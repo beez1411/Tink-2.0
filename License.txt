@@ -1,0 +1,4 @@
+Tink License
+Copyright (c) 2024 1411 Capital Inc
+
+This software is proprietary to 1411 Capital Inc. All rights reserved.
