@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -42,6 +42,15 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => {
     mainWindow.maximize();
     mainWindow.show();
+    
+    // Ensure the renderer is fully initialized
+    mainWindow.webContents.executeJavaScript(`
+      console.log('Window is now ready and visible');
+      // Force input field initialization if not already done
+      if (window.initializeInputFields) {
+        window.initializeInputFields();
+      }
+    `).catch(err => console.log('JavaScript execution error:', err));
   });
 
   // Open DevTools in development
@@ -190,12 +199,86 @@ ipcMain.handle('process-file', async (event, options) => {
       cleanupAceNetFlags();
     }
 
+    // Handle special case for AceNet using suggested order file
+    let actualInputFile = filePath;
+    let outputDir = filePath ? path.dirname(filePath) : path.join(os.homedir(), 'Desktop');
+    
+    if (scriptType === 'check_acenet' && filePath === 'USE_SUGGESTED_ORDER') {
+      // Look for suggested order files on desktop and in project directory
+      const desktop = path.join(os.homedir(), 'Desktop');
+      const projectDir = __dirname;
+      
+      // Search in both desktop and project directory
+      const searchDirs = [desktop, projectDir];
+      let foundFile = null;
+      let mostRecentFile = null;
+      let mostRecentTime = 0;
+      
+      for (const dir of searchDirs) {
+        try {
+          const files = fs.readdirSync(dir);
+          
+          // Look for suggested_order_output_*.xlsx files
+          const suggestedOrderFiles = files.filter(file => 
+            file.startsWith('suggested_order_output_') && file.endsWith('.xlsx')
+          );
+          
+          // Find the most recent file by timestamp in filename
+          for (const file of suggestedOrderFiles) {
+            const match = file.match(/suggested_order_output_(\d+)\.xlsx/);
+            if (match) {
+              const timestamp = parseInt(match[1]);
+              if (timestamp > mostRecentTime) {
+                mostRecentTime = timestamp;
+                mostRecentFile = path.join(dir, file);
+              }
+            }
+          }
+          
+          // Also check for traditional naming patterns
+          const today = new Date().toISOString().split('T')[0];
+          const todayFile = path.join(dir, `Suggested Order -- ${today}.xlsx`);
+          if (fs.existsSync(todayFile)) {
+            const stats = fs.statSync(todayFile);
+            if (stats.mtime.getTime() > mostRecentTime) {
+              mostRecentTime = stats.mtime.getTime();
+              mostRecentFile = todayFile;
+            }
+          }
+          
+          // Check yesterday's file
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split('T')[0];
+          const yesterdayFile = path.join(dir, `Suggested Order -- ${yesterdayStr}.xlsx`);
+          if (fs.existsSync(yesterdayFile)) {
+            const stats = fs.statSync(yesterdayFile);
+            if (stats.mtime.getTime() > mostRecentTime) {
+              mostRecentTime = stats.mtime.getTime();
+              mostRecentFile = yesterdayFile;
+            }
+          }
+        } catch (error) {
+          console.log(`Error reading directory ${dir}:`, error.message);
+        }
+      }
+      
+      if (mostRecentFile && fs.existsSync(mostRecentFile)) {
+        actualInputFile = mostRecentFile;
+        outputDir = path.dirname(mostRecentFile);
+        console.log(`Found suggested order file: ${mostRecentFile}`);
+      } else {
+        reject(new Error('No recent suggested order file found. Please run Suggested Order first or upload a part numbers file.'));
+        return;
+      }
+    }
+
     // Create a temporary config file with parameters
     const configPath = path.join(app.getPath('temp'), 'inventory_config.json');
     const config = {
       script_type: scriptType,
-      input_file: filePath,
-      output_file: path.join(path.dirname(filePath), `output_${Date.now()}.xlsx`),
+      input_file: actualInputFile,
+      output_file: path.join(outputDir, `${scriptType}_output_${Date.now()}.xlsx`),
       days_threshold: daysThreshold,
       current_month: currentMonth
     };
@@ -211,7 +294,16 @@ ipcMain.handle('process-file', async (event, options) => {
     fs.writeFileSync(configPath, JSON.stringify(config));
 
     // Spawn Node.js process
-    pythonProcess = spawn('node', [WRAPPER_PATH, configPath]);
+    try {
+      pythonProcess = spawn('node', [WRAPPER_PATH, configPath]);
+    } catch (error) {
+      reject(new Error(`Failed to start process: ${error.message}`));
+      return;
+    }
+    
+    pythonProcess.on('error', (error) => {
+      reject(new Error(`Process error: ${error.message}`));
+    });
 
     let output = '';
     let errorOutput = '';
@@ -241,6 +333,23 @@ ipcMain.handle('process-file', async (event, options) => {
           type: 'log',
           message: dataStr.trim()
         });
+      } else if (dataStr.includes('ORDER_DATA:')) {
+        // Extract order data for suggested order results
+        const match = dataStr.match(/ORDER_DATA:(.+)/);
+        if (match) {
+          try {
+            const orderInfo = JSON.parse(match[1].trim());
+            config.orderData = orderInfo.orderData;
+            config.processed_items = orderInfo.processed_items;
+            config.debug = orderInfo.debug;
+          } catch (error) {
+            console.error('Failed to parse order data:', error);
+          }
+        }
+        event.sender.send('processing-update', {
+          type: 'log',
+          message: `Found ${config.processed_items || 0} items to order`
+        });
       } else {
         event.sender.send('processing-update', {
           type: 'log',
@@ -269,17 +378,27 @@ ipcMain.handle('process-file', async (event, options) => {
       }
 
       if (code === 0) {
-        resolve({
-          success: true,
-          output: output,
-          outputFile: config.output_file,
-          partnumberFile: config.partnumber_file || null
-        });
+        try {
+          const result = JSON.parse(output);
+          resolve({
+            success: true,
+            output: result.output,
+            outputFile: result.output_file,
+            partnumberFile: result.partnumber_file || null,
+            orderData: result.orderData || [],
+            processed_items: result.processed_items || 0,
+            debug: result.debug || {}
+          });
+        } catch (parseError) {
+          console.error('Failed to parse output as JSON:', output);
+          resolve({ 
+            success: false, 
+            error: `Failed to parse output: ${parseError.message}`,
+            rawOutput: output 
+          });
+        }
       } else {
-        reject({
-          success: false,
-          error: errorOutput || 'Process failed with code ' + code
-        });
+        reject(new Error(errorOutput || `Process failed with code ${code}`));
       }
     });
   });
@@ -315,7 +434,7 @@ ipcMain.handle('install-dependencies', async (event) => {
       if (code === 0) {
         resolve({ success: true });
       } else {
-        reject({ success: false, error: 'Installation failed' });
+        reject(new Error('Installation failed'));
       }
     });
   });
@@ -384,6 +503,134 @@ ipcMain.handle('run-python', async (event, args) => {
       }
     });
   });
+});
+
+// New IPC handler for direct AceNet processing with part numbers
+ipcMain.handle('process-acenet-direct', async (event, data) => {
+  const { partNumbers, username, password, store } = data;
+  console.log(`Processing ${partNumbers.length} part numbers directly with AceNet`);
+  
+  return new Promise((resolve, reject) => {
+    const args = ['check_acenet_direct'];
+    args.push('--username', username);
+    args.push('--password', password);
+    args.push('--store', store);
+    args.push('--part-numbers', JSON.stringify(partNumbers));
+    
+    console.log('Spawning direct AceNet process with args:', args.slice(0, -1), '[part numbers array]');
+    
+    const child = spawn('node', ['js/wrapper.js', ...args], {
+      cwd: __dirname,
+      stdio: ['inherit', 'pipe', 'pipe']
+    });
+    
+    let output = '';
+    let errorOutput = '';
+    
+    child.stdout.on('data', (data) => {
+      const chunk = data.toString();
+      output += chunk;
+      
+      // Forward progress updates to renderer
+      if (chunk.includes('PROGRESS:')) {
+        const match = chunk.match(/PROGRESS:(\d+)\/(\d+):(.+)/);
+        if (match) {
+          event.sender.send('processing-update', {
+            type: 'progress',
+            current: parseInt(match[1]),
+            total: parseInt(match[2]),
+            message: match[3].trim()
+          });
+        }
+      }
+    });
+    
+    child.stderr.on('data', (data) => {
+      const chunk = data.toString();
+      errorOutput += chunk;
+      console.error('Child stderr:', chunk);
+      
+      // Forward progress updates from stderr to renderer
+      if (chunk.includes('PROGRESS:')) {
+        const match = chunk.match(/PROGRESS:(\d+)\/(\d+):(.+)/);
+        if (match) {
+          event.sender.send('processing-update', {
+            type: 'progress',
+            current: parseInt(match[1]),
+            total: parseInt(match[2]),
+            message: match[3].trim()
+          });
+        }
+      }
+    });
+    
+    child.on('close', (code) => {
+      console.log(`Direct AceNet process exited with code ${code}`);
+      console.log('Output:', output);
+      if (errorOutput) {
+        console.error('Error output:', errorOutput);
+      }
+      
+      if (code === 0) {
+        try {
+          // Extract the last line that looks like JSON (in case there are other messages)
+          const lines = output.trim().split('\n');
+          let jsonResult = null;
+          
+          // Work backwards from the last line to find valid JSON
+          for (let i = lines.length - 1; i >= 0; i--) {
+            const line = lines[i].trim();
+            if (line.startsWith('{') && line.endsWith('}')) {
+              try {
+                jsonResult = JSON.parse(line);
+                break;
+              } catch (e) {
+                // Continue looking for valid JSON
+                continue;
+              }
+            }
+          }
+          
+          if (jsonResult) {
+            resolve(jsonResult);
+          } else {
+            // Fallback: try to parse the entire output as JSON
+            const result = JSON.parse(output);
+            resolve(result);
+          }
+        } catch (parseError) {
+          console.error('Failed to parse output as JSON:', output);
+          resolve({ 
+            success: false, 
+            error: `Failed to parse output: ${parseError.message}`,
+            rawOutput: output 
+          });
+        }
+      } else {
+        resolve({ 
+          success: false, 
+          error: errorOutput || `Process exited with code ${code}`,
+          rawOutput: output 
+        });
+      }
+    });
+    
+    child.on('error', (error) => {
+      console.error('Direct AceNet process error:', error);
+      resolve({ success: false, error: error.message });
+    });
+  });
+});
+
+// IPC handler to open files
+ipcMain.handle('open-file', async (event, filePath) => {
+  try {
+    await shell.openPath(filePath);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to open file:', error);
+    return { success: false, error: error.message };
+  }
 });
 
 // Helper function to clean up AceNet flag files

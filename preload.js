@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld('api', {
   checkDependencies: () => ipcRenderer.invoke('check-dependencies'),
   
   processFile: (options) => ipcRenderer.invoke('process-file', options),
+  processAceNetDirect: (data) => ipcRenderer.invoke('process-acenet-direct', data),
+  
+  openFile: (filePath) => ipcRenderer.invoke('open-file', filePath),
   
   installDependencies: () => ipcRenderer.invoke('install-dependencies'),
   
@@ -44,8 +47,6 @@ contextBridge.exposeInMainWorld('api', {
 contextBridge.exposeInMainWorld('electronAPI', {
   runPython: (script, params) => ipcRenderer.invoke('run-python', { script, params }),
   saveTempFile: (file) => ipcRenderer.invoke('save-temp-file', file),
-  saveOrderData: (orderData) => ipcRenderer.invoke('save-order-data', orderData),
-  saveOrderToPO: (orderData) => ipcRenderer.invoke('save-order-to-po', orderData),
   acenetPause: () => ipcRenderer.invoke('acenet-pause'),
   acenetResume: () => ipcRenderer.invoke('acenet-resume'),
   acenetCancel: () => ipcRenderer.invoke('acenet-cancel'),

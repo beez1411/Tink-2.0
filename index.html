@@ -8,7 +8,7 @@
         content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <link rel="stylesheet" href="css/styles.css">
-    <script type="module" src="js/app.js" defer></script>
+    <script src="renderer.js" defer></script>
     <link rel="icon" type="image/x-icon" href="assets/icon.ico">
 </head>
 <body>
@@ -49,11 +49,11 @@
         <div id="acenetOptions" style="margin-top: 0.5em;">
             <div class="input-group">
                 <label for="username">AceNet Username:</label>
-                <input type="text" id="username" placeholder="Enter username" autocomplete="off" />
+                <input type="text" id="username" placeholder="Enter username" autocomplete="off" tabindex="1" style="pointer-events: auto !important; user-select: text !important;" />
             </div>
             <div class="input-group">
                 <label for="password">AceNet Password:</label>
-                <input type="password" id="password" autocomplete="off" placeholder="Enter password" aria-describedby="password-requirements" />
+                <input type="password" id="password" autocomplete="off" placeholder="Enter password" aria-describedby="password-requirements" tabindex="2" style="pointer-events: auto !important; user-select: text !important;" />
                 <small id="password-requirements" class="input-help">Password must be secure</small>
             </div>
             <div class="input-group">
@@ -83,18 +83,18 @@
         </div>
     </div>
     <div class="main-content">
-        <div class="dual-output single-panel">
-        <div id="orderDisplaySection" class="order-display-section" style="display: none;">
-            <h2 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                Order Items
-            </h2>
+        <div class="dual-output-container">
+            <!-- Suggested Order Panel -->
+            <div class="output-panel" id="suggestedOrderPanel">
+                            <div id="orderDisplaySection" class="order-display-section" style="display: none;">
+                <h2 class="section-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Suggested Order
+                </h2>
             <div class="order-controls">
                 <button id="addItemBtn" class="btn btn-secondary">Add Item</button>
-                <button id="saveOrderBtn" class="btn btn-primary">Save Changes</button>
-                <button id="saveToPOBtn" class="btn btn-success">Save to PO</button>
             </div>
             <div class="order-summary">
                 <div class="order-total">
@@ -108,7 +108,9 @@
                             <th>#</th>
                             <th>SKU</th>
                             <th>Description</th>
+                            <th>Category</th>
                             <th>Current Stock</th>
+                            <th>Safety Stock</th>
                             <th>Suggested Qty</th>
                             <th>Final Qty</th>
                             <th>Actions</th>
@@ -118,22 +120,106 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-        <div id="acenetResultsSection" class="acenet-results-section" style="display: none;">
-            <div class="acenet-results-header">
-                <h2>AceNet Check Results</h2>
-                <button id="printAcenetResultsBtn" class="btn btn-secondary">Print Results</button>
+
             </div>
-            <div id="acenetResultsTableContainer"></div>
         </div>
+        
+        <!-- AceNet Results Panel -->
+        <div class="output-panel" id="acenetResultsPanel">
+            <div id="acenetResultsSection" class="acenet-results-section" style="display: none;">
+                <h2 class="section-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    AceNet Check Results
+                </h2>
+                <div class="acenet-results-header">
+                    <button id="printAcenetResultsBtn" class="btn btn-secondary">Print Results</button>
+                </div>
+                <div id="acenetResultsContent" class="results-content">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
         </div>
+    </div>
     </div>
 
     <!-- Robot Animation Container -->
-    <div id="robotAnimationContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 2em; border-radius: 8px; text-align: center;">
-            <div style="font-size: 2em; margin-bottom: 1em;">🤖</div>
-            <div>Processing your order...</div>
+    <div id="robotAnimationContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;">
+        <div id="processingModal" class="processing-modal">
+            <!-- Processing State -->
+            <div id="processingState" class="modal-state">
+                <div class="robot-icon">🤖</div>
+                <h2 class="modal-title">Processing your order...</h2>
+                <div class="processing-steps">
+                    <div class="processing-step" id="step1">
+                        <span class="step-icon">⏳</span>
+                        <span class="step-text">Loading and validating data...</span>
+                    </div>
+                    <div class="processing-step" id="step2">
+                        <span class="step-icon">📊</span>
+                        <span class="step-text">Analyzing sales patterns...</span>
+                    </div>
+                    <div class="processing-step" id="step3">
+                        <span class="step-icon">🔍</span>
+                        <span class="step-text">Calculating forecasts...</span>
+                    </div>
+                    <div class="processing-step" id="step4">
+                        <span class="step-icon">📈</span>
+                        <span class="step-text">Determining order quantities...</span>
+                    </div>
+                    <div class="processing-step" id="step5">
+                        <span class="step-icon">✅</span>
+                        <span class="step-text">Finalizing suggestions...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Completion State -->
+            <div id="completionState" class="modal-state" style="display: none;">
+                <div class="completion-header">
+                    <div class="success-icon">🎉</div>
+                    <h2 class="modal-title">Analysis Complete!</h2>
+                </div>
+                
+                <div class="completion-content">
+                    <div class="completion-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Items to Order:</span>
+                            <span class="summary-value" id="itemsToOrderCount">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Analysis Method:</span>
+                            <span class="summary-value">Advanced Analytics</span>
+                        </div>
+                    </div>
+                    
+                    <div class="completion-features">
+                        <div class="feature-item">
+                            <span class="feature-icon">📊</span>
+                            <span class="feature-text">Sales pattern clustering</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🔮</span>
+                            <span class="feature-text">Demand forecasting</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📈</span>
+                            <span class="feature-text">Statistical analysis</span>
+                        </div>
+                    </div>
+                    
+                    <div class="debug-section" id="debugSection" style="display: none;">
+                        <h4>Analysis Details</h4>
+                        <div class="debug-content" id="debugContent"></div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button id="toggleDebugBtn" class="btn btn-secondary">Show Details</button>
+                    <button id="closeModalBtn" class="btn btn-primary">Continue</button>
+                </div>
+            </div>
         </div>
     </div>
 </body>
