@@ -22,6 +22,45 @@ let suggestedOrderResults = {
     hasResults: false
 };
 
+// Global storage for on order data
+let onOrderData = {};
+
+// Load on order data from localStorage on startup
+function loadOnOrderData() {
+    const saved = localStorage.getItem('onOrderData');
+    if (saved) {
+        try {
+            onOrderData = JSON.parse(saved);
+            console.log('Loaded on order data:', onOrderData);
+        } catch (error) {
+            console.error('Error loading on order data:', error);
+            onOrderData = {};
+        }
+    }
+}
+
+// Save on order data to localStorage
+function saveOnOrderData() {
+    try {
+        localStorage.setItem('onOrderData', JSON.stringify(onOrderData));
+        console.log('Saved on order data:', onOrderData);
+    } catch (error) {
+        console.error('Error saving on order data:', error);
+    }
+}
+
+// Clear on order data
+function clearOnOrderData() {
+    onOrderData = {};
+    localStorage.removeItem('onOrderData');
+    console.log('Cleared on order data');
+}
+
+// Get on order quantity for a specific SKU
+function getOnOrderQuantity(sku) {
+    return onOrderData[sku] || 0;
+}
+
 // Ensure input fields work properly
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing input fields...');
@@ -65,57 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('Input fields initialization complete');
     
-    // Modal event handlers
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const toggleDebugBtn = document.getElementById('toggleDebugBtn');
-    const debugSection = document.getElementById('debugSection');
-    
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', () => {
-            const robotAnimationContainer = document.getElementById('robotAnimationContainer');
-            if (robotAnimationContainer) {
-                robotAnimationContainer.style.display = 'none';
-                
-                // Reset modal state for next time
-                const processingState = document.getElementById('processingState');
-                const completionState = document.getElementById('completionState');
-                if (processingState && completionState) {
-                    processingState.style.display = 'block';
-                    completionState.style.display = 'none';
-                }
-                
-                // Reset debug section
-                if (debugSection) {
-                    debugSection.style.display = 'none';
-                }
-                if (toggleDebugBtn) {
-                    toggleDebugBtn.textContent = 'Show Details';
-                }
-            }
-        });
-    }
-    
-    if (toggleDebugBtn && debugSection) {
-        toggleDebugBtn.addEventListener('click', () => {
-            if (debugSection.style.display === 'none') {
-                debugSection.style.display = 'block';
-                toggleDebugBtn.textContent = 'Hide Details';
-            } else {
-                debugSection.style.display = 'none';
-                toggleDebugBtn.textContent = 'Show Details';
-            }
-        });
-    }
-    
-    // Close modal when clicking outside
-    const robotAnimationContainer = document.getElementById('robotAnimationContainer');
-    if (robotAnimationContainer) {
-        robotAnimationContainer.addEventListener('click', (e) => {
-            if (e.target === robotAnimationContainer) {
-                if (closeModalBtn) closeModalBtn.click();
-            }
-        });
-    }
+    // Completion modal event handlers removed - no longer needed
 });
 
 // Backup initialization function that can be called from main process
@@ -197,6 +186,29 @@ const printAcenetResultsBtn = document.getElementById('printAcenetResultsBtn');
 // Robot animation
 const robotAnimationContainer = document.getElementById('robotAnimationContainer');
 
+// Processing modal functions
+function showProcessingModal() {
+    const robotAnimationContainer = document.getElementById('robotAnimationContainer');
+    if (robotAnimationContainer) {
+        robotAnimationContainer.style.display = 'flex';
+        
+        // Reset modal state to processing
+        const processingState = document.getElementById('processingState');
+        const completionState = document.getElementById('completionState');
+        if (processingState && completionState) {
+            processingState.style.display = 'block';
+            completionState.style.display = 'none';
+        }
+    }
+}
+
+function hideProcessingModal() {
+    const robotAnimationContainer = document.getElementById('robotAnimationContainer');
+    if (robotAnimationContainer) {
+        robotAnimationContainer.style.display = 'none';
+    }
+}
+
 // File selection handling
 fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
@@ -228,27 +240,37 @@ document.querySelector('.file-input-label').addEventListener('click', async (e) 
 
 // Run Suggested Order button
 runSuggestedOrderBtn.addEventListener('click', async () => {
-    if (!selectedFile) return;
-    
-    // Show robot animation
-    robotAnimationContainer.style.display = 'flex';
-    runSuggestedOrderBtn.disabled = true;
-    
-    // Set up progress listener
-    window.api.onProcessingUpdate((data) => {
-        if (data.type === 'log') {
-            console.log('Processing:', data.message);
-        } else if (data.type === 'error') {
-            console.error('Error:', data.message);
-        }
-    });
-    
     try {
+        if (!selectedFile) {
+            alert('Please select an inventory file first');
+            return;
+        }
+
+        showProcessingModal();
+        
+        // Check if Delete On Order is checked
+        const deleteOnOrderCheckbox = document.getElementById('deleteOnOrder');
+        if (deleteOnOrderCheckbox && deleteOnOrderCheckbox.checked) {
+            clearOnOrderData();
+            deleteOnOrderCheckbox.checked = false; // Uncheck after clearing
+        }
+
+        const daysThresholdValue = parseInt(daysThreshold.value) || 14;
+        
+        console.log('Starting suggested order analysis...');
+        console.log('=== SUGGESTED ORDER DEBUG ===');
+        console.log('On order data being passed:', onOrderData);
+        console.log('On order items count:', Object.keys(onOrderData).length);
+        if (Object.keys(onOrderData).length > 0) {
+            console.log('Sample on order items:', Object.entries(onOrderData).slice(0, 5));
+        }
+        console.log('=== END SUGGESTED ORDER DEBUG ===');
+        
         const result = await window.api.processFile({
             filePath: selectedFile.path,
             scriptType: 'suggested_order',
-            daysThreshold: parseInt(daysThreshold.value),
-            skipFileOutput: true
+            daysThreshold: daysThresholdValue,
+            onOrderData: onOrderData // Pass the on order data to the analysis
         });
         
         if (result.success) {
@@ -285,21 +307,17 @@ runSuggestedOrderBtn.addEventListener('click', async () => {
                 updateOrderTotal();
             }
             
-            // Transition to completion state instead of alert
-            showCompletionModal(result);
+            // Hide processing modal and show results directly
+            hideProcessingModal();
+            
         } else {
-            // Hide robot animation
-            robotAnimationContainer.style.display = 'none';
-            alert('Processing failed: ' + (result.error || 'Unknown error'));
+            throw new Error(result.message || 'Unknown error occurred');
         }
+        
     } catch (error) {
-        // Hide robot animation
-        robotAnimationContainer.style.display = 'none';
         console.error('Suggested Order Error:', error);
         alert('Error processing suggested order: ' + (error.message || error.toString()));
-    } finally {
-        runSuggestedOrderBtn.disabled = false;
-        window.api.removeAllListeners('processing-update');
+        hideProcessingModal();
     }
 });
 
@@ -453,7 +471,13 @@ runCheckAceNetBtn.addEventListener('click', async () => {
             // Close progress popup
             progressPopup.close();
             
-            alert('AceNet check failed: ' + (result.error || 'Unknown error'));
+            // Check if error is due to user cancellation
+            const errorMessage = result.error || 'Unknown error';
+            if (errorMessage.toLowerCase().includes('cancelled by user')) {
+                showCancellationPopup();
+            } else {
+                alert('AceNet check failed: ' + errorMessage);
+            }
         }
     } catch (error) {
         // Close progress popup
@@ -462,7 +486,14 @@ runCheckAceNetBtn.addEventListener('click', async () => {
         }
         
         console.error('AceNet Error:', error);
-        alert('Error running AceNet check: ' + (error.message || error.toString()));
+        const errorMessage = error.message || error.toString();
+        
+        // Check if error is due to user cancellation
+        if (errorMessage.toLowerCase().includes('cancelled by user')) {
+            showCancellationPopup();
+        } else {
+            alert('Error running AceNet check: ' + errorMessage);
+        }
     } finally {
         runCheckAceNetBtn.disabled = false;
         window.api.removeAllListeners('processing-update');
@@ -473,14 +504,17 @@ runCheckAceNetBtn.addEventListener('click', async () => {
 function getCurrentOrderPartNumbers() {
     const partNumbers = [];
     
-    // Get all rows from the order table body
+    // First, try to get part numbers from the visible table
     const rows = orderTableBody.querySelectorAll('tr');
+    console.log(`Found ${rows.length} rows in order table`);
     
-    rows.forEach(row => {
+    rows.forEach((row, index) => {
         // Part number is in the second column (index 1)
         const partNumberCell = row.cells[1];
-        // Quantity is in the eighth column (index 7) - the editable input field
-        const quantityCell = row.cells[7];
+        // Quantity is in the sixth column (index 5) - this is the quantity controls column
+        const quantityCell = row.cells[5];
+        
+        console.log(`Row ${index}: cells count = ${row.cells.length}`);
         
         if (partNumberCell && quantityCell) {
             let partNumber = '';
@@ -494,11 +528,13 @@ function getCurrentOrderPartNumbers() {
                 partNumber = partNumberCell.textContent.trim();
             }
             
-            // Get quantity from the quantity input field
-            const qtyInput = quantityCell.querySelector('input');
+            // Get quantity from the quantity input field within the quantity controls
+            const qtyInput = quantityCell.querySelector('.qty-input');
             if (qtyInput) {
                 quantity = parseInt(qtyInput.value) || 0;
             }
+            
+            console.log(`Row ${index}: partNumber='${partNumber}', quantity=${quantity}`);
             
             // Only add non-empty part numbers with quantity > 0
             if (partNumber && partNumber !== '' && quantity > 0) {
@@ -508,6 +544,14 @@ function getCurrentOrderPartNumbers() {
     });
     
     console.log('Extracted part numbers from order table (with qty > 0):', partNumbers);
+    
+    // If no part numbers found from table but we have suggested order results, use those
+    if (partNumbers.length === 0 && suggestedOrderResults.hasResults && suggestedOrderResults.partNumbers.length > 0) {
+        console.log('No part numbers found in table, falling back to stored suggested order results');
+        console.log('Available part numbers from suggested order:', suggestedOrderResults.partNumbers);
+        return suggestedOrderResults.partNumbers.slice(); // Return a copy
+    }
+    
     return partNumbers;
 }
 
@@ -526,24 +570,33 @@ function populateOrderTable(orderData) {
         const demandStd = item.demandStd || 0;
         const leadTimeWeeks = (item.daysThreshold || 14) / 7;
         const serviceLevel = Z * demandStd * Math.sqrt(leadTimeWeeks);
-        // Map category to badge
-        let categoryLabel = 'Unknown';
-        let categoryClass = 'category-badge';
-        if (item.category && categoryMap[item.category.toLowerCase()]) {
-            categoryLabel = categoryMap[item.category.toLowerCase()].label;
-            categoryClass = categoryMap[item.category.toLowerCase()].class;
-        }
+        
+        // Calculate cost and total
+        const cost = item.cost || 0;
+        const suggestedQty = item.suggestedQty || 0;
+        const total = cost * suggestedQty;
+        
+        // Get on order quantity for this SKU
+        const sku = item.partNumber || item.sku || '';
+        const onOrderQty = getOnOrderQuantity(sku);
+        
         // Build row
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${index + 1}</td>
-            <td title="${item.partNumber || item.sku || ''}">${item.partNumber || item.sku || ''}</td>
+            <td title="${sku}">${sku}</td>
             <td title="${item.description || 'No Description'}">${item.description || 'No Description'}</td>
-            <td><span class="${categoryClass}">${categoryLabel}</span></td>
             <td>${item.currentStock != null ? item.currentStock : ''}</td>
-            <td>${item.safetyStock != null ? item.safetyStock : ''}</td>
-            <td>${item.suggestedQty != null ? item.suggestedQty : ''}</td>
-            <td><input type="number" value="${item.suggestedQty != null ? item.suggestedQty : ''}" min="0" class="qty-input" data-index="${index}" data-cost="${item.cost || 0}"></td>
+            <td>${onOrderQty}</td>
+            <td class="quantity-cell">
+                <div class="quantity-controls">
+                    <button class="qty-btn minus-btn" onclick="adjustQuantity(${index}, -1)" title="Decrease quantity">-</button>
+                    <input type="number" value="${suggestedQty}" min="0" class="qty-input" data-index="${index}" data-cost="${cost}" onchange="updateRowTotal(${index})">
+                    <button class="qty-btn plus-btn" onclick="adjustQuantity(${index}, 1)" title="Increase quantity">+</button>
+                </div>
+            </td>
+            <td class="cost-cell">$${cost.toFixed(2)}</td>
+            <td class="total-cell" id="total-${index}">$${total.toFixed(2)}</td>
             <td><button class="btn btn-danger btn-sm btn-icon" onclick="removeOrderItem(${index})" title="Delete item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3,6 5,6 21,6"></polyline>
@@ -610,11 +663,13 @@ function updateOrderTotal() {
         totalCost += qty * cost;
     });
     
-    if (totalCost > 0) {
-        orderTotalAmount.textContent = `${totalItems} items - $${totalCost.toFixed(2)}`;
-    } else {
-        orderTotalAmount.textContent = `${totalItems} items`;
-    }
+    // Format currency with commas for thousands
+    const formattedTotal = totalCost.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD'
+    });
+    
+    orderTotalAmount.textContent = formattedTotal;
 }
 
 function removeOrderItem(index) {
@@ -642,11 +697,17 @@ if (addItemBtn) {
             <td>${newIndex + 1}</td>
             <td><input type="text" class="form-control" placeholder="Enter SKU"></td>
             <td><input type="text" class="form-control" placeholder="Enter description"></td>
-            <td><span class="category-badge">Manual</span></td>
-            <td><input type="number" class="form-control" placeholder="Stock" value="0" min="0"></td>
-            <td><input type="number" class="form-control" placeholder="Safety Stock" value="0" min="0"></td>
-            <td>-</td>
-            <td><input type="number" value="0" min="0" class="qty-input" data-index="${newIndex}" data-cost="0"></td>
+            <td><input type="number" class="form-control" placeholder="SOH" value="0" min="0"></td>
+            <td><input type="number" class="form-control" placeholder="On ORD" value="0" min="0"></td>
+            <td class="quantity-cell">
+                <div class="quantity-controls">
+                    <button class="qty-btn minus-btn" onclick="adjustQuantity(${newIndex}, -1)" title="Decrease quantity">-</button>
+                    <input type="number" value="0" min="0" class="qty-input" data-index="${newIndex}" data-cost="0" onchange="updateRowTotal(${newIndex})">
+                    <button class="qty-btn plus-btn" onclick="adjustQuantity(${newIndex}, 1)" title="Increase quantity">+</button>
+                </div>
+            </td>
+            <td><input type="number" class="form-control cost-input" placeholder="Cost" value="0" min="0" step="0.01" onchange="updateItemCost(${newIndex})"></td>
+            <td class="total-cell" id="total-${newIndex}">$0.00</td>
             <td><button class="btn btn-danger btn-sm btn-icon" onclick="removeOrderItem(${newIndex})" title="Delete item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3,6 5,6 21,6"></polyline>
@@ -663,7 +724,87 @@ if (addItemBtn) {
     });
 }
 
-// Removed save order event listeners - no longer saving files to disk
+// Save On Order button handler
+const saveOnOrderBtn = document.getElementById('saveOnOrderBtn');
+if (saveOnOrderBtn) {
+    saveOnOrderBtn.addEventListener('click', () => {
+        // Get current order data and save as on order
+        const rows = orderTableBody.querySelectorAll('tr');
+        const newOnOrderData = {};
+        
+        console.log('=== SAVE ON ORDER DEBUG ===');
+        console.log('Processing', rows.length, 'rows');
+        
+        rows.forEach((row, index) => {
+            // Get SKU from the row
+            const skuCell = row.cells[1];
+            let sku = '';
+            
+            const skuInput = skuCell.querySelector('input');
+            if (skuInput) {
+                sku = skuInput.value.trim();
+                console.log(`Row ${index}: SKU from input:`, sku);
+            } else {
+                sku = skuCell.textContent.trim();
+                console.log(`Row ${index}: SKU from text:`, sku);
+            }
+            
+            if (sku) {
+                // Get current quantity
+                const qtyInput = row.querySelector('.qty-input');
+                const currentQty = parseInt(qtyInput.value) || 0;
+                console.log(`Row ${index}: Quantity:`, currentQty);
+                
+                if (currentQty > 0) {
+                    // Add to existing on order quantity
+                    const existingOnOrder = getOnOrderQuantity(sku);
+                    const newTotal = existingOnOrder + currentQty;
+                    newOnOrderData[sku] = newTotal;
+                    console.log(`Row ${index}: SKU "${sku}" - existing: ${existingOnOrder}, adding: ${currentQty}, new total: ${newTotal}`);
+                }
+            }
+        });
+        
+        console.log('New on order data:', newOnOrderData);
+        console.log('Existing on order data before merge:', onOrderData);
+        
+        // Merge with existing on order data
+        Object.assign(onOrderData, newOnOrderData);
+        saveOnOrderData();
+        
+        console.log('Final on order data after merge:', onOrderData);
+        console.log('=== END SAVE ON ORDER DEBUG ===');
+        
+        // Show confirmation
+        alert(`Saved ${Object.keys(newOnOrderData).length} items to On Order. Total items on order: ${Object.keys(onOrderData).length}`);
+        
+        // Refresh the display to show updated on order quantities
+        if (suggestedOrderResults.hasResults && suggestedOrderResults.orderData) {
+            populateOrderTable(suggestedOrderResults.orderData);
+        }
+    });
+}
+
+// Delete On Order checkbox handler
+const deleteOnOrderCheckbox = document.getElementById('deleteOnOrder');
+if (deleteOnOrderCheckbox) {
+    deleteOnOrderCheckbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            if (confirm('This will clear all On Order data. Are you sure?')) {
+                clearOnOrderData();
+                console.log('On Order data cleared');
+                
+                // Refresh the display if there's current order data
+                if (suggestedOrderResults.hasResults && suggestedOrderResults.orderData) {
+                    populateOrderTable(suggestedOrderResults.orderData);
+                }
+            } else {
+                // Uncheck the checkbox if user cancels
+                e.target.checked = false;
+            }
+        }
+    });
+}
 
 if (printAcenetResultsBtn) {
     printAcenetResultsBtn.addEventListener('click', () => {
@@ -702,7 +843,7 @@ function displayAceNetResults(categorizedResults) {
     console.log('=== DISPLAY DEBUG ===');
     console.log('Categories to display:', categorizedResults.length);
     
-    // Process each category
+    // Process each category (only non-empty categories are now passed from backend)
     categorizedResults.forEach((category, index) => {
         console.log(`Display Category ${index}:`, {
             name: category.name,
@@ -711,41 +852,45 @@ function displayAceNetResults(categorizedResults) {
             parts: category.parts
         });
         
-        // Show ALL categories temporarily (including empty ones) for debugging
-        if (category.parts && Array.isArray(category.parts)) {
+        // Only display categories with parts (empty categories are already filtered out)
+        if (category.parts && Array.isArray(category.parts) && category.parts.length > 0) {
             const categoryDiv = document.createElement('div');
             categoryDiv.className = 'acenet-category';
             
             const categoryHeader = document.createElement('h4');
-            if (category.parts.length > 0) {
-                categoryHeader.textContent = `${category.name} (${category.parts.length} items)`;
-                categoryHeader.style.color = category.color || '#333';
-                categoryDiv.appendChild(categoryHeader);
-                
-                const partsList = document.createElement('ul');
-                partsList.className = 'parts-list';
-                
-                category.parts.forEach(part => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = part;
-                    listItem.style.fontSize = '14px';
-                    listItem.style.marginBottom = '5px';
-                    partsList.appendChild(listItem);
-                });
-                
-                categoryDiv.appendChild(partsList);
-            } else {
-                // Show empty categories with a note for debugging
-                categoryHeader.textContent = `${category.name} (0 items) - EMPTY`;
-                categoryHeader.style.color = '#999';
-                categoryHeader.style.fontStyle = 'italic';
-                categoryDiv.appendChild(categoryHeader);
-                console.log(`EMPTY CATEGORY: ${category.name}`);
-            }
+            categoryHeader.textContent = `${category.name} (${category.parts.length} items)`;
+            categoryHeader.style.color = category.color || '#333';
+            categoryDiv.appendChild(categoryHeader);
             
+            const partsList = document.createElement('ul');
+            partsList.className = 'parts-list';
+            
+            category.parts.forEach(part => {
+                const listItem = document.createElement('li');
+                
+                // Check if this part needs manual review
+                const partData = typeof part === 'object' ? part : { partNumber: part };
+                const partNumber = partData.partNumber || part;
+                
+                // Create text content
+                let displayText = partNumber;
+                if (partData.needsManualReview) {
+                    displayText += ' ⚠️ (NEEDS MANUAL REVIEW)';
+                    listItem.style.backgroundColor = '#fff3cd';
+                    listItem.style.border = '1px solid #ffeaa7';
+                    listItem.style.padding = '5px';
+                    listItem.style.borderRadius = '3px';
+                    listItem.title = 'This item was flagged as "Not in AceNet" but may need manual verification. Please double-check this part number in AceNet directly.';
+                }
+                
+                listItem.textContent = displayText;
+                listItem.style.fontSize = '14px';
+                listItem.style.marginBottom = '5px';
+                partsList.appendChild(listItem);
+            });
+            
+            categoryDiv.appendChild(partsList);
             resultsContainer.appendChild(categoryDiv);
-        } else {
-            console.log(`SKIPPED CATEGORY: ${category.name} - No valid parts array`);
         }
     });
     
@@ -855,22 +1000,53 @@ function createProgressPopup(totalItems) {
     let isCancelled = false;
     
     // Add event listeners for pause/cancel
-    popup.querySelector('#pauseProcessBtn').addEventListener('click', () => {
+    popup.querySelector('#pauseProcessBtn').addEventListener('click', async () => {
         isPaused = !isPaused;
         const btn = popup.querySelector('#pauseProcessBtn');
         btn.textContent = isPaused ? 'Resume' : 'Pause';
         btn.className = isPaused ? 'btn btn-success' : 'btn btn-warning';
         
-        // TODO: Implement actual pause/resume functionality
-        console.log(isPaused ? 'Process paused' : 'Process resumed');
+        try {
+            if (isPaused) {
+                const result = await window.electronAPI.acenetPause();
+                if (result.success) {
+                    console.log('Process paused successfully');
+                } else {
+                    console.error('Failed to pause process:', result.error);
+                }
+            } else {
+                const result = await window.electronAPI.acenetResume();
+                if (result.success) {
+                    console.log('Process resumed successfully');
+                } else {
+                    console.error('Failed to resume process:', result.error);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to control process:', error);
+            // Revert button state on error
+            isPaused = !isPaused;
+            btn.textContent = isPaused ? 'Resume' : 'Pause';
+            btn.className = isPaused ? 'btn btn-success' : 'btn btn-warning';
+        }
     });
     
-    popup.querySelector('#cancelProcessBtn').addEventListener('click', () => {
+    popup.querySelector('#cancelProcessBtn').addEventListener('click', async () => {
         if (confirm('Are you sure you want to cancel the AceNet check process?')) {
-            isCancelled = true;
-            popup.remove();
-            // TODO: Implement actual cancellation
-            console.log('Process cancelled');
+            try {
+                const result = await window.electronAPI.acenetCancel();
+                if (result.success) {
+                    isCancelled = true;
+                    popup.remove();
+                    console.log('Process cancelled successfully');
+                } else {
+                    console.error('Failed to cancel process:', result.error);
+                    alert('Failed to cancel process. Please try again.');
+                }
+            } catch (error) {
+                console.error('Failed to cancel process:', error);
+                alert('Failed to cancel process. Please try again.');
+            }
         }
     });
     
@@ -1038,52 +1214,129 @@ function showCompletionPopup(result, totalProcessed) {
     });
 }
 
-// Show completion modal function
-function showCompletionModal(result) {
-    // Transition from processing to completion state
-    setTimeout(() => {
-        const processingState = document.getElementById('processingState');
-        const completionState = document.getElementById('completionState');
-        
-        if (processingState && completionState) {
-            processingState.style.display = 'none';
-            completionState.style.display = 'block';
-            
-            // Update content based on results
-            const itemsCount = (result.orderData && result.orderData.length) || 0;
-            const itemsToOrderCount = document.getElementById('itemsToOrderCount');
-            if (itemsToOrderCount) {
-                itemsToOrderCount.textContent = itemsCount;
-            }
-            
-            // Populate debug information if available
-            if (result.debug) {
-                const debugContent = document.getElementById('debugContent');
-                if (debugContent) {
-                    const debugInfo = [
-                        `Total items in file: ${result.debug.totalItems || 'N/A'}`,
-                        `Items after filtering: ${result.debug.filteredItems || 'N/A'}`,
-                        `Items with forecast > 0: ${result.debug.itemsWithForecast || 'N/A'}`,
-                        `Items with stock > 0: ${result.debug.itemsWithStock || 'N/A'}`,
-                        `Items below min stock: ${result.debug.itemsBelowMinStock || 'N/A'}`,
-                        `Items skipped (MINORDERQTY=0): ${result.debug.itemsSkippedMinOrderQty || 'N/A'}`,
-                        `Week columns found: ${result.debug.weekColumnsFound || 'N/A'}`,
-                        `Total sales value: ${result.debug.totalSalesValue || 'N/A'}`
-                    ];
-                    
-                    if (itemsCount === 0) {
-                        debugInfo.push('');
-                        debugInfo.push('Troubleshooting Tips:');
-                        debugInfo.push('- If filtered items is 0, check your supplier number');
-                        debugInfo.push('- If week columns is 0, check your data format');
-                        debugInfo.push('- If total sales is 0, there may be no sales history');
-                        debugInfo.push('- Many skipped items indicate non-orderable products');
-                    }
-                    
-                    debugContent.innerHTML = debugInfo.map(line => `<div>${line}</div>`).join('');
-                }
-            }
+// Simple cancellation popup for user-friendly messaging
+function showCancellationPopup() {
+    const popup = document.createElement('div');
+    popup.className = 'cancellation-popup';
+    
+    popup.innerHTML = `
+        <div class="cancellation-popup-content">
+            <div class="cancellation-icon">❌</div>
+            <h3>Process Cancelled</h3>
+            <p>The AceNet check process has been cancelled successfully.</p>
+            <button id="closeCancellationBtn" class="btn btn-primary">OK</button>
+        </div>
+    `;
+    
+    // Add styles for cancellation popup
+    const style = document.createElement('style');
+    style.textContent = `
+        .cancellation-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
         }
-    }, 1000); // 1 second delay to show processing completion
+        .cancellation-popup-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            min-width: 300px;
+            max-width: 400px;
+            text-align: center;
+        }
+        .cancellation-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .cancellation-popup-content h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 20px;
+        }
+        .cancellation-popup-content p {
+            margin: 0 0 25px 0;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .cancellation-popup-content button {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            background: #007bff;
+            color: white;
+            font-size: 14px;
+        }
+        .cancellation-popup-content button:hover {
+            background: #0056b3;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(popup);
+    
+    // Add event listener for OK button
+    popup.querySelector('#closeCancellationBtn').addEventListener('click', () => {
+        popup.remove();
+        style.remove(); // Also remove the styles
+    });
 }
+
+// showCompletionModal function removed - no longer needed
+
+// Function to adjust quantity with + and - buttons
+function adjustQuantity(index, change) {
+    const row = orderTableBody.children[index];
+    if (row) {
+        const qtyInput = row.querySelector('.qty-input');
+        const currentQty = parseInt(qtyInput.value) || 0;
+        const newQty = Math.max(0, currentQty + change);
+        qtyInput.value = newQty;
+        updateRowTotal(index);
+        updateOrderTotal();
+    }
+}
+
+// Function to update individual row total
+function updateRowTotal(index) {
+    const row = orderTableBody.children[index];
+    if (row) {
+        const qtyInput = row.querySelector('.qty-input');
+        const totalCell = row.querySelector('.total-cell');
+        const qty = parseInt(qtyInput.value) || 0;
+        const cost = parseFloat(qtyInput.dataset.cost) || 0;
+        const total = qty * cost;
+        totalCell.textContent = `$${total.toFixed(2)}`;
+    }
+    updateOrderTotal();
+}
+
+// Function to update item cost for manually added items
+function updateItemCost(index) {
+    const row = orderTableBody.children[index];
+    if (row) {
+        const costInput = row.querySelector('.cost-input');
+        const qtyInput = row.querySelector('.qty-input');
+        const newCost = parseFloat(costInput.value) || 0;
+        
+        // Update the data-cost attribute
+        qtyInput.dataset.cost = newCost;
+        
+        // Update the row total
+        updateRowTotal(index);
+    }
+}
+
+// Load on order data when the page loads
+loadOnOrderData();
 

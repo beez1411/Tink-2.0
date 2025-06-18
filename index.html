@@ -43,10 +43,17 @@
             <label for="daysThreshold">Inventory Stock Day:</label>
             <input type="number" id="daysThreshold" value="14" min="1" max="365" />
         </div>
+        <div class="input-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="deleteOnOrder" />
+                <span class="checkmark"></span>
+                Delete On Order
+            </label>
+        </div>
         <button id="runSuggestedOrderBtn" class="btn btn-primary" disabled>
             Run Suggested Order
         </button>
-        <div id="acenetOptions" style="margin-top: 0.5em;">
+        <div id="acenetOptions">
             <div class="input-group">
                 <label for="username">AceNet Username:</label>
                 <input type="text" id="username" placeholder="Enter username" autocomplete="off" tabindex="1" style="pointer-events: auto !important; user-select: text !important;" />
@@ -73,11 +80,12 @@
                     Remember Me
                 </label>
             </div>
+
         </div>
         <button id="runCheckAceNetBtn" class="btn btn-secondary" disabled>
             Check AceNet
         </button>
-        <div class="input-group" style="margin-top: 0.5em;">
+        <div class="input-group" style="margin-top: 0.3em;">
             <label for="acenetPartFile">Upload Part Number File (optional):</label>
             <input type="file" id="acenetPartFile" accept=".xlsx,.xls,.txt" />
         </div>
@@ -95,6 +103,7 @@
                 </h2>
             <div class="order-controls">
                 <button id="addItemBtn" class="btn btn-secondary">Add Item</button>
+                <button id="saveOnOrderBtn" class="btn btn-success">Save On Order</button>
             </div>
             <div class="order-summary">
                 <div class="order-total">
@@ -108,12 +117,12 @@
                             <th>#</th>
                             <th>SKU</th>
                             <th>Description</th>
-                            <th>Category</th>
-                            <th>Current Stock</th>
-                            <th>Safety Stock</th>
-                            <th>Suggested Qty</th>
-                            <th>Final Qty</th>
-                            <th>Actions</th>
+                            <th>SOH</th>
+                            <th>On Order</th>
+                            <th style="text-align: center;">Suggested Qty</th>
+                            <th>Cost</th>
+                            <th>Total</th>
+                            <th>Delete</th>
                         </tr>
                     </thead>
                     <tbody id="orderTableBody">
@@ -174,52 +183,7 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Completion State -->
-            <div id="completionState" class="modal-state" style="display: none;">
-                <div class="completion-header">
-                    <div class="success-icon">🎉</div>
-                    <h2 class="modal-title">Analysis Complete!</h2>
-                </div>
-                
-                <div class="completion-content">
-                    <div class="completion-summary">
-                        <div class="summary-item">
-                            <span class="summary-label">Items to Order:</span>
-                            <span class="summary-value" id="itemsToOrderCount">0</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Analysis Method:</span>
-                            <span class="summary-value">Advanced Analytics</span>
-                        </div>
-                    </div>
-                    
-                    <div class="completion-features">
-                        <div class="feature-item">
-                            <span class="feature-icon">📊</span>
-                            <span class="feature-text">Sales pattern clustering</span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon">🔮</span>
-                            <span class="feature-text">Demand forecasting</span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon">📈</span>
-                            <span class="feature-text">Statistical analysis</span>
-                        </div>
-                    </div>
-                    
-                    <div class="debug-section" id="debugSection" style="display: none;">
-                        <h4>Analysis Details</h4>
-                        <div class="debug-content" id="debugContent"></div>
-                    </div>
-                </div>
-                
-                <div class="modal-actions">
-                    <button id="toggleDebugBtn" class="btn btn-secondary">Show Details</button>
-                    <button id="closeModalBtn" class="btn btn-primary">Continue</button>
-                </div>
-            </div>
+
         </div>
     </div>
 </body>

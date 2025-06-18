@@ -53,7 +53,8 @@ async function main() {
                      outputFile: outputFile,
                      supplierNumber: 10,
                      daysThreshold: daysThreshold,
-                     currentMonth: config ? config.current_month : null
+                     currentMonth: config ? config.current_month : null,
+                     onOrderData: config ? config.onOrderData : {}
                  });
                 
                 // Handle the new return format (no file output) and set the main result

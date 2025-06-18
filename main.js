@@ -508,7 +508,7 @@ ipcMain.handle('run-python', async (event, args) => {
 // New IPC handler for direct AceNet processing with part numbers
 ipcMain.handle('process-acenet-direct', async (event, data) => {
   const { partNumbers, username, password, store } = data;
-  console.log(`Processing ${partNumbers.length} part numbers directly with AceNet`);
+  console.log(`Processing ${partNumbers.length} part numbers directly with AceNet (Double-check enabled)`);
   
   return new Promise((resolve, reject) => {
     const args = ['check_acenet_direct'];
@@ -607,11 +607,21 @@ ipcMain.handle('process-acenet-direct', async (event, data) => {
           });
         }
       } else {
-        resolve({ 
-          success: false, 
-          error: errorOutput || `Process exited with code ${code}`,
-          rawOutput: output 
-        });
+        // Check if the error is due to user cancellation
+        const errorMessage = errorOutput || `Process exited with code ${code}`;
+        if (errorMessage.toLowerCase().includes('cancelled by user')) {
+          resolve({ 
+            success: false, 
+            error: 'Process cancelled by user',
+            rawOutput: output 
+          });
+        } else {
+          resolve({ 
+            success: false, 
+            error: errorMessage,
+            rawOutput: output 
+          });
+        }
       }
     });
     
@@ -650,6 +660,48 @@ function cleanupAceNetFlags() {
     console.warn('Warning: Could not clean up flag files:', e.message);
   }
 }
+
+// IPC handlers for AceNet process control
+ipcMain.handle('acenet-pause', async (event) => {
+  const tempDir = os.tmpdir();
+  const pauseFlag = path.join(tempDir, 'acenet_pause.flag');
+  try {
+    fs.writeFileSync(pauseFlag, 'paused');
+    console.log('AceNet process paused');
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to pause AceNet process:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('acenet-resume', async (event) => {
+  const tempDir = os.tmpdir();
+  const pauseFlag = path.join(tempDir, 'acenet_pause.flag');
+  try {
+    if (fs.existsSync(pauseFlag)) {
+      fs.unlinkSync(pauseFlag);
+    }
+    console.log('AceNet process resumed');
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to resume AceNet process:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('acenet-cancel', async (event) => {
+  const tempDir = os.tmpdir();
+  const cancelFlag = path.join(tempDir, 'acenet_cancel.flag');
+  try {
+    fs.writeFileSync(cancelFlag, 'cancelled');
+    console.log('AceNet process cancelled');
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to cancel AceNet process:', error);
+    return { success: false, error: error.message };
+  }
+});
 
 // Helper function to check if a Node.js package is installed
 async function checkNodePackage(packageName) {

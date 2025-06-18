@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer');
 const ExcelJS = require('exceljs');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const os = require('os');
 
@@ -12,9 +13,22 @@ class AceNetScraper {
         this.popupWindow = null;
         this.maxRestarts = 50;
         this.restartCount = 0;
+        
+        // Configuration for double-checking behavior
+        this.config = {
+            enableDoubleCheck: true,        // Enable/disable double-check for "Not in AceNet"
+            doubleCheckRetries: 2,          // Number of retry attempts during double-check
+            doubleCheckDelay: 3000,         // Delay before double-check (ms)
+            popupWaitTime: 2000,            // Standard popup wait time (ms)
+            firstSearchWaitTime: 5000,      // Wait time for first search (ms)
+            networkTimeoutRetry: true       // Retry on network timeouts
+        };
     }
 
     async initialize() {
+        // Clean up any leftover flag files from previous runs
+        this.cleanupControlFlags();
+        
         this.browser = await puppeteer.launch({
             headless: false, // Keep visible like Python script
             args: [
@@ -282,6 +296,49 @@ class AceNetScraper {
         }
     }
 
+    cleanupControlFlags() {
+        const tempDir = os.tmpdir();
+        const pauseFlag = path.join(tempDir, 'acenet_pause.flag');
+        const cancelFlag = path.join(tempDir, 'acenet_cancel.flag');
+        
+        try {
+            if (fsSync.existsSync(pauseFlag)) {
+                fsSync.unlinkSync(pauseFlag);
+                console.log('Cleaned up leftover pause flag');
+            }
+            if (fsSync.existsSync(cancelFlag)) {
+                fsSync.unlinkSync(cancelFlag);
+                console.log('Cleaned up leftover cancel flag');
+            }
+        } catch (e) {
+            console.warn('Warning: Could not clean up flag files:', e.message);
+        }
+    }
+
+    async checkControlFlags() {
+        const tempDir = os.tmpdir();
+        const pauseFlag = path.join(tempDir, 'acenet_pause.flag');
+        const cancelFlag = path.join(tempDir, 'acenet_cancel.flag');
+        
+        // Check for cancellation first
+        if (fsSync.existsSync(cancelFlag)) {
+            console.log('Process cancelled by user');
+            throw new Error('Process cancelled by user');
+        }
+        
+        // Check for pause and wait if paused
+        while (fsSync.existsSync(pauseFlag)) {
+            console.log('Process paused - waiting...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Check for cancellation while paused
+            if (fsSync.existsSync(cancelFlag)) {
+                console.log('Process cancelled while paused');
+                throw new Error('Process cancelled by user');
+            }
+        }
+    }
+
     async findElementByXPath(frame, xpath) {
         try {
             const result = await frame.evaluate((xpathQuery) => {
@@ -297,6 +354,9 @@ class AceNetScraper {
 
     async checkPartNumber(partNumber, outputFile, progressCallback) {
         console.log(`Processing PARTNUMBER: '${partNumber}'`);
+        
+        // Check for pause/cancel flags at the start of processing
+        await this.checkControlFlags();
         
         try {
             // Clear and enter part number in search box
@@ -409,6 +469,9 @@ class AceNetScraper {
                 await popupPage.close();
                 return;
             }
+            
+            // Check control flags before starting detailed processing
+            await this.checkControlFlags();
             
             // Now perform the checks in the same order as Python script
             let isCancelled = false;
@@ -555,6 +618,9 @@ class AceNetScraper {
     async checkPartNumberDirect(partNumber, isFirstSearch = false) {
         console.log(`DIRECT: Processing PARTNUMBER: '${partNumber}'${isFirstSearch ? ' (FIRST SEARCH)' : ''}`);
         
+        // Check for pause/cancel flags at the start of processing
+        await this.checkControlFlags();
+        
         try {
             // Debug current page state before search
             console.log(`DIRECT: Starting search for ${partNumber}`);
@@ -633,12 +699,20 @@ class AceNetScraper {
             const mainUrl = this.page.url();
             console.log(`DIRECT: Main window URL after search: ${mainUrl}`);
             if (mainUrl.includes('/search/product?q=')) {
-                console.log(`DIRECT: PARTNUMBER '${partNumber}' not found in AceNet (main window redirected to search page).`);
+                console.log(`DIRECT: PARTNUMBER '${partNumber}' might not be found (main window redirected to search page).`);
                 
-                // Navigate back to main page
-                await this.page.goto('https://acenet.aceservices.com/', { waitUntil: 'networkidle2' });
-                await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
-                return [{ category: 'Not in AceNet', details: 'Redirected to search page' }];
+                // Double-check before marking as "Not in AceNet" if enabled
+                if (this.config.enableDoubleCheck) {
+                    console.log(`DIRECT: Double-checking enabled - re-verifying...`);
+                    const doubleCheckResult = await this.doubleCheckPartNumber(partNumber, 'Search page redirect');
+                    return [doubleCheckResult];
+                } else {
+                    console.log(`DIRECT: Double-check disabled - marking as Not in AceNet`);
+                    // Navigate back to main page
+                    await this.page.goto('https://acenet.aceservices.com/', { waitUntil: 'networkidle2' });
+                    await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
+                    return [{ category: 'Not in AceNet', details: 'Redirected to search page', verified: false }];
+                }
             }
             
             // Find popup window - look for the item details page specifically
@@ -669,7 +743,16 @@ class AceNetScraper {
             if (!popupPage) {
                 console.log(`DIRECT: Error: Popup window not found for PARTNUMBER '${partNumber}'.`);
                 console.log(`DIRECT: Only found ${pages.length} total pages, main page is at index 0`);
-                return [{ category: 'Not in AceNet', details: 'Popup window not found' }];
+                
+                // Double-check before marking as "Not in AceNet" if enabled
+                if (this.config.enableDoubleCheck) {
+                    console.log(`DIRECT: Double-checking enabled - re-verifying...`);
+                    const doubleCheckResult = await this.doubleCheckPartNumber(partNumber, 'Popup window not found');
+                    return [doubleCheckResult];
+                } else {
+                    console.log(`DIRECT: Double-check disabled - marking as Not in AceNet`);
+                    return [{ category: 'Not in AceNet', details: 'Popup window not found', verified: false }];
+                }
             }
             
             console.log(`DIRECT: Switched to popup window`);
@@ -759,12 +842,24 @@ class AceNetScraper {
             }
             
             if (!frameFound || !frame) {
-                console.log(`DIRECT: PARTNUMBER '${partNumber}' not found in AceNet (no valid iframe content).`);
+                console.log(`DIRECT: PARTNUMBER '${partNumber}' iframe content not accessible.`);
                 console.log(`DIRECT: DEBUG: Iframe detection failed - frameFound=${frameFound}, frame=${frame ? 'exists' : 'null'}`);
                 console.log(`DIRECT: DEBUG: Total iframes checked: ${iframes.length}`);
                 await popupPage.close();
-                return [{ category: 'Not in AceNet', details: 'No valid iframe content' }];
+                
+                // Double-check before marking as "Not in AceNet" if enabled
+                if (this.config.enableDoubleCheck) {
+                    console.log(`DIRECT: Double-checking enabled - re-verifying...`);
+                    const doubleCheckResult = await this.doubleCheckPartNumber(partNumber, 'No valid iframe content');
+                    return [doubleCheckResult];
+                } else {
+                    console.log(`DIRECT: Double-check disabled - marking as Not in AceNet`);
+                    return [{ category: 'Not in AceNet', details: 'No valid iframe content', verified: false }];
+                }
             }
+            
+            // Check control flags before starting detailed processing
+            await this.checkControlFlags();
             
             // Now perform the checks and collect ALL applicable categories
             const categories = [];
@@ -852,8 +947,6 @@ class AceNetScraper {
                     } catch (error) {
                         console.log("DIRECT: Order text is not a number, skipping.");
                     }
-                } else {
-                    console.log("DIRECT: Order element (#spnQOO) not found.");
                 }
             } catch (error) {
                 console.log("DIRECT: On Order element error, skipping.");
@@ -908,7 +1001,189 @@ class AceNetScraper {
                 console.log(`DIRECT: Error closing pages: ${closeError.message}`);
             }
             
+            // For serious errors, attempt a double-check with retry if enabled
+            if (this.config.enableDoubleCheck && (error.message.includes('timeout') || error.message.includes('navigation') || error.message.includes('disconnected'))) {
+                console.log(`DIRECT: Network/timeout error detected. Double-checking enabled - attempting re-verification...`);
+                try {
+                    const doubleCheckResult = await this.doubleCheckPartNumber(partNumber, error.message);
+                    return [doubleCheckResult];
+                } catch (doubleCheckError) {
+                    console.log(`DIRECT: Double-check also failed: ${doubleCheckError.message}`);
+                    return [{ 
+                        category: 'Not in AceNet', 
+                        details: `Error: ${error.message}`, 
+                        needsManualReview: true 
+                    }];
+                }
+            }
+            
             return [{ category: 'Not in AceNet', details: error.message }];
+        }
+    }
+
+    // New method to double-check parts marked as "Not in AceNet"
+    async doubleCheckPartNumber(partNumber, originalError) {
+        console.log(`DOUBLE CHECK: Re-verifying PARTNUMBER '${partNumber}' due to: ${originalError}`);
+        
+        try {
+            // Wait a bit longer for system to stabilize
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            // Clear any potential cached states
+            await this.page.evaluate(() => {
+                if (document.getElementById('tbxSearchBox')) {
+                    document.getElementById('tbxSearchBox').value = '';
+                }
+            });
+            
+            // Navigate back to main page to ensure clean state
+            await this.page.goto('https://acenet.aceservices.com/', { waitUntil: 'networkidle2' });
+            await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
+            
+            // Perform the search again with more patience
+            console.log(`DOUBLE CHECK: Performing search for '${partNumber}'`);
+            await this.page.type('#tbxSearchBox', partNumber);
+            await this.page.keyboard.press('Enter');
+            
+            // Wait longer for popup
+            console.log(`DOUBLE CHECK: Waiting 5 seconds for popup...`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            
+            const pages = await this.browser.pages();
+            console.log(`DOUBLE CHECK: Found ${pages.length} pages after search`);
+            
+            // Check if main window redirected to search (legitimate "not found")
+            const mainUrl = this.page.url();
+            if (mainUrl.includes('/search/product?q=')) {
+                console.log(`DOUBLE CHECK: Confirmed - '${partNumber}' truly not found (search redirect)`);
+                await this.page.goto('https://acenet.aceservices.com/', { waitUntil: 'networkidle2' });
+                await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
+                return { category: 'Not in AceNet', details: 'Confirmed: Search redirect', verified: true };
+            }
+            
+            // Look for popup with more thorough checking
+            let popupPage = null;
+            for (let i = 0; i < pages.length; i++) {
+                const page = pages[i];
+                if (page !== this.page) {
+                    try {
+                        const pageUrl = await page.url();
+                        console.log(`DOUBLE CHECK: Checking page ${i}: ${pageUrl}`);
+                        
+                        // More flexible popup detection
+                        if (pageUrl && (
+                            pageUrl.includes('item-detail-direct-sku') ||
+                            pageUrl.includes('acenet') && !pageUrl.includes('search')
+                        )) {
+                            // Verify the page has loaded content
+                            const hasContent = await page.evaluate(() => {
+                                return document.body && document.body.innerHTML.length > 1000;
+                            });
+                            
+                            if (hasContent) {
+                                popupPage = page;
+                                console.log(`DOUBLE CHECK: Found valid popup with content`);
+                                break;
+                            }
+                        }
+                    } catch (e) {
+                        console.log(`DOUBLE CHECK: Error checking page ${i}: ${e.message}`);
+                    }
+                }
+            }
+            
+            if (!popupPage) {
+                // Try one more time with different approach
+                console.log(`DOUBLE CHECK: No popup found, trying alternative search method...`);
+                
+                // Close all extra pages
+                for (let i = 1; i < pages.length; i++) {
+                    try {
+                        await pages[i].close();
+                    } catch (e) {}
+                }
+                
+                // Try clicking the search button instead of pressing Enter
+                await this.page.evaluate(() => document.getElementById('tbxSearchBox').value = '');
+                await this.page.type('#tbxSearchBox', partNumber);
+                
+                // Look for search button and click it
+                try {
+                    const searchBtn = await this.page.$('#btnSearch');
+                    if (searchBtn) {
+                        await searchBtn.click();
+                    } else {
+                        await this.page.keyboard.press('Enter');
+                    }
+                } catch (e) {
+                    await this.page.keyboard.press('Enter');
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 4000));
+                
+                const newPages = await this.browser.pages();
+                if (newPages.length > 1) {
+                    popupPage = newPages[1];
+                    console.log(`DOUBLE CHECK: Found popup using alternative method`);
+                } else {
+                    console.log(`DOUBLE CHECK: Still no popup - confirming Not in AceNet`);
+                    return { category: 'Not in AceNet', details: 'Confirmed: No popup after multiple attempts', verified: true };
+                }
+            }
+            
+            // If we have a popup, try to verify it has valid part data
+            if (popupPage) {
+                try {
+                    // Wait for iframe to load
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    const iframes = await popupPage.$$('iframe');
+                    if (iframes.length > 0) {
+                        const frame = await iframes[0].contentFrame();
+                        if (frame) {
+                            // Look for any indication this is a valid part page
+                            const hasPartData = await frame.evaluate(() => {
+                                // Look for common AceNet part page elements
+                                const indicators = [
+                                    document.querySelector('#spnQOO'), // On Order quantity
+                                    document.querySelector('#ctl00_ctl00_contentMainPlaceHolder_MainContent_imagesVideos_mainStatusDiv'), // Status
+                                    document.querySelector('div[class*="location"]'), // Location info
+                                    document.querySelector('div[class*="discovery"]') // Discovery info
+                                ];
+                                return indicators.some(el => el !== null);
+                            });
+                            
+                            if (hasPartData) {
+                                console.log(`DOUBLE CHECK: Found valid part data - this is NOT 'Not in AceNet'`);
+                                await popupPage.close();
+                                // Return a neutral result and let normal processing continue
+                                return await this.checkPartNumberDirect(partNumber, false);
+                            }
+                        }
+                    }
+                    
+                    await popupPage.close();
+                } catch (e) {
+                    console.log(`DOUBLE CHECK: Error analyzing popup: ${e.message}`);
+                    try {
+                        await popupPage.close();
+                    } catch (e2) {}
+                }
+            }
+            
+            // If we get here, it's likely a legitimate "Not in AceNet"
+            console.log(`DOUBLE CHECK: Confirmed - '${partNumber}' is Not in AceNet`);
+            return { category: 'Not in AceNet', details: 'Confirmed after double-check', verified: true };
+            
+        } catch (error) {
+            console.log(`DOUBLE CHECK: Error during double-check: ${error.message}`);
+            // If double-check fails, default to marking as Not in AceNet but flag for manual review
+            return { 
+                category: 'Not in AceNet', 
+                details: `Double-check failed: ${error.message}`, 
+                verified: false,
+                needsManualReview: true
+            };
         }
     }
 
@@ -924,6 +1199,9 @@ class AceNetScraper {
         
         // Process each part number
         for (let i = 0; i < partNumbers.length; i++) {
+            // Check for pause/cancel flags before processing each part number
+            await this.checkControlFlags();
+            
             const partNumber = partNumbers[i];
             
             if (progressCallback) {
@@ -950,14 +1228,18 @@ class AceNetScraper {
             await this.browser.close();
             this.browser = null;
         }
+        
+        // Clean up flag files on close
+        this.cleanupControlFlags();
     }
 
     // Method to categorize results for both Excel and UI display
     categorizeResults(results) {
+        // Define categories in the desired display order
         const categories = [
+            { name: 'Cancelled', key: 'cancelled', parts: [], color: '#ff1744' },
             { name: 'No Discovery', key: 'noDiscovery', parts: [], color: '#ff6b6b' },
             { name: 'No Asterisk(*)', key: 'noAsterisk', parts: [], color: '#ffa500' },
-            { name: 'Cancelled', key: 'cancelled', parts: [], color: '#ff1744' },
             { name: 'On Order', key: 'onOrder', parts: [], color: '#4caf50' },
             { name: 'No Location', key: 'noLocation', parts: [], color: '#9c27b0' },
             { name: 'Not in AceNet', key: 'notInAceNet', parts: [], color: '#2196f3' },
@@ -990,11 +1272,15 @@ class AceNetScraper {
             } else if (result.category === 'No Location') {
                 categories.find(c => c.key === 'noLocation').parts.push(partNumber);
             } else if (result.category === 'Not in AceNet') {
-                categories.find(c => c.key === 'notInAceNet').parts.push(partNumber);
+                const partData = result.needsManualReview ? 
+                    { partNumber: partNumber, needsManualReview: true, details: result.details } : 
+                    partNumber;
+                categories.find(c => c.key === 'notInAceNet').parts.push(partData);
             }
         });
         
-        return categories;
+        // Filter out empty categories - only return categories with parts
+        return categories.filter(category => category.parts && category.parts.length > 0);
     }
 }
 
@@ -1028,10 +1314,13 @@ async function runAceNetCheck(config) {
 
 // Main function to run AceNet check with direct part numbers (no file)
 async function runAceNetCheckDirect(partNumbers, username, password, store) {
-    console.error(`Starting direct AceNet check for ${partNumbers.length} part numbers`);
+    console.error(`Starting direct AceNet check for ${partNumbers.length} part numbers (Double-check enabled)`);
     console.error(`Store: ${store}`);
     
     const scraper = new AceNetScraper();
+    
+    // Double-check is always enabled
+    scraper.config.enableDoubleCheck = true;
     
     try {
         if (!partNumbers || partNumbers.length === 0) {
@@ -1050,6 +1339,9 @@ async function runAceNetCheckDirect(partNumbers, username, password, store) {
         const results = [];
         
         for (let i = 0; i < partNumbers.length; i++) {
+            // Check for pause/cancel flags before processing each part number
+            await scraper.checkControlFlags();
+            
             const partNumber = partNumbers[i];
             
             console.error(`PROGRESS:${i + 1}/${partNumbers.length}:Processing ${partNumber}`);

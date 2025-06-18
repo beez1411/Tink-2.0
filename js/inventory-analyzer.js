@@ -466,8 +466,13 @@ class AdvancedInventoryAnalyzer {
             supplierNumber = 10,
             daysThreshold = 14,
             serviceLevel = 0.95,
-            currentMonth = null
+            currentMonth = null,
+            onOrderData = {} // Accept on order data
         } = config;
+        
+        // Store on order data for use in analysis
+        this.onOrderData = onOrderData;
+        this.log(`On order data contains ${Object.keys(onOrderData).length} items`);
         
         try {
             // Load and prepare data
@@ -657,8 +662,50 @@ class AdvancedInventoryAnalyzer {
             itemsNeedingOrder: 0,
             dataQualityIssues: 0,
             itemsSkippedMinOrderQty: this.debugInfo?.itemsSkippedMinOrderQty || 0,
-            clusterDistribution: {}
+            clusterDistribution: {},
+            // Add missing fields
+            filteredItems: items.length,
+            itemsWithStock: 0,
+            itemsBelowMinStock: 0,
+            weekColumnsFound: 0, // Will be set later
+            totalSalesValue: 0
         };
+
+        // Calculate week columns found
+        if (salesData.length > 0) {
+            debug.weekColumnsFound = salesData[0].length;
+        }
+
+        // Pre-scan to collect additional debug info
+        let totalSalesValue = 0;
+        let itemsWithStock = 0;
+        let itemsBelowMinStock = 0;
+        
+        for (let i = 0; i < items.length; i++) {
+            const row = items[i];
+            const sales = salesData[i];
+            const currentStock = this.parseNumber(row.STOCKONHAND) || 0;
+            const minStock = this.parseNumber(row.MINSTOCK) || 0;
+            const unitCost = this.parseNumber(row.UNITCOST) || 0;
+            
+            // Count items with stock
+            if (currentStock > 0) {
+                itemsWithStock++;
+            }
+            
+            // Count items below min stock
+            if (minStock > 0 && currentStock < minStock) {
+                itemsBelowMinStock++;
+            }
+            
+            // Calculate total sales value
+            const totalSales = sales.reduce((a, b) => a + b, 0);
+            totalSalesValue += totalSales * unitCost;
+        }
+        
+        debug.itemsWithStock = itemsWithStock;
+        debug.itemsBelowMinStock = itemsBelowMinStock;
+        debug.totalSalesValue = totalSalesValue;
         
         for (let i = 0; i < items.length; i++) {
             const row = items[i];
@@ -696,6 +743,7 @@ class AdvancedInventoryAnalyzer {
             
             // Determine if item needs ordering using sophisticated logic
             const orderAnalysis = this.analyzeOrderNeed(
+                partNumber,
                 currentStock, 
                 minStock, 
                 minOrderQty, 
@@ -742,6 +790,82 @@ class AdvancedInventoryAnalyzer {
                 });
             }
         }
+
+        // COMPREHENSIVE FINAL MINSTOCK CHECK
+        // This ensures ALL items are checked against MINSTOCK regardless of previous ordering logic
+        for (let i = 0; i < items.length; i++) {
+            const row = items[i];
+            const partNumber = row.PARTNUMBER || `Item_${i}`;
+            const description = row.DESCRIPTION1 || row.DESCRIPTION || 'No Description';
+            const currentStock = this.parseNumber(row.STOCKONHAND) || 0;
+            const minStock = this.parseNumber(row.MINSTOCK) || 0;
+            const minOrderQty = this.parseNumber(row.MINORDERQTY) || 1;
+            const unitCost = this.parseNumber(row.UNITCOST) || 0;
+            const sales = salesData[i];
+            
+            // Skip items with MINORDERQTY of 0
+            if (this.parseNumber(row.MINORDERQTY) === 0) {
+                continue;
+            }
+            
+            // Check if this item is already in the order
+            const existingOrderIndex = orderItems.findIndex(item => item.partNumber === partNumber);
+            
+            // Get on order quantity for this part
+            const onOrderQty = (this.onOrderData && this.onOrderData[partNumber]) || 0;
+            
+            // Calculate effective stock (current stock + on order + any already ordered quantity)
+            let effectiveStock = currentStock + onOrderQty;
+            if (existingOrderIndex >= 0) {
+                effectiveStock += orderItems[existingOrderIndex].suggestedQty;
+            }
+            
+            // If MINSTOCK > 0 and effective stock is below MINSTOCK, ensure we order to meet MINSTOCK
+            if (minStock > 0 && effectiveStock < minStock) {
+                const qtyNeededForMinStock = minStock - effectiveStock;
+                const adjustedQty = Math.max(qtyNeededForMinStock, minOrderQty);
+                
+                if (existingOrderIndex >= 0) {
+                    // Update existing order to meet MINSTOCK
+                    const currentQty = orderItems[existingOrderIndex].suggestedQty;
+                    const newQty = currentQty + adjustedQty;
+                    orderItems[existingOrderIndex].suggestedQty = newQty;
+                    
+                    // Update the order reason to include MINSTOCK requirement
+                    if (!orderItems[existingOrderIndex].orderReason.includes('minimum stock')) {
+                        orderItems[existingOrderIndex].orderReason += ` + Ensure minimum stock level (${minStock})`;
+                    }
+                } else {
+                    // Create new order item for MINSTOCK requirement
+                    debug.itemsNeedingOrder++;
+                    
+                    orderItems.push({
+                        partNumber,
+                        description,
+                        category: 'minstock-required',
+                        currentStock,
+                        safetyStock: 0,
+                        suggestedQty: adjustedQty,
+                        cost: unitCost,
+                        demandStd: 0,
+                        daysThreshold,
+                        forecast: 0,
+                        minStock,
+                        minOrderQty,
+                        recentSales: sales.slice(-4).reduce((a, b) => a + b, 0),
+                        avgWeeklySales: (() => {
+                            const recentSalesForAvg = sales.slice(-12);
+                            return recentSalesForAvg.length > 0 ? ss.mean(recentSalesForAvg) : 0;
+                        })(),
+                        totalSales104Weeks: sales.reduce((a, b) => a + b, 0),
+                        stockTurnover: this.calculateStockTurnover(sales, currentStock),
+                        orderReason: `MINSTOCK requirement - Stock to minimum level (${minStock}), ${onOrderQty} on order`,
+                        qualityIssues: 'None',
+                        confidence: 0.95
+                    });
+                }
+            }
+        }
         
         // Sort by SKU (Part Number) in ascending alphabetical order
         orderItems.sort((a, b) => {
@@ -751,11 +875,17 @@ class AdvancedInventoryAnalyzer {
         return { orderItems, debug };
     }
 
-    analyzeOrderNeed(currentStock, minStock, minOrderQty, forecast, safetyStock, salesHistory, category) {
+    analyzeOrderNeed(partNumber, currentStock, minStock, minOrderQty, forecast, safetyStock, salesHistory, category) {
         let needsOrder = false;
         let suggestedQty = 0;
         let reason = '';
         let confidence = 0;
+        
+        // Get on order quantity for this part
+        const onOrderQty = (this.onOrderData && this.onOrderData[partNumber]) || 0;
+        
+        // Calculate effective stock (current stock + on order)
+        const effectiveStock = currentStock + onOrderQty;
         
         // Calculate various thresholds
         const reorderPoint = Math.max(minStock, safetyStock, forecast);
@@ -763,57 +893,64 @@ class AdvancedInventoryAnalyzer {
         const recentSalesForAvg = salesHistory.slice(-12);
         const avgWeeklySales = recentSalesForAvg.length > 0 ? ss.mean(recentSalesForAvg) : 0;
         
-        // Multiple ordering criteria with confidence scoring
+        // Multiple ordering criteria with confidence scoring - use effective stock
         const criteria = [];
         
-        // 1. Below minimum stock level
-        if (minStock > 0 && currentStock < minStock) {
+        // 1. Below minimum stock level (considering what's already on order)
+        if (minStock > 0 && effectiveStock < minStock) {
             criteria.push({
                 trigger: true,
-                qty: Math.max(minStock - currentStock, minOrderQty),
-                reason: `Below minimum stock (${minStock})`,
+                qty: Math.max(minStock - effectiveStock, minOrderQty),
+                reason: `Below minimum stock (${minStock}), considering ${onOrderQty} on order`,
                 confidence: 0.9
             });
         }
         
-        // 2. Below reorder point
-        if (currentStock < reorderPoint) {
+        // 2. Below reorder point (considering what's already on order)
+        if (effectiveStock < reorderPoint) {
             criteria.push({
                 trigger: true,
-                qty: Math.max(reorderPoint - currentStock, minOrderQty),
-                reason: `Below reorder point (${Math.round(reorderPoint)})`,
+                qty: Math.max(reorderPoint - effectiveStock, minOrderQty),
+                reason: `Below reorder point (${Math.round(reorderPoint)}), considering ${onOrderQty} on order`,
                 confidence: 0.8
             });
         }
         
-        // 3. Out of stock with recent sales
+        // 3. Out of stock with recent sales (only consider current stock, not on order for this case)
         if (currentStock === 0 && recentSalesSum > 0) {
-            criteria.push({
-                trigger: true,
-                qty: Math.max(Math.ceil(forecast * 2), minOrderQty), // Double forecast for stockouts
-                reason: 'Out of stock with recent sales',
-                confidence: 0.95
-            });
+            // If we have something on order, reduce the urgency but still consider additional needs
+            const urgencyQty = onOrderQty > 0 ? forecast : Math.ceil(forecast * 2);
+            if (effectiveStock < urgencyQty) {
+                criteria.push({
+                    trigger: true,
+                    qty: Math.max(urgencyQty - effectiveStock, minOrderQty),
+                    reason: `Out of stock with recent sales, ${onOrderQty} on order`,
+                    confidence: 0.95
+                });
+            }
         }
         
-        // 4. Low stock relative to sales velocity
-        if (avgWeeklySales > 0 && currentStock < (avgWeeklySales * 2)) {
+        // 4. Low stock relative to sales velocity (considering effective stock)
+        if (avgWeeklySales > 0 && effectiveStock < (avgWeeklySales * 2)) {
             criteria.push({
                 trigger: true,
-                qty: Math.max(Math.ceil(avgWeeklySales * 4), minOrderQty), // 4 weeks supply
-                reason: 'Low stock relative to sales velocity',
+                qty: Math.max(Math.ceil(avgWeeklySales * 4) - effectiveStock, minOrderQty),
+                reason: `Low effective stock relative to sales velocity, ${onOrderQty} on order`,
                 confidence: 0.7
             });
         }
         
-        // 5. Seasonal items approaching season
+        // 5. Seasonal items approaching season (considering effective stock)
         if (category === 'seasonal' && this.isApproachingSeason(salesHistory)) {
-            criteria.push({
-                trigger: true,
-                qty: Math.max(Math.ceil(forecast * 1.5), minOrderQty),
-                reason: 'Seasonal item approaching peak season',
-                confidence: 0.85
-            });
+            const seasonalTarget = Math.ceil(forecast * 1.5);
+            if (effectiveStock < seasonalTarget) {
+                criteria.push({
+                    trigger: true,
+                    qty: Math.max(seasonalTarget - effectiveStock, minOrderQty),
+                    reason: `Seasonal item approaching peak season, ${onOrderQty} on order`,
+                    confidence: 0.85
+                });
+            }
         }
         
         // Select the best criterion
@@ -833,13 +970,13 @@ class AdvancedInventoryAnalyzer {
         }
         
         // CRITICAL: Always ensure we stock to at least MINSTOCK level if MINSTOCK > 0
-        if (minStock > 0 && currentStock < minStock) {
-            const qtyNeededForMinStock = minStock - currentStock;
-            if (suggestedQty < qtyNeededForMinStock) {
+        if (minStock > 0 && effectiveStock < minStock) {
+            const qtyNeededForMinStock = minStock - effectiveStock;
+            if (qtyNeededForMinStock > 0 && (suggestedQty < qtyNeededForMinStock || !needsOrder)) {
                 needsOrder = true;
                 suggestedQty = Math.max(qtyNeededForMinStock, minOrderQty);
                 if (!reason) { // Only update reason if no other reason was set
-                    reason = `Stock to minimum level (${minStock})`;
+                    reason = `Stock to minimum level (${minStock}), ${onOrderQty} on order`;
                     confidence = 0.9;
                 }
                 // If we already had a reason, append the MINSTOCK requirement
