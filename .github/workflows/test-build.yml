@@ -20,47 +20,30 @@ jobs:
         
     - name: Debug environment
       run: |
-        echo "=== ENVIRONMENT DEBUG ==="
-        echo "Node version: $(node --version)"
-        echo "NPM version: $(npm --version)"
-        echo "Current directory: $(Get-Location)"
-        echo "Directory contents:"
-        Get-ChildItem | Format-Table Name, Length, LastWriteTime
-        echo "Environment variables:"
-        Get-ChildItem env: | Where-Object { $_.Name -like "*NODE*" -or $_.Name -like "*NPM*" } | Format-Table Name, Value
-      shell: powershell
+        echo === ENVIRONMENT DEBUG ===
+        node --version
+        npm --version
+        echo Current directory:
+        cd
+        echo Directory contents:
+        dir
+      shell: cmd
         
     - name: Install dependencies
       run: |
-        Write-Output "Installing dependencies..."
         npm install
-        Write-Output "Dependencies installed successfully"
-        Write-Output "Checking node_modules..."
-        if (Test-Path "node_modules") { 
-          Write-Output "✓ node_modules exists" 
-        } else { 
-          Write-Output "✗ node_modules missing" 
-        }
-      shell: powershell
+        dir node_modules
+      shell: cmd
         
     - name: Test electron-builder without publishing
-      run: |
-        Write-Output "Testing electron-builder build..."
-        Write-Output "Running: npx electron-builder --publish=never"
-        npx electron-builder --publish=never --win --x64
-        Write-Output "Build test completed successfully"
-      shell: powershell
+      run: npx electron-builder --publish=never --win --x64
+      shell: cmd
       env:
         DEBUG: electron-builder
         NODE_ENV: production
         
     - name: List results
       run: |
-        Write-Output "Checking build results..."
-        if (Test-Path "dist") {
-          Write-Output "✓ dist directory exists"
-          Get-ChildItem -Path "dist" -Recurse | Format-Table Name, Length, LastWriteTime
-        } else {
-          Write-Output "✗ dist directory missing"
-        }
-      shell: powershell 
+        echo Build completed, checking results...
+        dir dist /s
+      shell: cmd 
