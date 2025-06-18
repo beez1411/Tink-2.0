@@ -26,11 +26,14 @@
     "appId": "com.1411capital.tink2",
     "productName": "Tink 2.0",
     "copyright": "Copyright © 2024 1411 Capital Inc",
-    "publish": {
-      "provider": "github",
-      "owner": "beez1411",
-      "repo": "Tink-2.0"
-    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "beez1411",
+        "repo": "Tink-2.0",
+        "releaseType": "release"
+      }
+    ],
     "directories": {
       "output": "dist"
     },

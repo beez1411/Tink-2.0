@@ -580,6 +580,9 @@ function populateOrderTable(orderData) {
         const sku = item.partNumber || item.sku || '';
         const onOrderQty = getOnOrderQuantity(sku);
         
+        // Get minimum order quantity for this item
+        const minOrderQty = item.minOrderQty || 1;
+        
         // Build row
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -590,12 +593,15 @@ function populateOrderTable(orderData) {
             <td>${onOrderQty}</td>
             <td class="quantity-cell">
                 <div class="quantity-controls">
-                    <button class="qty-btn minus-btn" onclick="adjustQuantity(${index}, -1)" title="Decrease quantity">-</button>
-                    <input type="number" value="${suggestedQty}" min="0" class="qty-input" data-index="${index}" data-cost="${cost}" onchange="updateRowTotal(${index})">
-                    <button class="qty-btn plus-btn" onclick="adjustQuantity(${index}, 1)" title="Increase quantity">+</button>
+                    <button class="qty-btn minus-btn" onclick="adjustQuantity(${index}, -${minOrderQty})" title="Decrease by ${minOrderQty}">-</button>
+                    <input type="number" value="${suggestedQty}" min="0" class="qty-input" data-index="${index}" data-cost="${cost}" data-min-order-qty="${minOrderQty}" onchange="updateRowTotal(${index})" title="Min Order Qty: ${minOrderQty}">
+                    <button class="qty-btn plus-btn" onclick="adjustQuantity(${index}, ${minOrderQty})" title="Increase by ${minOrderQty}">+</button>
                 </div>
             </td>
-            <td class="cost-cell">$${cost.toFixed(2)}</td>
+            <td class="cost-cell">
+                <div>$${cost.toFixed(2)}</div>
+                <small style="color: #6c757d; font-size: 10px;">MOQ: ${minOrderQty}</small>
+            </td>
             <td class="total-cell" id="total-${index}">$${total.toFixed(2)}</td>
             <td><button class="btn btn-danger btn-sm btn-icon" onclick="removeOrderItem(${index})" title="Delete item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -693,6 +699,8 @@ if (addItemBtn) {
     addItemBtn.addEventListener('click', () => {
         const row = document.createElement('tr');
         const newIndex = orderTableBody.children.length;
+        const defaultMinOrderQty = 1; // Default MOQ for manually added items
+        
         row.innerHTML = `
             <td>${newIndex + 1}</td>
             <td><input type="text" class="form-control" placeholder="Enter SKU"></td>
@@ -701,12 +709,17 @@ if (addItemBtn) {
             <td><input type="number" class="form-control" placeholder="On ORD" value="0" min="0"></td>
             <td class="quantity-cell">
                 <div class="quantity-controls">
-                    <button class="qty-btn minus-btn" onclick="adjustQuantity(${newIndex}, -1)" title="Decrease quantity">-</button>
-                    <input type="number" value="0" min="0" class="qty-input" data-index="${newIndex}" data-cost="0" onchange="updateRowTotal(${newIndex})">
-                    <button class="qty-btn plus-btn" onclick="adjustQuantity(${newIndex}, 1)" title="Increase quantity">+</button>
+                    <button class="qty-btn minus-btn" onclick="adjustQuantity(${newIndex}, -${defaultMinOrderQty})" title="Decrease by ${defaultMinOrderQty}">-</button>
+                    <input type="number" value="0" min="0" class="qty-input" data-index="${newIndex}" data-cost="0" data-min-order-qty="${defaultMinOrderQty}" onchange="updateRowTotal(${newIndex})" title="Min Order Qty: ${defaultMinOrderQty}">
+                    <button class="qty-btn plus-btn" onclick="adjustQuantity(${newIndex}, ${defaultMinOrderQty})" title="Increase by ${defaultMinOrderQty}">+</button>
                 </div>
             </td>
-            <td><input type="number" class="form-control cost-input" placeholder="Cost" value="0" min="0" step="0.01" onchange="updateItemCost(${newIndex})"></td>
+            <td>
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <input type="number" class="form-control cost-input" placeholder="Cost" value="0" min="0" step="0.01" onchange="updateItemCost(${newIndex})" style="margin-bottom: 2px;">
+                    <input type="number" class="form-control moq-input" placeholder="MOQ" value="${defaultMinOrderQty}" min="1" onchange="updateItemMOQ(${newIndex})" title="Minimum Order Quantity" style="font-size: 11px; height: 24px;">
+                </div>
+            </td>
             <td class="total-cell" id="total-${newIndex}">$0.00</td>
             <td><button class="btn btn-danger btn-sm btn-icon" onclick="removeOrderItem(${newIndex})" title="Delete item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1294,13 +1307,24 @@ function showCancellationPopup() {
 
 // showCompletionModal function removed - no longer needed
 
-// Function to adjust quantity with + and - buttons
+// Function to adjust quantity with + and - buttons (now supports MOQ increments)
 function adjustQuantity(index, change) {
     const row = orderTableBody.children[index];
     if (row) {
         const qtyInput = row.querySelector('.qty-input');
         const currentQty = parseInt(qtyInput.value) || 0;
-        const newQty = Math.max(0, currentQty + change);
+        const minOrderQty = parseInt(qtyInput.dataset.minOrderQty) || 1;
+        
+        let newQty;
+        if (change > 0) {
+            // Increasing quantity - use the MOQ increment
+            newQty = currentQty + Math.abs(change);
+        } else {
+            // Decreasing quantity - use the MOQ decrement, but don't go below 0
+            const decreaseAmount = Math.abs(change);
+            newQty = Math.max(0, currentQty - decreaseAmount);
+        }
+        
         qtyInput.value = newQty;
         updateRowTotal(index);
         updateOrderTotal();
@@ -1314,7 +1338,18 @@ function updateRowTotal(index) {
         const qtyInput = row.querySelector('.qty-input');
         const totalCell = row.querySelector('.total-cell');
         const qty = parseInt(qtyInput.value) || 0;
+        const minOrderQty = parseInt(qtyInput.dataset.minOrderQty) || 1;
         const cost = parseFloat(qtyInput.dataset.cost) || 0;
+        
+        // Validate quantity against MOQ - show warning if not divisible by MOQ
+        if (qty > 0 && qty % minOrderQty !== 0) {
+            qtyInput.style.backgroundColor = '#fff3cd';
+            qtyInput.title = `Warning: Quantity should be in multiples of ${minOrderQty} (MOQ). Current: ${qty}`;
+        } else {
+            qtyInput.style.backgroundColor = '';
+            qtyInput.title = `Min Order Qty: ${minOrderQty}`;
+        }
+        
         const total = qty * cost;
         totalCell.textContent = `$${total.toFixed(2)}`;
     }
@@ -1337,6 +1372,140 @@ function updateItemCost(index) {
     }
 }
 
+// Function to update minimum order quantity for manually added items
+function updateItemMOQ(index) {
+    const row = orderTableBody.children[index];
+    if (row) {
+        const moqInput = row.querySelector('.moq-input');
+        const qtyInput = row.querySelector('.qty-input');
+        const minusBtn = row.querySelector('.minus-btn');
+        const plusBtn = row.querySelector('.plus-btn');
+        
+        const newMOQ = Math.max(1, parseInt(moqInput.value) || 1);
+        moqInput.value = newMOQ; // Ensure the input shows the corrected value
+        
+        // Update the data attribute and button handlers
+        qtyInput.dataset.minOrderQty = newMOQ;
+        qtyInput.title = `Min Order Qty: ${newMOQ}`;
+        
+        // Update button onclick handlers and titles
+        minusBtn.setAttribute('onclick', `adjustQuantity(${index}, -${newMOQ})`);
+        minusBtn.title = `Decrease by ${newMOQ}`;
+        
+        plusBtn.setAttribute('onclick', `adjustQuantity(${index}, ${newMOQ})`);
+        plusBtn.title = `Increase by ${newMOQ}`;
+    }
+}
+
 // Load on order data when the page loads
 loadOnOrderData();
+
+// Add collapsible functionality for AceNet Results
+document.addEventListener('DOMContentLoaded', function() {
+    const acenetToggle = document.getElementById('acenetResultsToggle');
+    const acenetContent = document.getElementById('acenetCollapsibleContent');
+    
+    if (acenetToggle && acenetContent) {
+        acenetToggle.addEventListener('click', function() {
+            const isCollapsed = acenetToggle.classList.contains('collapsed');
+            
+            if (isCollapsed) {
+                // Expand
+                acenetToggle.classList.remove('collapsed');
+                acenetContent.classList.remove('collapsed');
+            } else {
+                // Collapse
+                acenetToggle.classList.add('collapsed');
+                acenetContent.classList.add('collapsed');
+            }
+        });
+    }
+});
+
+// Auto-updater event listeners
+if (window.api) {
+    // Listen for update available
+    window.api.onUpdateAvailable((info) => {
+        showUpdateNotification('Update Available', `Version ${info.version} is available. It will be downloaded in the background.`);
+    });
+    
+    // Listen for download progress
+    window.api.onDownloadProgress((progressObj) => {
+        updateDownloadProgress(progressObj.percent);
+    });
+    
+    // Listen for update downloaded
+    window.api.onUpdateDownloaded((info) => {
+        showUpdateReadyNotification(`Version ${info.version} has been downloaded and is ready to install.`);
+    });
+}
+
+// Update notification functions
+function showUpdateNotification(title, message) {
+    const notification = document.createElement('div');
+    notification.className = 'update-notification';
+    notification.innerHTML = `
+        <div class="update-content">
+            <h3>${title}</h3>
+            <p>${message}</p>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+function showUpdateReadyNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'update-notification';
+    notification.innerHTML = `
+        <div class="update-content">
+            <h3>Update Ready</h3>
+            <p>${message}</p>
+            <div class="update-buttons">
+                <button id="installUpdate">Restart & Install</button>
+                <button id="dismissUpdate">Later</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Add event listeners
+    notification.querySelector('#installUpdate').addEventListener('click', () => {
+        window.api.restartApp();
+    });
+    
+    notification.querySelector('#dismissUpdate').addEventListener('click', () => {
+        notification.remove();
+    });
+}
+
+function updateDownloadProgress(percent) {
+    const existingNotification = document.querySelector('.update-notification');
+    if (existingNotification) {
+        let progressBar = existingNotification.querySelector('.progress-bar');
+        if (!progressBar) {
+            const progressContainer = document.createElement('div');
+            progressContainer.innerHTML = `
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                    <span id="updateProgressText">${Math.round(percent)}%</span>
+                </div>
+            `;
+            existingNotification.querySelector('.update-content').appendChild(progressContainer);
+            progressBar = progressContainer.querySelector('.progress-bar');
+        }
+        
+        const progressFill = progressBar.querySelector('.progress-fill');
+        const progressText = progressBar.querySelector('#updateProgressText');
+        
+        if (progressFill) progressFill.style.width = `${percent}%`;
+        if (progressText) progressText.textContent = `${Math.round(percent)}%`;
+    }
+}
 

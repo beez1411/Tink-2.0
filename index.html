@@ -65,13 +65,15 @@
             </div>
             <div class="input-group">
                 <label for="storeNumber">Store Number:</label>
-                <select id="storeNumber">
-                    <option value="" selected disabled>Select a store</option>
-                    <option value="16719">16719</option>
-                    <option value="17521">17521</option>
-                    <option value="18179">18179</option>
-                    <option value="18181">18181</option>
-                </select>
+                <div class="select-wrapper">
+                    <select id="storeNumber">
+                        <option value="" selected disabled>Select a store</option>
+                        <option value="16719">16719</option>
+                        <option value="17521">17521</option>
+                        <option value="18179">18179</option>
+                        <option value="18181">18181</option>
+                    </select>
+                </div>
             </div>
             <div class="input-group">
                 <label class="checkbox-label">
@@ -120,7 +122,7 @@
                             <th>SOH</th>
                             <th>On Order</th>
                             <th style="text-align: center;">Suggested Qty</th>
-                            <th>Cost</th>
+                            <th>Cost/MOQ</th>
                             <th>Total</th>
                             <th>Delete</th>
                         </tr>
@@ -136,17 +138,22 @@
         <!-- AceNet Results Panel -->
         <div class="output-panel" id="acenetResultsPanel">
             <div id="acenetResultsSection" class="acenet-results-section" style="display: none;">
-                <h2 class="section-title">
+                <h2 class="section-title collapsible" id="acenetResultsToggle">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     AceNet Check Results
+                    <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
                 </h2>
-                <div class="acenet-results-header">
-                    <button id="printAcenetResultsBtn" class="btn btn-secondary">Print Results</button>
-                </div>
-                <div id="acenetResultsContent" class="results-content">
-                    <!-- Results will be populated here -->
+                <div class="collapsible-content" id="acenetCollapsibleContent">
+                    <div class="acenet-results-header">
+                        <button id="printAcenetResultsBtn" class="btn btn-secondary">Print Results</button>
+                    </div>
+                    <div id="acenetResultsContent" class="results-content">
+                        <!-- Results will be populated here -->
+                    </div>
                 </div>
             </div>
         </div>
