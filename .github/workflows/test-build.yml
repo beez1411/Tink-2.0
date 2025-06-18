@@ -1,0 +1,44 @@
+name: Test Build (Debug)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  test-build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        echo "Installing dependencies..."
+        npm install
+        echo "Dependencies installed successfully"
+        
+    - name: Test electron-builder without publishing
+      run: |
+        echo "Testing electron-builder build..."
+        npx electron-builder --publish=never
+        echo "Build test completed"
+      env:
+        DEBUG: electron-builder
+        
+    - name: List results
+      run: |
+        echo "Checking build results..."
+        if (Test-Path "dist") {
+          echo "✓ dist directory exists"
+          Get-ChildItem -Path "dist" -Recurse | Format-Table Name, Length, LastWriteTime
+        } else {
+          echo "✗ dist directory missing"
+        }
+      shell: powershell 

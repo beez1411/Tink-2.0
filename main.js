@@ -15,13 +15,7 @@ try {
 let mainWindow;
 let pythonProcess;
 
-// Path to Node.js wrapper script
-let WRAPPER_PATH;
-if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
-  WRAPPER_PATH = path.join(__dirname, 'js', 'wrapper.js');
-} else {
-  WRAPPER_PATH = path.join(process.resourcesPath, 'js', 'wrapper.js');
-}
+// Modules are now imported only when needed inside functions
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -193,7 +187,7 @@ ipcMain.handle('check-for-updates', () => {
 ipcMain.handle('process-file', async (event, options) => {
   const { filePath, scriptType, daysThreshold, currentMonth, username, password, store, sheetName } = options;
   
-  return new Promise((resolve, reject) => {
+  try {
     // Clean up any existing flag files for AceNet processes
     if (scriptType === 'check_acenet') {
       cleanupAceNetFlags();
@@ -268,13 +262,11 @@ ipcMain.handle('process-file', async (event, options) => {
         outputDir = path.dirname(mostRecentFile);
         console.log(`Found suggested order file: ${mostRecentFile}`);
       } else {
-        reject(new Error('No recent suggested order file found. Please run Suggested Order first or upload a part numbers file.'));
-        return;
+        throw new Error('No recent suggested order file found. Please run Suggested Order first or upload a part numbers file.');
       }
     }
 
-    // Create a temporary config file with parameters
-    const configPath = path.join(app.getPath('temp'), 'inventory_config.json');
+    // Create config object
     const config = {
       script_type: scriptType,
       input_file: actualInputFile,
@@ -290,119 +282,117 @@ ipcMain.handle('process-file', async (event, options) => {
       config.store = store;
       config.sheet_name = sheetName || 'Big Beautiful Order';
     }
-    
-    fs.writeFileSync(configPath, JSON.stringify(config));
 
-    // Spawn Node.js process
-    try {
-      pythonProcess = spawn('node', [WRAPPER_PATH, configPath]);
-    } catch (error) {
-      reject(new Error(`Failed to start process: ${error.message}`));
-      return;
+    // Send initial progress update
+    event.sender.send('processing-update', {
+      type: 'log',
+      message: 'Starting processing...'
+    });
+
+    // Run wrapper functionality directly in this process
+    const result = await runWrapperDirectly(config, (updateData) => {
+      event.sender.send('processing-update', updateData);
+    });
+
+    // Clean up flag files for AceNet processes
+    if (scriptType === 'check_acenet') {
+      cleanupAceNetFlags();
+    }
+
+    return {
+      success: true,
+      output: result.output,
+      outputFile: result.output_file,
+      partnumberFile: result.partnumber_file || null,
+      orderData: result.orderData || [],
+      processed_items: result.processed_items || 0,
+      debug: result.debug || {}
+    };
+
+  } catch (error) {
+    // Clean up flag files for AceNet processes
+    if (scriptType === 'check_acenet') {
+      cleanupAceNetFlags();
     }
     
-    pythonProcess.on('error', (error) => {
-      reject(new Error(`Process error: ${error.message}`));
-    });
-
-    let output = '';
-    let errorOutput = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-      const dataStr = data.toString();
-      output += dataStr;
-      
-      // Check for progress updates
-      if (dataStr.includes('PROGRESS:')) {
-        const match = dataStr.match(/PROGRESS:(\d+)\/(\d+):(.+)/);
-        if (match) {
-          event.sender.send('processing-update', {
-            type: 'progress',
-            current: parseInt(match[1]),
-            total: parseInt(match[2]),
-            message: match[3].trim()
-          });
-        }
-      } else if (dataStr.includes('PARTNUMBER_FILE:')) {
-        // Extract partnumber file path
-        const match = dataStr.match(/PARTNUMBER_FILE:\s*(.+)/);
-        if (match) {
-          config.partnumber_file = match[1].trim();
-        }
-        event.sender.send('processing-update', {
-          type: 'log',
-          message: dataStr.trim()
-        });
-      } else if (dataStr.includes('ORDER_DATA:')) {
-        // Extract order data for suggested order results
-        const match = dataStr.match(/ORDER_DATA:(.+)/);
-        if (match) {
-          try {
-            const orderInfo = JSON.parse(match[1].trim());
-            config.orderData = orderInfo.orderData;
-            config.processed_items = orderInfo.processed_items;
-            config.debug = orderInfo.debug;
-          } catch (error) {
-            console.error('Failed to parse order data:', error);
-          }
-        }
-        event.sender.send('processing-update', {
-          type: 'log',
-          message: `Found ${config.processed_items || 0} items to order`
-        });
-      } else {
-        event.sender.send('processing-update', {
-          type: 'log',
-          message: dataStr.trim()
-        });
-      }
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      errorOutput += data.toString();
-      event.sender.send('processing-update', {
-        type: 'error',
-        message: data.toString().trim()
-      });
-    });
-
-    pythonProcess.on('close', (code) => {
-      // Clean up temp config
-      try {
-        fs.unlinkSync(configPath);
-      } catch (e) {}
-
-      // Clean up flag files for AceNet processes
-      if (scriptType === 'check_acenet') {
-        cleanupAceNetFlags();
-      }
-
-      if (code === 0) {
-        try {
-          const result = JSON.parse(output);
-          resolve({
-            success: true,
-            output: result.output,
-            outputFile: result.output_file,
-            partnumberFile: result.partnumber_file || null,
-            orderData: result.orderData || [],
-            processed_items: result.processed_items || 0,
-            debug: result.debug || {}
-          });
-        } catch (parseError) {
-          console.error('Failed to parse output as JSON:', output);
-          resolve({ 
-            success: false, 
-            error: `Failed to parse output: ${parseError.message}`,
-            rawOutput: output 
-          });
-        }
-      } else {
-        reject(new Error(errorOutput || `Process failed with code ${code}`));
-      }
-    });
-  });
+    throw new Error(`Processing failed: ${error.message}`);
+  }
 });
+
+// New function to run wrapper functionality directly
+async function runWrapperDirectly(config, progressCallback) {
+  const { runAceNetCheck, runAceNetCheckDirect } = require('./js/acenet-scraper');
+  const { generateSuggestedOrder } = require('./js/inventory-analyzer');
+  
+  const scriptType = config.script_type;
+  const filePath = config.input_file;
+  
+  let result = {};
+  
+  if (scriptType === 'suggested_order') {
+    const skipFileOutput = config.output_file === 'SKIP_FILE_OUTPUT';
+    const daysThreshold = config.days_threshold || 14;
+    const outputFile = config.output_file;
+    
+    progressCallback({
+      type: 'log',
+      message: 'Analyzing inventory data...'
+    });
+    
+    const orderResult = await generateSuggestedOrder({
+      inputFile: filePath,
+      outputFile: outputFile,
+      supplierNumber: 10,
+      daysThreshold: daysThreshold,
+      currentMonth: config.current_month,
+      onOrderData: config.onOrderData || {}
+    });
+   
+    // Handle the new return format (no file output) and set the main result
+    if (orderResult && (orderResult.orderData || orderResult.processed_items !== undefined)) {
+      progressCallback({
+        type: 'log',
+        message: `Generated ${orderResult.processed_items || 0} order recommendations`
+      });
+      
+      // Set the main result object for final JSON output
+      result = {
+        success: true,
+        output: `Generated ${orderResult.processed_items || 0} order recommendations`,
+        output_file: outputFile,
+        orderData: orderResult.orderData || [],
+        processed_items: orderResult.processed_items || 0,
+        debug: orderResult.debug || {}
+      };
+    } else {
+      throw new Error('No output generated');
+    }
+    
+  } else if (scriptType === 'check_acenet_direct') {
+    throw new Error('Direct AceNet processing not supported in this context');
+  } else if (scriptType.includes('check_acenet')) {
+    // File-based processing
+    const username = config.username;
+    const password = config.password;
+    const store = config.store;
+    const sheetName = config.sheet_name || 'Big Beautiful Order';
+    
+    if (!username || !password || !store) {
+      throw new Error('Missing required AceNet credentials (username, password, store)');
+    }
+    
+    progressCallback({
+      type: 'log',
+      message: 'Starting AceNet check...'
+    });
+    
+    result = await runAceNetCheck(filePath, username, password, store, sheetName);
+  } else {
+    throw new Error(`Unknown script type: ${scriptType}`);
+  }
+  
+  return result;
+}
 
 ipcMain.handle('install-dependencies', async (event) => {
   return new Promise((resolve, reject) => {
@@ -453,183 +443,94 @@ ipcMain.handle('save-temp-file', async (event, fileInfo) => {
   return tempFilePath;
 });
 
-// IPC handler to run Node.js scripts
+// IPC handler to run Node.js scripts directly
 ipcMain.handle('run-python', async (event, args) => {
-  return new Promise((resolve, reject) => {
-    console.log('Starting Node.js script execution...');
-    console.log('Wrapper path:', WRAPPER_PATH);
+  try {
+    console.log('Starting script execution...');
     console.log('Script parameters:', args.params);
 
-    const py = spawn('node', [WRAPPER_PATH, ...args.params]);
-    let output = '';
-    let error = '';
-
-    py.stdout.on('data', (data) => {
-      const chunk = data.toString();
-      console.log('Node.js stdout:', chunk);
-      output += chunk;
+    // Parse the parameters to determine what to do
+    const scriptType = args.params[0];
+    
+    if (scriptType === 'check_acenet_direct') {
+      // Handle direct AceNet processing
+      const usernameIndex = args.params.indexOf('--username');
+      const passwordIndex = args.params.indexOf('--password');
+      const storeIndex = args.params.indexOf('--store');
+      const partNumbersIndex = args.params.indexOf('--part-numbers');
       
-      // Send progress updates to renderer
-      if (chunk.includes('PROGRESS:')) {
-        const match = chunk.match(/PROGRESS:(\d+)\/(\d+):(.+)/);
-        if (match) {
+      if (usernameIndex !== -1 && passwordIndex !== -1 && storeIndex !== -1 && partNumbersIndex !== -1) {
+        const username = args.params[usernameIndex + 1];
+        const password = args.params[passwordIndex + 1];
+        const store = args.params[storeIndex + 1];
+        const partNumbersJson = args.params[partNumbersIndex + 1];
+        
+        try {
+          const partNumbers = JSON.parse(partNumbersJson);
+          const { runAceNetCheckDirect } = require('./js/acenet-scraper');
+          
+          // Send progress updates via the acenet-progress channel
+          const result = await runAceNetCheckDirect(partNumbers, username, password, store, (progress) => {
+            event.sender.send('acenet-progress', progress);
+          });
+          
+          return JSON.stringify(result);
+        } catch (parseError) {
+          throw new Error(`Failed to parse part numbers: ${parseError.message}`);
+        }
+      } else {
+        throw new Error('Missing required arguments for direct AceNet processing');
+      }
+    } else {
+      // Handle other script types using the wrapper directly
+      const config = {
+        script_type: scriptType,
+        input_file: args.params[1]
+      };
+      
+      const result = await runWrapperDirectly(config, (updateData) => {
+        // Convert processing updates to acenet-progress format
+        if (updateData.type === 'progress') {
           event.sender.send('acenet-progress', {
-            current: parseInt(match[1]),
-            total: parseInt(match[2]),
-            message: match[3].trim()
+            current: updateData.current,
+            total: updateData.total,
+            message: updateData.message
           });
         }
-      }
-    });
-
-    py.stderr.on('data', (data) => {
-      const chunk = data.toString();
-      console.error('Node.js stderr:', chunk);
-      error += chunk;
-    });
-
-    py.on('error', (err) => {
-      console.error('Failed to start Node.js process:', err);
-      reject(new Error(`Failed to start Node.js process: ${err.message}`));
-    });
-
-    py.on('close', (code) => {
-      console.log('Node.js process exited with code:', code);
+      });
       
-      if (code === 0) {
-        resolve(output);
-      } else {
-        reject(new Error(`Node.js script failed with code ${code}: ${error}`));
-      }
-    });
-  });
+      return JSON.stringify(result);
+    }
+  } catch (error) {
+    console.error('Script execution failed:', error);
+    throw error;
+  }
 });
 
-// New IPC handler for direct AceNet processing with part numbers
+// IPC handler for direct AceNet processing with part numbers
 ipcMain.handle('process-acenet-direct', async (event, data) => {
   const { partNumbers, username, password, store } = data;
   console.log(`Processing ${partNumbers.length} part numbers directly with AceNet (Double-check enabled)`);
   
-  return new Promise((resolve, reject) => {
-    const args = ['check_acenet_direct'];
-    args.push('--username', username);
-    args.push('--password', password);
-    args.push('--store', store);
-    args.push('--part-numbers', JSON.stringify(partNumbers));
+  try {
+    const { runAceNetCheckDirect } = require('./js/acenet-scraper');
     
-    console.log('Spawning direct AceNet process with args:', args.slice(0, -1), '[part numbers array]');
-    
-    const child = spawn('node', ['js/wrapper.js', ...args], {
-      cwd: __dirname,
-      stdio: ['inherit', 'pipe', 'pipe']
-    });
-    
-    let output = '';
-    let errorOutput = '';
-    
-    child.stdout.on('data', (data) => {
-      const chunk = data.toString();
-      output += chunk;
-      
+    // Run the AceNet check directly in this process
+    const result = await runAceNetCheckDirect(partNumbers, username, password, store, (progress) => {
       // Forward progress updates to renderer
-      if (chunk.includes('PROGRESS:')) {
-        const match = chunk.match(/PROGRESS:(\d+)\/(\d+):(.+)/);
-        if (match) {
-          event.sender.send('processing-update', {
-            type: 'progress',
-            current: parseInt(match[1]),
-            total: parseInt(match[2]),
-            message: match[3].trim()
-          });
-        }
-      }
+      event.sender.send('processing-update', {
+        type: 'progress',
+        current: progress.current || 0,
+        total: progress.total || partNumbers.length,
+        message: progress.message || 'Processing...'
+      });
     });
     
-    child.stderr.on('data', (data) => {
-      const chunk = data.toString();
-      errorOutput += chunk;
-      console.error('Child stderr:', chunk);
-      
-      // Forward progress updates from stderr to renderer
-      if (chunk.includes('PROGRESS:')) {
-        const match = chunk.match(/PROGRESS:(\d+)\/(\d+):(.+)/);
-        if (match) {
-          event.sender.send('processing-update', {
-            type: 'progress',
-            current: parseInt(match[1]),
-            total: parseInt(match[2]),
-            message: match[3].trim()
-          });
-        }
-      }
-    });
-    
-    child.on('close', (code) => {
-      console.log(`Direct AceNet process exited with code ${code}`);
-      console.log('Output:', output);
-      if (errorOutput) {
-        console.error('Error output:', errorOutput);
-      }
-      
-      if (code === 0) {
-        try {
-          // Extract the last line that looks like JSON (in case there are other messages)
-          const lines = output.trim().split('\n');
-          let jsonResult = null;
-          
-          // Work backwards from the last line to find valid JSON
-          for (let i = lines.length - 1; i >= 0; i--) {
-            const line = lines[i].trim();
-            if (line.startsWith('{') && line.endsWith('}')) {
-              try {
-                jsonResult = JSON.parse(line);
-                break;
-              } catch (e) {
-                // Continue looking for valid JSON
-                continue;
-              }
-            }
-          }
-          
-          if (jsonResult) {
-            resolve(jsonResult);
-          } else {
-            // Fallback: try to parse the entire output as JSON
-            const result = JSON.parse(output);
-            resolve(result);
-          }
-        } catch (parseError) {
-          console.error('Failed to parse output as JSON:', output);
-          resolve({ 
-            success: false, 
-            error: `Failed to parse output: ${parseError.message}`,
-            rawOutput: output 
-          });
-        }
-      } else {
-        // Check if the error is due to user cancellation
-        const errorMessage = errorOutput || `Process exited with code ${code}`;
-        if (errorMessage.toLowerCase().includes('cancelled by user')) {
-          resolve({ 
-            success: false, 
-            error: 'Process cancelled by user',
-            rawOutput: output 
-          });
-        } else {
-          resolve({ 
-            success: false, 
-            error: errorMessage,
-            rawOutput: output 
-          });
-        }
-      }
-    });
-    
-    child.on('error', (error) => {
-      console.error('Direct AceNet process error:', error);
-      resolve({ success: false, error: error.message });
-    });
-  });
+    return result;
+  } catch (error) {
+    console.error('Direct AceNet process error:', error);
+    return { success: false, error: error.message };
+  }
 });
 
 // IPC handler to open files

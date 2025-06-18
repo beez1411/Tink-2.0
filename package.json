@@ -1,11 +1,13 @@
 {
   "name": "tink-2.0",
-  "version": "2.0.1",
+  "version": "2.0.3",
   "description": "Tink 2.0 - JavaScript-powered desktop application for processing inventory data",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
+    "build-only": "electron-builder",
+    "copy-installer": "powershell -Command \"if (Test-Path 'Tink Installer') { Get-ChildItem 'dist/Tink 2.0 Setup*.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | Copy-Item -Destination 'Tink Installer/Tink-2.0-Installer.exe' }\"",
     "dist": "electron-builder --publish=never",
     "release": "electron-builder --publish=always",
     "postinstall": "electron-builder install-app-deps"
@@ -19,8 +21,8 @@
   "author": "1411 Capital Inc",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^22.0.0",
-    "electron-builder": "^23.6.0"
+    "electron": "^25.0.0",
+    "electron-builder": "^24.0.0"
   },
   "build": {
     "appId": "com.1411capital.tink2",
@@ -49,15 +51,6 @@
       "!__pycache__",
       "!*.py"
     ],
-    "extraResources": [
-      {
-        "from": "js",
-        "to": "js",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"
@@ -70,7 +63,7 @@
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
       "installerHeaderIcon": "assets/icon.ico",
-      "license": "LICENSE.txt",
+      "license": "License.txt",
       "perMachine": true,
       "runAfterFinish": false,
       "include": "installer.nsh",
