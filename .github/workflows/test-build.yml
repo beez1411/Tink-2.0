@@ -18,19 +18,51 @@ jobs:
       with:
         node-version: '18'
         
+    - name: Debug environment
+      run: |
+        echo "=== ENVIRONMENT DEBUG ==="
+        echo "Node version: $(node --version)"
+        echo "NPM version: $(npm --version)"
+        echo "Current directory: $(Get-Location)"
+        echo "Directory contents:"
+        Get-ChildItem | Format-Table Name, Length, LastWriteTime
+        echo "Environment variables:"
+        Get-ChildItem env: | Where-Object { $_.Name -like "*NODE*" -or $_.Name -like "*NPM*" } | Format-Table Name, Value
+      shell: powershell
+        
     - name: Install dependencies
       run: |
         echo "Installing dependencies..."
         npm install
         echo "Dependencies installed successfully"
+        echo "Checking node_modules:"
+        if (Test-Path "node_modules") { echo "✓ node_modules exists" } else { echo "✗ node_modules missing" }
+      shell: powershell
         
     - name: Test electron-builder without publishing
       run: |
         echo "Testing electron-builder build..."
-        npx electron-builder --publish=never
-        echo "Build test completed"
+        echo "Running: npx electron-builder --publish=never"
+        try {
+          npx electron-builder --publish=never --win --x64
+          echo "Build test completed successfully"
+        } catch {
+          echo "ERROR: Build failed!"
+          echo "Last error: $($Error[0])"
+          echo "Checking for error logs..."
+          if (Test-Path "*.log") {
+            echo "Found log files:"
+            Get-ChildItem "*.log" | ForEach-Object { 
+              echo "=== $($_.Name) ==="
+              Get-Content $_.FullName | Select-Object -Last 50
+            }
+          }
+          throw "Build failed - see logs above"
+        }
+      shell: powershell
       env:
         DEBUG: electron-builder
+        NODE_ENV: production
         
     - name: List results
       run: |
