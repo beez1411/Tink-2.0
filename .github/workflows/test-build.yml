@@ -32,28 +32,35 @@ jobs:
         
     - name: Install dependencies
       run: |
-        echo Installing dependencies...
+        Write-Output "Installing dependencies..."
         npm install
-        echo Dependencies installed successfully
-        echo Checking node_modules...
-        if exist "node_modules" (echo ✓ node_modules exists) else (echo ✗ node_modules missing)
+        Write-Output "Dependencies installed successfully"
+        Write-Output "Checking node_modules..."
+        if (Test-Path "node_modules") { 
+          Write-Output "✓ node_modules exists" 
+        } else { 
+          Write-Output "✗ node_modules missing" 
+        }
+      shell: powershell
         
     - name: Test electron-builder without publishing
       run: |
-        echo Testing electron-builder build...
-        echo Running: npx electron-builder --publish=never
+        Write-Output "Testing electron-builder build..."
+        Write-Output "Running: npx electron-builder --publish=never"
         npx electron-builder --publish=never --win --x64
-        echo Build test completed successfully
+        Write-Output "Build test completed successfully"
+      shell: powershell
       env:
         DEBUG: electron-builder
         NODE_ENV: production
         
     - name: List results
       run: |
-        echo Checking build results...
-        if exist "dist" (
-          echo ✓ dist directory exists
-          dir dist /s
-        ) else (
-          echo ✗ dist directory missing
-        ) 
+        Write-Output "Checking build results..."
+        if (Test-Path "dist") {
+          Write-Output "✓ dist directory exists"
+          Get-ChildItem -Path "dist" -Recurse | Format-Table Name, Length, LastWriteTime
+        } else {
+          Write-Output "✗ dist directory missing"
+        }
+      shell: powershell 
