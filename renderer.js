@@ -357,7 +357,14 @@ runCheckAceNetBtn.addEventListener('click', async () => {
     const progressPopup = createProgressPopup(useInMemoryResults ? partNumbers.length : 0);
     runCheckAceNetBtn.disabled = true;
     
-    // Set up progress listener
+    // Set up progress listener for direct AceNet processing
+    window.electronAPI.onAcenetProgress((data) => {
+        console.log(`AceNet Progress: ${data.current}/${data.total} - ${data.message}`);
+        // Update progress popup
+        progressPopup.updateProgress(data.current, data.total, data.message);
+    });
+    
+    // Also set up the legacy processing-update listener for file-based processing
     window.api.onProcessingUpdate((data) => {
         if (data.type === 'log') {
             console.log('AceNet Processing:', data.message);
@@ -497,6 +504,7 @@ runCheckAceNetBtn.addEventListener('click', async () => {
     } finally {
         runCheckAceNetBtn.disabled = false;
         window.api.removeAllListeners('processing-update');
+        window.electronAPI.removeAcenetProgressListener();
     }
 });
 

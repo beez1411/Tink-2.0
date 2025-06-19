@@ -1313,7 +1313,7 @@ async function runAceNetCheck(config) {
 }
 
 // Main function to run AceNet check with direct part numbers (no file)
-async function runAceNetCheckDirect(partNumbers, username, password, store) {
+async function runAceNetCheckDirect(partNumbers, username, password, store, progressCallback) {
     console.error(`Starting direct AceNet check for ${partNumbers.length} part numbers (Double-check enabled)`);
     console.error(`Store: ${store}`);
     
@@ -1343,6 +1343,15 @@ async function runAceNetCheckDirect(partNumbers, username, password, store) {
             await scraper.checkControlFlags();
             
             const partNumber = partNumbers[i];
+            
+            // Report progress to callback if available
+            if (progressCallback) {
+                progressCallback({
+                    current: i + 1,
+                    total: partNumbers.length,
+                    message: `Processing ${partNumber}`
+                });
+            }
             
             console.error(`PROGRESS:${i + 1}/${partNumbers.length}:Processing ${partNumber}`);
             
