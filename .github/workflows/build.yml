@@ -27,54 +27,44 @@ jobs:
     
     - name: Verify required files
       run: |
-        echo "Checking for required files..."
-        if (Test-Path "License.txt") { echo "✓ License.txt found" } else { echo "✗ License.txt missing"; exit 1 }
-        if (Test-Path "assets/icon.ico") { echo "✓ Icon file found" } else { echo "✗ Icon file missing"; exit 1 }
-        if (Test-Path "main.js") { echo "✓ main.js found" } else { echo "✗ main.js missing"; exit 1 }
-        if (Test-Path "package.json") { echo "✓ package.json found" } else { echo "✗ package.json missing"; exit 1 }
-      shell: powershell
+        echo Checking for required files...
+        if exist "License.txt" (echo ✓ License.txt found) else (echo ✗ License.txt missing && exit /b 1)
+        if exist "assets\icon.ico" (echo ✓ Icon file found) else (echo ✗ Icon file missing && exit /b 1)
+        if exist "main.js" (echo ✓ main.js found) else (echo ✗ main.js missing && exit /b 1)
+        if exist "package.json" (echo ✓ package.json found) else (echo ✗ package.json missing && exit /b 1)
+      shell: cmd
         
     - name: Install dependencies
       run: npm ci
       
     - name: Show build configuration
       run: |
-        echo "Current directory: $(Get-Location)"
-        echo "Node version: $(node --version)"
-        echo "NPM version: $(npm --version)"
-        echo "Package.json version:"
-        Get-Content package.json | Select-String '"version"'
-        echo "Environment variables:"
-        Get-ChildItem env: | Where-Object { $_.Name -like "*GH*" -or $_.Name -like "*GITHUB*" } | Format-Table Name, Value
-      shell: powershell
+        echo === BUILD CONFIGURATION ===
+        node --version
+        npm --version
+        echo Current directory:
+        cd
+        echo Directory contents:
+        dir
+      shell: cmd
       
     - name: Build application
-      run: |
-        echo "Starting build process..."
-        npm run dist
-        echo "Build completed successfully"
+      run: npm run dist
+      shell: cmd
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         DEBUG: electron-builder
         
     - name: List build artifacts
       run: |
-        echo "Listing dist directory contents:"
-        if (Test-Path "dist") {
-          Get-ChildItem -Path "dist" -Recurse | Format-Table Name, Length, LastWriteTime
-          echo "Build artifacts created successfully"
-        } else {
-          echo "ERROR: dist directory not found!"
-          exit 1
-        }
-      shell: powershell
+        echo Listing dist directory contents:
+        dir dist /s
+      shell: cmd
         
     - name: Release to GitHub (if tag)
       if: startsWith(github.ref, 'refs/tags/')
-      run: |
-        echo "Starting release process..."
-        npm run release
-        echo "Release completed successfully"
+      run: npm run release
+      shell: cmd
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
