@@ -394,6 +394,34 @@ async function runWrapperDirectly(config, progressCallback) {
   return result;
 }
 
+// IPC handler to toggle DevTools (for input field accessibility fix)
+ipcMain.handle('toggle-devtools', async (event) => {
+  try {
+    if (mainWindow) {
+      console.log('Toggling DevTools to fix input accessibility...');
+      
+      if (mainWindow.webContents.isDevToolsOpened()) {
+        mainWindow.webContents.closeDevTools();
+      } else {
+        mainWindow.webContents.openDevTools();
+      }
+      
+      // Close DevTools immediately after opening to simulate the toggle effect
+      setTimeout(() => {
+        if (mainWindow.webContents.isDevToolsOpened()) {
+          mainWindow.webContents.closeDevTools();
+        }
+      }, 100);
+      
+      return { success: true };
+    }
+    return { success: false, error: 'No main window available' };
+  } catch (error) {
+    console.error('Error toggling DevTools:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle('install-dependencies', async (event) => {
   return new Promise((resolve, reject) => {
     const packages = [
@@ -441,6 +469,208 @@ ipcMain.handle('save-temp-file', async (event, fileInfo) => {
   fs.writeFileSync(tempFilePath, Buffer.from(fileInfo.data));
   
   return tempFilePath;
+});
+
+// IPC handler to save PO file
+ipcMain.handle('save-to-po', async (event, orderData) => {
+  try {
+    const os = require('os');
+    const path = require('path');
+    const fs = require('fs');
+    
+    // Get current date for filename
+    const now = new Date();
+    const dateStr = now.getFullYear() + 
+                   String(now.getMonth() + 1).padStart(2, '0') + 
+                   String(now.getDate()).padStart(2, '0');
+    
+    // Create filename: Tink PO YYYYMMDD.txt
+    const filename = `Tink PO ${dateStr}.txt`;
+    
+    // Save to user's desktop
+    const desktopPath = path.join(os.homedir(), 'Desktop');
+    const filePath = path.join(desktopPath, filename);
+    
+    // Create file content with tab-separated values
+    let content = 'PARTNUMBER\tSUPPLIER_NUMBER1\tQUANTITY\tMKTCOST\n';
+    
+    orderData.forEach(item => {
+      // Format: PARTNUMBER	SUPPLIER_NUMBER1	QUANTITY	MKTCOST
+      content += `${item.partNumber}\t\t${item.quantity}\t${item.cost || ''}\n`;
+    });
+    
+    // Write the file
+    fs.writeFileSync(filePath, content, 'utf8');
+    
+    console.log(`PO file saved: ${filePath}`);
+    console.log(`Items saved: ${orderData.length}`);
+    
+    return {
+      success: true,
+      filePath: filePath,
+      itemCount: orderData.length
+    };
+    
+  } catch (error) {
+    console.error('Error saving PO file:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+// IPC handler to export AceNet results to Excel
+ipcMain.handle('export-acenet-results', async (event, resultsData) => {
+  try {
+    const ExcelJS = require('exceljs');
+    const os = require('os');
+    const path = require('path');
+    
+    // Get current date for filename
+    const now = new Date();
+    const dateStr = now.getFullYear() + 
+                   String(now.getMonth() + 1).padStart(2, '0') + 
+                   String(now.getDate()).padStart(2, '0');
+    
+    // Create filename: AceNet Results YYYYMMDD.xlsx
+    const filename = `AceNet Results ${dateStr}.xlsx`;
+    
+    // Save to user's desktop
+    const desktopPath = path.join(os.homedir(), 'Desktop');
+    const filePath = path.join(desktopPath, filename);
+    
+    // Create new workbook
+    const workbook = new ExcelJS.Workbook();
+    
+    // Set workbook properties
+    workbook.creator = 'Tink 2.0';
+    workbook.created = new Date();
+    workbook.modified = new Date();
+    
+    // Create summary worksheet
+    const summarySheet = workbook.addWorksheet('Summary');
+    
+    // Add summary data
+    summarySheet.columns = [
+      { header: 'Category', key: 'category', width: 20 },
+      { header: 'Count', key: 'count', width: 10 }
+    ];
+    
+    // Style the header row
+    summarySheet.getRow(1).font = { bold: true };
+    summarySheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' }
+    };
+    summarySheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    
+    let totalItems = 0;
+    
+    // Process each category
+    if (resultsData && resultsData.categorizedResults && Array.isArray(resultsData.categorizedResults)) {
+      resultsData.categorizedResults.forEach((category, index) => {
+        if (category && category.name && category.parts && Array.isArray(category.parts) && category.parts.length > 0) {
+          const categoryName = category.name;
+          const partCount = category.parts.length;
+          totalItems += partCount;
+          
+          // Add to summary
+          summarySheet.addRow({
+            category: categoryName,
+            count: partCount
+          });
+          
+          // Create separate worksheet for each category
+          const categorySheet = workbook.addWorksheet(categoryName);
+          
+          // Add headers
+          categorySheet.columns = [
+            { header: 'Part Number', key: 'partNumber', width: 15 },
+            { header: 'Notes', key: 'notes', width: 30 }
+          ];
+          
+          // Style the header row
+          categorySheet.getRow(1).font = { bold: true };
+          categorySheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: category.color ? category.color.replace('#', 'FF') : 'FF4472C4' }
+          };
+          categorySheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+          
+          // Add part numbers
+          category.parts.forEach(part => {
+            const partData = typeof part === 'object' ? part : { partNumber: part };
+            const partNumber = partData.partNumber || part;
+            const notes = partData.needsManualReview ? 'NEEDS MANUAL REVIEW' : '';
+            
+            const row = categorySheet.addRow({
+              partNumber: partNumber,
+              notes: notes
+            });
+            
+            // Highlight rows that need manual review
+            if (partData.needsManualReview) {
+              row.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFFEB3B' }
+              };
+            }
+          });
+        }
+      });
+    }
+    
+    // Add total to summary
+    summarySheet.addRow({
+      category: 'TOTAL',
+      count: totalItems
+    });
+    
+    // Style the total row
+    const totalRowIndex = summarySheet.rowCount;
+    summarySheet.getRow(totalRowIndex).font = { bold: true };
+    summarySheet.getRow(totalRowIndex).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' }
+    };
+    
+    // Add processing info
+    summarySheet.addRow({});
+    summarySheet.addRow({
+      category: 'Processed Date',
+      count: new Date().toLocaleDateString()
+    });
+    summarySheet.addRow({
+      category: 'Processing Time',
+      count: new Date().toLocaleTimeString()
+    });
+    
+    // Save the file
+    await workbook.xlsx.writeFile(filePath);
+    
+    console.log(`AceNet Excel file saved: ${filePath}`);
+    console.log(`Categories processed: ${resultsData.categorizedResults?.length || 0}`);
+    console.log(`Total items: ${totalItems}`);
+    
+    return {
+      success: true,
+      filePath: filePath,
+      categoriesCount: resultsData.categorizedResults?.length || 0,
+      totalItems: totalItems
+    };
+    
+  } catch (error) {
+    console.error('Error creating AceNet Excel file:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
 });
 
 // IPC handler to run Node.js scripts directly
@@ -638,4 +868,140 @@ async function checkNodePackage(packageName) {
       }
     }
   });
-} 
+}
+
+// IPC handler to process part number files
+ipcMain.handle('process-part-number-file', async (event, filePath) => {
+  try {
+    const ExcelJS = require('exceljs');
+    const fs = require('fs');
+    const path = require('path');
+    
+    const partNumbers = [];
+    const fileExtension = path.extname(filePath).toLowerCase();
+    
+    if (fileExtension === '.txt') {
+      // Process text file
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const lines = content.split('\n');
+      
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine && !trimmedLine.startsWith('#') && !trimmedLine.startsWith('//')) {
+          // Clean the line and handle multiple separators
+          const cleanedLine = trimmedLine.replace(/[\s,;|\t]+/g, ' ').trim();
+          
+          // Split by spaces in case multiple part numbers are on one line
+          const possibleParts = cleanedLine.split(/\s+/);
+          
+          for (const part of possibleParts) {
+            // Skip common non-part-number words and column headers
+            const skipWords = [
+              'part', 'number', 'sku', 'item', 'code', 'description', 'qty', 'quantity',
+              'partnumber', 'part_number', 'supplier_number1', 'supplier_number', 'supplier',
+              'mktcost', 'cost', 'price', 'total', 'amount', 'value', 'soh', 'stock',
+              'on_order', 'onorder', 'order', 'min_order_qty', 'moq', 'category',
+              'vendor', 'manufacturer', 'brand', 'upc', 'barcode', 'location'
+            ];
+            if (skipWords.includes(part.toLowerCase())) {
+              continue;
+            }
+            
+            // Check if it looks like a part number
+            if (part.length >= 3 && part.match(/^[A-Za-z0-9][A-Za-z0-9\-\.\_]*[A-Za-z0-9]$/)) {
+              const partNumber = part.toUpperCase();
+              if (!partNumbers.includes(partNumber)) {
+                partNumbers.push(partNumber);
+              }
+            } else if (part.length >= 2 && part.match(/^[A-Za-z0-9\-\.\_]+$/)) {
+              // Accept shorter alphanumeric codes as well
+              const partNumber = part.toUpperCase();
+              if (!partNumbers.includes(partNumber)) {
+                partNumbers.push(partNumber);
+              }
+            }
+          }
+        }
+      }
+    } else if (fileExtension === '.xlsx' || fileExtension === '.xls') {
+      // Process Excel file
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(filePath);
+      
+      // Try to find part numbers in the first worksheet
+      const worksheet = workbook.worksheets[0];
+      
+      worksheet.eachRow((row, rowNumber) => {
+        row.eachCell((cell, colNumber) => {
+          const cellValue = cell.value;
+          if (cellValue) {
+            let potentialPartNumber = '';
+            
+            if (typeof cellValue === 'string') {
+              potentialPartNumber = cellValue.trim();
+            } else if (typeof cellValue === 'number') {
+              potentialPartNumber = cellValue.toString();
+            } else if (cellValue.text) {
+              // Handle rich text cells
+              potentialPartNumber = cellValue.text.trim();
+            }
+            
+            if (potentialPartNumber) {
+              // Clean and validate the potential part number
+              // Remove extra whitespace and common separators
+              const cleanedValue = potentialPartNumber.replace(/[\s,;|]+/g, ' ').trim();
+              
+              // Split by spaces in case multiple part numbers are in one cell
+              const possibleParts = cleanedValue.split(/\s+/);
+              
+                             for (const part of possibleParts) {
+                 // Skip common non-part-number words and column headers
+                 const skipWords = [
+                   'part', 'number', 'sku', 'item', 'code', 'description', 'qty', 'quantity',
+                   'partnumber', 'part_number', 'supplier_number1', 'supplier_number', 'supplier',
+                   'mktcost', 'cost', 'price', 'total', 'amount', 'value', 'soh', 'stock',
+                   'on_order', 'onorder', 'order', 'min_order_qty', 'moq', 'category',
+                   'vendor', 'manufacturer', 'brand', 'upc', 'barcode', 'location'
+                 ];
+                 if (skipWords.includes(part.toLowerCase())) {
+                   continue;
+                 }
+                 
+                 // Check if it looks like a part number (at least 3 characters, alphanumeric with dashes/dots)
+                 if (part.length >= 3 && part.match(/^[A-Za-z0-9][A-Za-z0-9\-\.\_]*[A-Za-z0-9]$/)) {
+                   const partNumber = part.toUpperCase();
+                   if (!partNumbers.includes(partNumber)) {
+                     partNumbers.push(partNumber);
+                   }
+                 } else if (part.length >= 2 && part.match(/^[A-Za-z0-9\-\.\_]+$/)) {
+                   // Accept shorter alphanumeric codes as well
+                   const partNumber = part.toUpperCase();
+                   if (!partNumbers.includes(partNumber)) {
+                     partNumbers.push(partNumber);
+                   }
+                 }
+               }
+            }
+          }
+        });
+      });
+    } else {
+      throw new Error('Unsupported file format. Please use .txt, .xlsx, or .xls files.');
+    }
+    
+    console.log(`Extracted ${partNumbers.length} part numbers from ${filePath}`);
+    
+    return {
+      success: true,
+      partNumbers: partNumbers,
+      totalFound: partNumbers.length
+    };
+    
+  } catch (error) {
+    console.error('Error processing part number file:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}); 

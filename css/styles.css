@@ -94,6 +94,25 @@ h1 {
     -ms-user-select: text !important;
     opacity: 1 !important;
     visibility: visible !important;
+    background-color: white !important;
+    color: #222 !important;
+    border: 1px solid #b3c6e0 !important;
+    cursor: text !important;
+}
+
+/* Force override any conflicting styles */
+#acenetOptions input:disabled,
+#acenetOptions select:disabled {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    background-color: white !important;
+    color: #222 !important;
+}
+
+/* Ensure all AceNet inputs are always accessible */
+#acenetOptions * {
+    pointer-events: auto !important;
+    user-select: text !important;
 }
 
 .input-group label {

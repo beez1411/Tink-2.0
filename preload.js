@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron')  
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -39,6 +39,15 @@ contextBridge.exposeInMainWorld('api', {
   
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   
+  saveToPO: (orderData) => ipcRenderer.invoke('save-to-po', orderData),
+  
+    exportAceNetResults: (resultsData) => ipcRenderer.invoke('export-acenet-results', resultsData),
+  
+  processPartNumberFile: (filePath) => ipcRenderer.invoke('process-part-number-file', filePath),
+  
+  // DevTools toggle for input field accessibility
+  toggleDevTools: () => ipcRenderer.invoke('toggle-devtools'),
+
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);
   }

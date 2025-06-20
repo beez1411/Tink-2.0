@@ -15,6 +15,10 @@ const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const storeNumberInput = document.getElementById('storeNumber');
 
+// Get DOM elements for part number file upload
+const partNumberFileInput = document.getElementById('acenetPartFile');
+const uploadPartNumberBtn = document.getElementById('uploadPartNumberBtn');
+
 // Global storage for suggested order results
 let suggestedOrderResults = {
     orderData: [],
@@ -117,48 +121,46 @@ function getOnOrderQuantity(sku) {
     return onOrderData[sku] || 0;
 }
 
-// Ensure input fields work properly
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, initializing input fields...');
-    
-    // Force enable input fields
+// Robust function to ensure input fields are always accessible
+function forceInputFieldAccessibility() {
+    // SIMPLIFIED: Less aggressive approach to avoid flashing
     const inputFields = document.querySelectorAll('#acenetOptions input, #acenetOptions select');
     inputFields.forEach(field => {
+        // Basic accessibility properties
         field.style.pointerEvents = 'auto';
         field.style.userSelect = 'text';
         field.disabled = false;
         field.readOnly = false;
-        
-        // Remove any potential tabindex issues
-        if (field.tabIndex < 0) {
-            field.tabIndex = 0;
-        }
     });
     
-    // Specifically handle username and password fields
-    if (usernameInput) {
-        usernameInput.style.pointerEvents = 'auto';
-        usernameInput.style.userSelect = 'text';
-        usernameInput.disabled = false;
-        usernameInput.readOnly = false;
-        usernameInput.tabIndex = 1;
-    }
+    // Specifically handle username and password fields with targeted approach
+    ['username', 'password', 'storeNumber'].forEach((fieldId) => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            // Only fix if actually locked
+            if (field.disabled || field.readOnly || getComputedStyle(field).pointerEvents === 'none') {
+                field.disabled = false;
+                field.readOnly = false;
+                field.style.pointerEvents = 'auto';
+                field.style.userSelect = 'text';
+                field.style.opacity = '1';
+                field.style.visibility = 'visible';
+            }
+        }
+    });
+}
+
+// Ensure input fields work properly
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing input fields...');
     
-    if (passwordInput) {
-        passwordInput.style.pointerEvents = 'auto';
-        passwordInput.style.userSelect = 'text';
-        passwordInput.disabled = false;
-        passwordInput.readOnly = false;
-        passwordInput.tabIndex = 2;
-    }
+    // Initial setup
+    forceInputFieldAccessibility();
     
-    if (storeNumberInput) {
-        storeNumberInput.style.pointerEvents = 'auto';
-        storeNumberInput.disabled = false;
-        storeNumberInput.tabIndex = 3;
-    }
+    // SIMPLIFIED: Only set up periodic checks to maintain accessibility (less aggressive)
+    setInterval(forceInputFieldAccessibility, 5000); // Check every 5 seconds instead of 2
     
-    console.log('Input fields initialization complete');
+    console.log('Input fields initialization complete with simplified monitoring');
     
     // Check sidebar accessibility after DOM is loaded
     setTimeout(() => {
@@ -172,47 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Backup initialization function that can be called from main process
 window.initializeInputFields = function() {
     console.log('Forcing input field initialization...');
-    
-    const usernameField = document.getElementById('username');
-    const passwordField = document.getElementById('password');
-    const storeField = document.getElementById('storeNumber');
-    
-    if (usernameField) {
-        usernameField.style.pointerEvents = 'auto';
-        usernameField.style.userSelect = 'text';
-        usernameField.style.webkitUserSelect = 'text';
-        usernameField.disabled = false;
-        usernameField.readOnly = false;
-        usernameField.tabIndex = 1;
-        usernameField.style.opacity = '1';
-        usernameField.style.visibility = 'visible';
-    }
-    
-    if (passwordField) {
-        passwordField.style.pointerEvents = 'auto';
-        passwordField.style.userSelect = 'text';
-        passwordField.style.webkitUserSelect = 'text';
-        passwordField.disabled = false;
-        passwordField.readOnly = false;
-        passwordField.tabIndex = 2;
-        passwordField.style.opacity = '1';
-        passwordField.style.visibility = 'visible';
-    }
-    
-    if (storeField) {
-        storeField.style.pointerEvents = 'auto';
-        storeField.disabled = false;
-        storeField.tabIndex = 3;
-        storeField.style.opacity = '1';
-        storeField.style.visibility = 'visible';
-    }
-    
-    // Force focus capability
-    const acenetOptions = document.getElementById('acenetOptions');
-    if (acenetOptions) {
-        acenetOptions.style.pointerEvents = 'auto';
-    }
-    
+    forceInputFieldAccessibility();
     console.log('Input field force initialization complete');
 };
 
@@ -251,7 +213,7 @@ const orderDisplaySection = document.getElementById('orderDisplaySection');
 const orderTableBody = document.getElementById('orderTableBody');
 const orderTotalAmount = document.getElementById('orderTotalAmount');
 const addItemBtn = document.getElementById('addItemBtn');
-// Removed saveOrderBtn and saveToPOBtn declarations - buttons no longer exist
+const saveToPOBtn = document.getElementById('saveToPOBtn');
 
 // AceNet results elements
 const acenetResultsSection = document.getElementById('acenetResultsSection');
@@ -352,11 +314,29 @@ runSuggestedOrderBtn.addEventListener('click', async () => {
             console.log('Analysis result:', result);
             console.log('Order data received:', result.orderData);
             
+            // CLEAR ANY EXISTING DATA - Override previous uploaded file or suggested order results
+            orderTableBody.innerHTML = '';
+            suggestedOrderResults = {
+                orderData: [],
+                partNumbers: [],
+                hasResults: false
+            };
+            
+            console.log('Cleared existing order data - switching to suggested order mode');
+            
+            // Clear any uploaded file input
+            const partNumberFileInput = document.getElementById('acenetPartFile');
+            if (partNumberFileInput) {
+                partNumberFileInput.value = '';
+                console.log('Cleared uploaded file input');
+            }
+            
             // Store results in memory for AceNet to use
             suggestedOrderResults.orderData = result.orderData || [];
             suggestedOrderResults.partNumbers = result.orderData ? 
                 result.orderData.map(item => item.partNumber || item.sku || '').filter(pn => pn) : [];
             suggestedOrderResults.hasResults = true;
+            suggestedOrderResults.source = 'suggested_order'; // Track the source
             
             console.log(`Stored ${suggestedOrderResults.partNumbers.length} part numbers for AceNet use`);
             
@@ -384,6 +364,12 @@ runSuggestedOrderBtn.addEventListener('click', async () => {
             
             // Hide processing modal and show results directly
             hideProcessingModal();
+            
+            // CRITICAL: Force input field accessibility after suggested order
+            setTimeout(() => {
+                forceInputFieldAccessibility();
+                console.log('Forced input accessibility after suggested order');
+            }, 100);
             
         } else {
             throw new Error(result.message || 'Unknown error occurred');
@@ -881,6 +867,72 @@ if (saveOnOrderBtn) {
     });
 }
 
+// Save to PO button handler
+if (saveToPOBtn) {
+    saveToPOBtn.addEventListener('click', async () => {
+        try {
+            // Get current order data from the table
+            const rows = orderTableBody.querySelectorAll('tr');
+            const orderData = [];
+            
+            rows.forEach((row, index) => {
+                // Get SKU from the row
+                const skuCell = row.cells[1];
+                let sku = '';
+                
+                const skuInput = skuCell.querySelector('input');
+                if (skuInput) {
+                    sku = skuInput.value.trim();
+                } else {
+                    sku = skuCell.textContent.trim();
+                }
+                
+                if (sku) {
+                    // Get quantity
+                    const qtyInput = row.querySelector('.qty-input');
+                    const quantity = parseInt(qtyInput.value) || 0;
+                    
+                    // Get cost if available
+                    const costCell = row.cells[6]; // Cost/MOQ column
+                    let cost = '';
+                    const costInput = costCell.querySelector('input');
+                    if (costInput) {
+                        const costValue = parseFloat(costInput.value) || 0;
+                        cost = costValue.toFixed(2);
+                    }
+                    
+                    // Only include items with quantity > 0
+                    if (quantity > 0) {
+                        orderData.push({
+                            partNumber: sku,
+                            quantity: quantity,
+                            cost: cost
+                        });
+                    }
+                }
+            });
+            
+            if (orderData.length === 0) {
+                alert('No items with quantities > 0 found to save to PO.');
+                return;
+            }
+            
+            // Call the API to save the PO file
+            const result = await window.api.saveToPO(orderData);
+            
+            if (result.success) {
+                alert(`PO file saved successfully!\nLocation: ${result.filePath}\nItems saved: ${orderData.length}`);
+            } else {
+                alert('Error saving PO file: ' + result.error);
+            }
+            
+        } catch (error) {
+            console.error('Save to PO error:', error);
+            alert('Error saving PO file: ' + error.message);
+        }
+    });
+}
+
 // Delete On Order checkbox handler
 const deleteOnOrderCheckbox = document.getElementById('deleteOnOrder');
 if (deleteOnOrderCheckbox) {
@@ -1293,8 +1345,25 @@ function showCompletionPopup(result, totalProcessed) {
     });
     
     popup.querySelector('#openExcelBtn').addEventListener('click', async () => {
-        // Since we're not creating Excel files anymore, show a message
-        alert('Excel files are no longer created for AceNet checks. Results are displayed in the panel on the right.');
+        try {
+            // Export results to Excel
+            const exportResult = await window.api.exportAceNetResults(result);
+            
+            if (exportResult.success) {
+                // Show success message and ask if user wants to open the file
+                const openFile = confirm(`Excel file created successfully!\nLocation: ${exportResult.filePath}\n\nWould you like to open the file now?`);
+                
+                if (openFile) {
+                    // Open the file using the system default application
+                    await window.api.openFile(exportResult.filePath);
+                }
+            } else {
+                alert('Error creating Excel file: ' + exportResult.error);
+            }
+        } catch (error) {
+            console.error('Excel export error:', error);
+            alert('Error creating Excel file: ' + error.message);
+        }
         popup.remove();
     });
     
@@ -1590,5 +1659,129 @@ function updateDownloadProgress(percent) {
         if (progressFill) progressFill.style.width = `${percent}%`;
         if (progressText) progressText.textContent = `${Math.round(percent)}%`;
     }
+}
+
+// Event listener for upload button
+if (uploadPartNumberBtn) {
+    uploadPartNumberBtn.addEventListener('click', () => {
+        partNumberFileInput.click(); // Trigger file dialog
+    });
+}
+
+// Event listener for part number file upload
+if (partNumberFileInput) {
+    partNumberFileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            try {
+                // Show processing modal
+                showProcessingModal();
+                
+                // Process the uploaded file to extract part numbers
+                const result = await window.api.processPartNumberFile(file.path);
+                
+                if (result.success && result.partNumbers.length > 0) {
+                    // Hide processing modal
+                    hideProcessingModal();
+                    
+                    // CLEAR ANY EXISTING DATA - Override previous suggested order or file results
+                    orderTableBody.innerHTML = '';
+                    suggestedOrderResults = {
+                        orderData: [],
+                        partNumbers: [],
+                        hasResults: false
+                    };
+                    
+                    console.log('Cleared existing order data - switching to uploaded file mode');
+                    
+                    // Create order data from part numbers
+                    const orderData = result.partNumbers.map((partNumber, index) => ({
+                        partNumber: partNumber,
+                        sku: partNumber,
+                        description: 'Uploaded Part Number',
+                        currentStock: 0,
+                        onOrder: 0,
+                        suggestedQty: 1,
+                        cost: 0,
+                        minOrderQty: 1,
+                        total: 0
+                    }));
+                    
+                    // Update global storage with new data
+                    suggestedOrderResults = {
+                        orderData: orderData,
+                        partNumbers: result.partNumbers,
+                        hasResults: true,
+                        source: 'uploaded_file' // Track the source
+                    };
+                    
+                    // Populate the order table
+                    populateOrderTable(orderData);
+                    
+                    // Show the order display section
+                    orderDisplaySection.style.display = 'block';
+                    
+                    // CRITICAL: Add the 'active' class to make the panel visible
+                    const suggestedOrderPanel = document.getElementById('suggestedOrderPanel');
+                    if (suggestedOrderPanel) {
+                        suggestedOrderPanel.classList.add('active');
+                        console.log('Added active class to suggested order panel');
+                    }
+                    
+                    // Scroll to the suggested order section to make it visible
+                    setTimeout(() => {
+                        orderDisplaySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                    
+                    // Enable the Check AceNet button  
+                    runCheckAceNetBtn.disabled = false;
+                    
+                                // CRITICAL: Handle input field locking specific to file uploads
+            setTimeout(async () => {
+                // Check if fields became locked after file processing
+                const usernameField = document.getElementById('username');
+                const passwordField = document.getElementById('password');
+                
+                if (usernameField && (usernameField.disabled || usernameField.readOnly || 
+                    getComputedStyle(usernameField).pointerEvents === 'none')) {
+                    console.log('Input fields locked after file upload - applying DevTools fix');
+                    try {
+                        // Single, clean DevTools toggle to unlock fields
+                        await window.api.toggleDevTools();
+                        console.log('DevTools toggle applied for file upload field unlock');
+                    } catch (error) {
+                        console.error('DevTools toggle failed:', error);
+                        // Fallback to simple field unlock
+                        [usernameField, passwordField].forEach(field => {
+                            if (field) {
+                                field.disabled = false;
+                                field.readOnly = false;
+                                field.style.pointerEvents = 'auto';
+                            }
+                        });
+                    }
+                } else {
+                    console.log('Input fields remain accessible after file upload');
+                }
+            }, 500);
+                    
+                    // Show success message with instruction
+                    alert(`Successfully loaded ${result.partNumbers.length} part numbers from the uploaded file!\n\nThe data is now displayed in the "Suggested Order" section below. You can now run "Check AceNet" to process these part numbers.`);
+                    
+                } else if (result.success && result.partNumbers.length === 0) {
+                    hideProcessingModal();
+                    alert('No part numbers found in the uploaded file. Please check the file format and content.');
+                } else {
+                    hideProcessingModal();
+                    alert('Failed to process file: ' + (result.error || 'Unknown error'));
+                }
+                
+            } catch (error) {
+                hideProcessingModal();
+                console.error('Error processing part number file:', error);
+                alert('Error processing file: ' + error.message);
+            }
+        }
+    });
 }
 
