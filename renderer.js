@@ -39,6 +39,62 @@ function loadOnOrderData() {
     }
 }
 
+// Function to check and adjust sidebar scrolling
+function checkSidebarScrolling() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+    
+    const sidebarHeight = sidebar.clientHeight;
+    const sidebarScrollHeight = sidebar.scrollHeight;
+    
+    // If content is overflowing, ensure scrolling is enabled
+    if (sidebarScrollHeight > sidebarHeight) {
+        sidebar.style.overflowY = 'auto';
+        sidebar.style.paddingRight = '16px'; // Account for scrollbar
+        console.log('Sidebar scrolling enabled - content overflowing');
+    } else {
+        sidebar.style.overflowY = 'hidden';
+        sidebar.style.paddingRight = '20px'; // Original padding
+    }
+}
+
+// Function to ensure all sidebar elements are accessible
+function ensureSidebarAccessibility() {
+    const sidebar = document.querySelector('.sidebar');
+    const checkAceNetBtn = document.getElementById('runCheckAceNetBtn');
+    const rememberMeCheckbox = document.getElementById('rememberMe');
+    
+    if (!sidebar || !checkAceNetBtn) return;
+    
+    // Check if the last elements are visible
+    const sidebarRect = sidebar.getBoundingClientRect();
+    const checkAceNetRect = checkAceNetBtn.getBoundingClientRect();
+    
+    // If the Check AceNet button is below the visible area
+    if (checkAceNetRect.bottom > sidebarRect.bottom) {
+        console.log('Check AceNet button is not fully visible, enabling scrolling');
+        sidebar.style.overflowY = 'auto';
+        
+        // Add visual indicator for scrolling
+        if (!sidebar.querySelector('.scroll-indicator')) {
+            const scrollIndicator = document.createElement('div');
+            scrollIndicator.className = 'scroll-indicator';
+            scrollIndicator.innerHTML = '⬇️ Scroll for more options';
+            scrollIndicator.style.cssText = `
+                position: sticky;
+                bottom: 0;
+                background: linear-gradient(transparent, #f4f6fa);
+                text-align: center;
+                padding: 8px;
+                font-size: 0.8em;
+                color: #666;
+                pointer-events: none;
+            `;
+            sidebar.appendChild(scrollIndicator);
+        }
+    }
+}
+
 // Save on order data to localStorage
 function saveOnOrderData() {
     try {
@@ -104,6 +160,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('Input fields initialization complete');
     
+    // Check sidebar accessibility after DOM is loaded
+    setTimeout(() => {
+        checkSidebarScrolling();
+        ensureSidebarAccessibility();
+    }, 500);
+    
     // Completion modal event handlers removed - no longer needed
 });
 
@@ -167,8 +229,21 @@ window.addEventListener('load', () => {
     // Also run another check after a longer delay to ensure everything is ready
     setTimeout(() => {
         window.initializeInputFields();
+        checkSidebarScrolling();
+        ensureSidebarAccessibility();
         console.log('Final input field accessibility check complete');
     }, 500);
+});
+
+// Handle window resize events
+window.addEventListener('resize', () => {
+    // Debounce the resize handler
+    clearTimeout(window.resizeTimeout);
+    window.resizeTimeout = setTimeout(() => {
+        console.log('Window resized, checking sidebar accessibility...');
+        checkSidebarScrolling();
+        ensureSidebarAccessibility();
+    }, 250);
 });
 
 // Order display elements

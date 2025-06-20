@@ -5,12 +5,13 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder",
+    "build": "npm run install-browsers && electron-builder",
     "build-only": "electron-builder",
     "copy-installer": "powershell -Command \"if (Test-Path 'Tink Installer') { Get-ChildItem 'dist/Tink 2.0 Setup*.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | Copy-Item -Destination 'Tink Installer/Tink-2.0-Installer.exe' }\"",
     "dist": "electron-builder --publish=never",
     "release": "electron-builder --publish=always",
-    "postinstall": "electron-builder install-app-deps"
+    "install-browsers": "npx puppeteer browsers install chrome",
+    "postinstall": "electron-builder install-app-deps && npm run install-browsers"
   },
   "keywords": [
     "inventory",
@@ -45,11 +46,13 @@
       "!src",
       "!dist",
       "!.git",
-      "!node_modules",
       "!Scripts/*.py",
       "!wrapper.py",
       "!__pycache__",
       "!*.py"
+    ],
+    "asarUnpack": [
+      "node_modules/puppeteer/.local-chromium/**/*"
     ],
     "win": {
       "target": "nsis",

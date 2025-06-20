@@ -29,8 +29,12 @@ class AceNetScraper {
         // Clean up any leftover flag files from previous runs
         this.cleanupControlFlags();
         
+        // Get the bundled Chromium path for Electron apps
+        const chromiumPath = await this.getChromiumPath();
+        
         this.browser = await puppeteer.launch({
             headless: false, // Keep visible like Python script
+            executablePath: chromiumPath, // Use bundled Chromium
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -46,6 +50,89 @@ class AceNetScraper {
             ]
         });
         this.page = await this.browser.newPage();
+    }
+
+    async getChromiumPath() {
+        const puppeteerConfig = require('puppeteer');
+        const fs = require('fs');
+        
+        try {
+            // First, try to use bundled Chromium from Puppeteer
+            console.log('Attempting to find bundled Chromium...');
+            
+            // Check if we're in a packaged Electron app
+            const isPackaged = process.mainModule && process.mainModule.filename.includes('app.asar');
+            const appPath = isPackaged ? process.resourcesPath : process.cwd();
+            
+            // Try multiple strategies to find Chromium
+            const strategies = [
+                // Strategy 1: Use Puppeteer's browser fetcher
+                async () => {
+                    const browserFetcher = puppeteerConfig.createBrowserFetcher();
+                    const revisionInfo = await browserFetcher.localRevisions();
+                    if (revisionInfo.length > 0) {
+                        const latestRevision = revisionInfo[revisionInfo.length - 1];
+                        const revisionData = browserFetcher.revisionInfo(latestRevision);
+                        if (fs.existsSync(revisionData.executablePath)) {
+                            console.log(`Found bundled Chromium: ${revisionData.executablePath}`);
+                            return revisionData.executablePath;
+                        }
+                    }
+                    throw new Error('No local Chromium found');
+                },
+                
+                // Strategy 2: Download if needed
+                async () => {
+                    console.log('Downloading Chromium...');
+                    const browserFetcher = puppeteerConfig.createBrowserFetcher();
+                    const revisionInfo = await browserFetcher.download();
+                    console.log(`Downloaded Chromium: ${revisionInfo.executablePath}`);
+                    return revisionInfo.executablePath;
+                },
+                
+                // Strategy 3: Look for system Chrome installation
+                async () => {
+                    const possiblePaths = [
+                        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+                        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+                        process.env.CHROME_BIN,
+                        process.env.CHROMIUM_BIN,
+                    ].filter(Boolean);
+                    
+                    for (const chromePath of possiblePaths) {
+                        if (fs.existsSync(chromePath)) {
+                            console.log(`Found system Chrome: ${chromePath}`);
+                            return chromePath;
+                        }
+                    }
+                    throw new Error('No system Chrome found');
+                }
+            ];
+            
+            // Try each strategy in order
+            for (let i = 0; i < strategies.length; i++) {
+                try {
+                    const result = await strategies[i]();
+                    if (result) return result;
+                } catch (error) {
+                    console.log(`Strategy ${i + 1} failed: ${error.message}`);
+                    if (i === strategies.length - 1) {
+                        // If all strategies failed, throw a comprehensive error
+                        throw new Error(
+                            'Chrome/Chromium not found. To fix this issue:\n\n' +
+                            '1. Install Google Chrome from https://www.google.com/chrome/\n' +
+                            '2. Or set CHROME_BIN environment variable to Chrome executable path\n' +
+                            '3. Or run "npx puppeteer browsers install chrome" to download Chromium\n\n' +
+                            'If you continue having issues, please restart the application after installing Chrome.'
+                        );
+                    }
+                }
+            }
+            
+        } catch (error) {
+            console.error('Failed to get Chromium path:', error.message);
+            throw error;
+        }
     }
 
     async getPartNumbersFromFile(inputFile) {

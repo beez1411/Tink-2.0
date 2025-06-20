@@ -484,6 +484,25 @@ input[type="number"]::-webkit-outer-spin-button {
     background: #2a4d69;
 }
 
+/* Sidebar-specific scrollbar styling */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(42, 77, 105, 0.4);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(42, 77, 105, 0.6);
+}
+
 /* Order Display Section Styles - Base styles only, layout handled by dual-output */
 
 .order-controls {
@@ -1208,6 +1227,8 @@ a {
     -moz-user-select: text;
     -ms-user-select: text;
     user-select: text;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sidebar .btn,
@@ -1289,6 +1310,50 @@ a {
     user-select: text;
 }
 
+/* Responsive design for smaller screens */
+@media (max-height: 800px) {
+    .sidebar {
+        padding: 16px 20px 16px 20px;
+        gap: 0.6em;
+    }
+    
+    .sidebar .input-group {
+        margin-bottom: 0.6em;
+    }
+    
+    .sidebar .btn {
+        padding: 0.4em 1em;
+        font-size: 0.9em;
+    }
+    
+    .sidebar input,
+    .sidebar select {
+        padding: 0.4em 0.6em;
+        font-size: 0.9em;
+    }
+}
+
+@media (max-height: 700px) {
+    .sidebar {
+        padding: 12px 20px 12px 20px;
+        gap: 0.5em;
+    }
+    
+    .sidebar .input-group {
+        margin-bottom: 0.5em;
+    }
+    
+    .sidebar .btn {
+        padding: 0.35em 0.8em;
+        font-size: 0.85em;
+    }
+    
+    .sidebar .input-group label {
+        margin-bottom: 0.3em;
+        font-size: 0.9em;
+    }
+}
+
 @media (max-width: 900px) {
     .dual-output {
         flex-direction: column;
@@ -1320,6 +1385,7 @@ a {
         flex-wrap: wrap;
         padding: 16px 8px 8px 8px;
         gap: 0.8em;
+        overflow-y: visible;
     }
 }
 
