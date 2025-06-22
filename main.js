@@ -496,7 +496,13 @@ ipcMain.handle('save-to-po', async (event, orderData) => {
     
     orderData.forEach(item => {
       // Format: PARTNUMBER	SUPPLIER_NUMBER1	QUANTITY	MKTCOST
-      content += `${item.partNumber}\t\t${item.quantity}\t${item.cost || ''}\n`;
+      // Use dynamic supplier number from original inventory data, fallback to '10'
+      const supplierNumber = item.supplierNumber || '10';
+      const partNumber = item.partNumber || item.sku || '';
+      const quantity = item.quantity || 0;
+      const cost = item.cost || '';
+      
+      content += `${partNumber}\t${supplierNumber}\t${quantity}\t${cost}\n`;
     });
     
     // Write the file
@@ -548,107 +554,128 @@ ipcMain.handle('export-acenet-results', async (event, resultsData) => {
     workbook.created = new Date();
     workbook.modified = new Date();
     
-    // Create summary worksheet
-    const summarySheet = workbook.addWorksheet('Summary');
+    // Create single worksheet with column-based layout
+    const worksheet = workbook.addWorksheet('AceNet Results');
     
-    // Add summary data
-    summarySheet.columns = [
-      { header: 'Category', key: 'category', width: 20 },
-      { header: 'Count', key: 'count', width: 10 }
+    // Define column mapping and colors to match UI and screenshot
+    const columnConfig = [
+      { column: 'A', header: 'No Discovery', color: 'FFFD7E14', key: 'No Discovery' },        // Orange
+      { column: 'B', header: '', color: null, key: 'spacer' },                               // Spacer
+      { column: 'C', header: 'No Asterisk(*)', color: 'FFFF1744', key: 'No Asterisk(*)' }, // Red
+      { column: 'D', header: '', color: null, key: 'spacer' },                               // Spacer
+      { column: 'E', header: 'Cancelled', color: 'FF6F42C1', key: 'Cancelled' },            // Purple
+      { column: 'F', header: '', color: null, key: 'spacer' },                               // Spacer
+      { column: 'G', header: 'On Order', color: 'FF28A745', key: 'On Order' },              // Green
+      { column: 'H', header: '', color: null, key: 'spacer' },                               // Spacer
+      { column: 'I', header: 'No Location', color: 'FF9C27B0', key: 'No Location' },        // Purple
+      { column: 'J', header: '', color: null, key: 'spacer' },                               // Spacer
+      { column: 'K', header: 'Not in AceNet', color: 'FF2196F3', key: 'Not in AceNet' },    // Blue
+      { column: 'L', header: '', color: null, key: 'spacer' },                               // Spacer
+      { column: 'M', header: 'Not in RSC', color: 'FF6C757D', key: 'Not in RSC' }           // Gray
     ];
     
-    // Style the header row
-    summarySheet.getRow(1).font = { bold: true };
-    summarySheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF4472C4' }
-    };
-    summarySheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    // Set up headers and column formatting
+    columnConfig.forEach(config => {
+      const cell = worksheet.getCell(`${config.column}1`);
+      cell.value = config.header;
+      
+      if (config.color) {
+        // Style header with color background, bold white text
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: config.color }
+        };
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        
+        // Set column width based on header text length
+        worksheet.getColumn(config.column).width = Math.max(config.header.length * 1.2, 15);
+      } else {
+        // Spacer columns - minimal width
+        worksheet.getColumn(config.column).width = 3;
+      }
+    });
     
+    // Process categorized results and populate columns
     let totalItems = 0;
     
-    // Process each category
     if (resultsData && resultsData.categorizedResults && Array.isArray(resultsData.categorizedResults)) {
-      resultsData.categorizedResults.forEach((category, index) => {
+      // Create a map to find the correct column for each category
+      const categoryToColumn = {};
+      columnConfig.forEach(config => {
+        if (config.key !== 'spacer') {
+          categoryToColumn[config.key] = config.column;
+        }
+      });
+      
+      resultsData.categorizedResults.forEach(category => {
         if (category && category.name && category.parts && Array.isArray(category.parts) && category.parts.length > 0) {
-          const categoryName = category.name;
-          const partCount = category.parts.length;
-          totalItems += partCount;
+          const columnLetter = categoryToColumn[category.name];
           
-          // Add to summary
-          summarySheet.addRow({
-            category: categoryName,
-            count: partCount
-          });
-          
-          // Create separate worksheet for each category
-          const categorySheet = workbook.addWorksheet(categoryName);
-          
-          // Add headers
-          categorySheet.columns = [
-            { header: 'Part Number', key: 'partNumber', width: 15 },
-            { header: 'Notes', key: 'notes', width: 30 }
-          ];
-          
-          // Style the header row
-          categorySheet.getRow(1).font = { bold: true };
-          categorySheet.getRow(1).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: category.color ? category.color.replace('#', 'FF') : 'FF4472C4' }
-          };
-          categorySheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-          
-          // Add part numbers
-          category.parts.forEach(part => {
-            const partData = typeof part === 'object' ? part : { partNumber: part };
-            const partNumber = partData.partNumber || part;
-            const notes = partData.needsManualReview ? 'NEEDS MANUAL REVIEW' : '';
+          if (columnLetter) {
+            totalItems += category.parts.length;
             
-            const row = categorySheet.addRow({
-              partNumber: partNumber,
-              notes: notes
+            // Add part numbers starting from row 2
+            category.parts.forEach((part, index) => {
+              const partData = typeof part === 'object' ? part : { partNumber: part };
+              const partNumber = partData.partNumber || part;
+              const row = index + 2; // Start from row 2 (row 1 is header)
+              
+              const cell = worksheet.getCell(`${columnLetter}${row}`);
+              cell.value = partNumber;
+              
+              // Style part number cells
+              cell.font = { name: 'Consolas', size: 10 }; // Monospace font like in screenshot
+              cell.alignment = { horizontal: 'left', vertical: 'top' };
+              
+              // Highlight rows that need manual review with yellow background
+              if (partData.needsManualReview) {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFFFFF00' } // Yellow
+                };
+                cell.font = { ...cell.font, bold: true };
+              }
             });
             
-            // Highlight rows that need manual review
-            if (partData.needsManualReview) {
-              row.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFFFEB3B' }
-              };
-            }
-          });
+            // Auto-size column based on content
+            const headerLength = category.name.length;
+            let maxContentLength = headerLength;
+            
+            category.parts.forEach(part => {
+              const partData = typeof part === 'object' ? part : { partNumber: part };
+              const partNumber = partData.partNumber || part;
+              maxContentLength = Math.max(maxContentLength, partNumber.toString().length);
+            });
+            
+            worksheet.getColumn(columnLetter).width = Math.max(maxContentLength * 1.1, 15);
+          }
         }
       });
     }
     
-    // Add total to summary
-    summarySheet.addRow({
-      category: 'TOTAL',
-      count: totalItems
+    // Add borders to make it look cleaner
+    const maxRow = worksheet.rowCount || 1;
+    columnConfig.forEach(config => {
+      if (config.key !== 'spacer') {
+        for (let row = 1; row <= Math.max(maxRow, 50); row++) {
+          const cell = worksheet.getCell(`${config.column}${row}`);
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFE0E0E0' } },
+            left: { style: 'thin', color: { argb: 'FFE0E0E0' } },
+            bottom: { style: 'thin', color: { argb: 'FFE0E0E0' } },
+            right: { style: 'thin', color: { argb: 'FFE0E0E0' } }
+          };
+        }
+      }
     });
     
-    // Style the total row
-    const totalRowIndex = summarySheet.rowCount;
-    summarySheet.getRow(totalRowIndex).font = { bold: true };
-    summarySheet.getRow(totalRowIndex).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' }
-    };
-    
-    // Add processing info
-    summarySheet.addRow({});
-    summarySheet.addRow({
-      category: 'Processed Date',
-      count: new Date().toLocaleDateString()
-    });
-    summarySheet.addRow({
-      category: 'Processing Time',
-      count: new Date().toLocaleTimeString()
-    });
+    // Freeze the header row
+    worksheet.views = [
+      { state: 'frozen', ySplit: 1 }
+    ];
     
     // Save the file
     await workbook.xlsx.writeFile(filePath);

@@ -764,6 +764,7 @@ class AdvancedInventoryAnalyzer {
                     safetyStock,
                     suggestedQty: orderAnalysis.suggestedQty,
                     cost: unitCost,
+                    supplierNumber: row.SUPPLIER_NUMBER1 || row.SUPPLIERNUMBER || row.SUPPLIER_NUMBER || row.SUPPLIER || '10', // Preserve original supplier number
                     demandStd: (() => {
                         try {
                             const recentSalesForStd = sales.slice(-26);
@@ -847,6 +848,7 @@ class AdvancedInventoryAnalyzer {
                         safetyStock: 0,
                         suggestedQty: adjustedQty,
                         cost: unitCost,
+                        supplierNumber: row.SUPPLIER_NUMBER1 || row.SUPPLIERNUMBER || row.SUPPLIER_NUMBER || row.SUPPLIER || '10', // Preserve original supplier number
                         demandStd: 0,
                         daysThreshold,
                         forecast: 0,

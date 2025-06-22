@@ -84,12 +84,19 @@
             </div>
 
         </div>
-        <button id="runCheckAceNetBtn" class="btn btn-secondary" disabled>
+        <button id="runCheckAceNetBtn" class="btn btn-primary" disabled>
             Check AceNet
         </button>
-        <button id="uploadPartNumberBtn" class="btn btn-primary" style="margin-top: 0.3em;">
-            Upload Part Number File
-        </button>
+        
+        <!-- Bottom buttons section - separated from main form -->
+        <div class="sidebar-bottom-section">
+            <button id="fixInputFieldsBtn" class="btn btn-warning">
+                Fix Input Fields
+            </button>
+            <button id="uploadPartNumberBtn" class="btn btn-primary">
+                Upload Part Number File
+            </button>
+        </div>
         <input type="file" id="acenetPartFile" accept=".xlsx,.xls,.txt" style="display: none;" />
     </div>
     <div class="main-content">
@@ -192,6 +199,69 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- File Upload Progress Modal -->
+    <div id="fileUploadModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1001; justify-content: center; align-items: center;">
+        <div class="file-upload-modal-content">
+            <div id="fileUploadProcessingState" class="modal-state">
+                <div class="file-upload-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                    </svg>
+                </div>
+                <h3 class="modal-title">Processing File Upload</h3>
+                <div class="file-upload-steps">
+                    <div class="processing-step current">
+                        <div class="step-icon">📁</div>
+                        <div class="step-text">Reading file contents...</div>
+                    </div>
+                    <div class="processing-step">
+                        <div class="step-icon">🔍</div>
+                        <div class="step-text">Extracting part numbers...</div>
+                    </div>
+                    <div class="processing-step">
+                        <div class="step-icon">✨</div>
+                        <div class="step-text">Preparing data...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="fileUploadSuccessState" class="modal-state" style="display: none;">
+                <div class="success-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 class="modal-title">File Upload Complete!</h3>
+                <div class="completion-content">
+                    <div class="completion-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Part Numbers Loaded:</span>
+                            <span class="summary-value" id="uploadedPartCount">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">File Name:</span>
+                            <span class="summary-value" id="uploadedFileName">-</span>
+                        </div>
+                    </div>
+                    <div class="completion-features">
+                        <div class="feature-item">
+                            <div class="feature-icon">📋</div>
+                            <span>Data displayed in Suggested Order section</span>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">🔍</div>
+                            <span>Ready for AceNet checking</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="closeFileUploadBtn" class="btn btn-secondary">Close</button>
+                    <button id="runAceNetFromUploadBtn" class="btn btn-primary">Check AceNet</button>
+                </div>
+            </div>
         </div>
     </div>
 </body>

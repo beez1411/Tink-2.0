@@ -121,33 +121,83 @@ function getOnOrderQuantity(sku) {
     return onOrderData[sku] || 0;
 }
 
-// Robust function to ensure input fields are always accessible
-function forceInputFieldAccessibility() {
-    // SIMPLIFIED: Less aggressive approach to avoid flashing
-    const inputFields = document.querySelectorAll('#acenetOptions input, #acenetOptions select');
-    inputFields.forEach(field => {
-        // Basic accessibility properties
-        field.style.pointerEvents = 'auto';
-        field.style.userSelect = 'text';
-        field.disabled = false;
-        field.readOnly = false;
+// Add a manual accessibility fix button for users
+function addAccessibilityFixButton() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar || sidebar.querySelector('.accessibility-fix-btn')) return;
+    
+    const fixButton = document.createElement('button');
+    fixButton.className = 'btn btn-secondary accessibility-fix-btn';
+    fixButton.innerHTML = '🔧 Fix Input Fields';
+    fixButton.title = 'Click if username/password fields are not working (alternative to Ctrl+Shift+I)';
+    fixButton.style.cssText = `
+        font-size: 0.8em;
+        padding: 0.3rem 0.6rem;
+        margin-top: 0.5rem;
+        background: #ffc107;
+        border-color: #ffc107;
+        color: #000;
+    `;
+    
+    fixButton.addEventListener('click', () => {
+        console.log('Manual accessibility fix triggered by user');
+        forceInputFieldAccessibility();
+        
+        // Provide visual feedback
+        fixButton.innerHTML = '✅ Fixed!';
+        setTimeout(() => {
+            fixButton.innerHTML = '🔧 Fix Input Fields';
+        }, 2000);
     });
     
-    // Specifically handle username and password fields with targeted approach
+    // Insert before the Check AceNet button
+    const checkAceNetBtn = document.getElementById('runCheckAceNetBtn');
+    if (checkAceNetBtn) {
+        sidebar.insertBefore(fixButton, checkAceNetBtn);
+    }
+}
+
+// Enhanced accessibility function with better detection
+function forceInputFieldAccessibility() {
+    // Only run if fields are actually inaccessible to avoid layout interference
+    let fixedAny = false;
+    
     ['username', 'password', 'storeNumber'].forEach((fieldId) => {
         const field = document.getElementById(fieldId);
         if (field) {
-            // Only fix if actually locked
-            if (field.disabled || field.readOnly || getComputedStyle(field).pointerEvents === 'none') {
+            const computedStyle = getComputedStyle(field);
+            const isInaccessible = field.disabled || 
+                                   field.readOnly || 
+                                   computedStyle.pointerEvents === 'none' ||
+                                   computedStyle.visibility === 'hidden' ||
+                                   computedStyle.opacity === '0';
+            
+            // Only apply fixes if field is actually inaccessible
+            if (isInaccessible) {
+                console.log(`Fixing accessibility for ${fieldId}`);
                 field.disabled = false;
                 field.readOnly = false;
                 field.style.pointerEvents = 'auto';
                 field.style.userSelect = 'text';
                 field.style.opacity = '1';
                 field.style.visibility = 'visible';
+                field.tabIndex = fieldId === 'username' ? 1 : fieldId === 'password' ? 2 : 3;
+                
+                // Ensure the field is focusable
+                field.setAttribute('aria-hidden', 'false');
+                field.removeAttribute('readonly');
+                field.removeAttribute('disabled');
+                
+                fixedAny = true;
             }
         }
     });
+    
+    if (fixedAny) {
+        console.log('Applied accessibility fixes to input fields');
+    }
+    
+    return fixedAny;
 }
 
 // Ensure input fields work properly
@@ -157,8 +207,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial setup
     forceInputFieldAccessibility();
     
-    // SIMPLIFIED: Only set up periodic checks to maintain accessibility (less aggressive)
-    setInterval(forceInputFieldAccessibility, 5000); // Check every 5 seconds instead of 2
+    // Connect the HTML Fix Input Fields button to functionality
+    const fixButton = document.getElementById('fixInputFieldsBtn');
+    if (fixButton) {
+        fixButton.addEventListener('click', () => {
+            console.log('Manual accessibility fix triggered by user');
+            forceInputFieldAccessibility();
+            
+            // Provide visual feedback
+            const originalText = fixButton.innerHTML;
+            fixButton.innerHTML = '✅ Fixed!';
+            setTimeout(() => {
+                fixButton.innerHTML = originalText;
+            }, 2000);
+        });
+    }
+    
+    // Minimal periodic checks to avoid layout interference
+    setInterval(forceInputFieldAccessibility, 15000); // Check every 15 seconds - much less aggressive
     
     console.log('Input fields initialization complete with simplified monitoring');
     
@@ -166,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         checkSidebarScrolling();
         ensureSidebarAccessibility();
+        // addAccessibilityFixButton(); // Removed - button now exists in HTML at bottom
     }, 500);
     
     // Completion modal event handlers removed - no longer needed
@@ -278,10 +345,10 @@ document.querySelector('.file-input-label').addEventListener('click', async (e) 
 // Run Suggested Order button
 runSuggestedOrderBtn.addEventListener('click', async () => {
     try {
-        if (!selectedFile) {
-            alert('Please select an inventory file first');
-            return;
-        }
+            if (!selectedFile) {
+        await showAlert('Please select an inventory file first', 'warning');
+        return;
+    }
 
         showProcessingModal();
         
@@ -377,7 +444,7 @@ runSuggestedOrderBtn.addEventListener('click', async () => {
         
     } catch (error) {
         console.error('Suggested Order Error:', error);
-        alert('Error processing suggested order: ' + (error.message || error.toString()));
+        await showAlert('Error processing suggested order: ' + (error.message || error.toString()), 'error');
         hideProcessingModal();
     }
 });
@@ -389,33 +456,23 @@ runCheckAceNetBtn.addEventListener('click', async () => {
     const currentStoreInput = document.getElementById('storeNumber');
     
     if (!currentUsernameInput.value || !currentPasswordInput.value || !currentStoreInput.value) {
-        alert('Please fill in all AceNet credentials');
+        await showAlert('Please fill in all AceNet credentials', 'warning');
         return;
     }
     
-    // Check for input source - either uploaded part numbers file or current order table
-    const partNumberFile = document.getElementById('acenetPartFile');
-    let partNumbers = [];
-    let useInMemoryResults = false;
+    // Extract part numbers from current order display table
+    // This covers both uploaded files (which populate the table) and suggested order results
+    const partNumbers = getCurrentOrderPartNumbers();
     
-    if (partNumberFile && partNumberFile.files.length > 0) {
-        // User uploaded a part numbers file - we'll let the backend handle this
-        console.log('Using uploaded part numbers file');
+    if (partNumbers.length > 0) {
+        console.log(`Using ${partNumbers.length} part numbers from current order display`);
     } else {
-        // Extract part numbers from current order display table (accounts for user additions/deletions)
-        partNumbers = getCurrentOrderPartNumbers();
-        
-        if (partNumbers.length > 0) {
-            useInMemoryResults = true;
-            console.log(`Using ${partNumbers.length} part numbers from current order display`);
-        } else {
-            alert('No part numbers available. Please run Suggested Order first or add items manually.');
-            return;
-        }
+        await showAlert('No part numbers available. Please run Suggested Order first or upload a part number file.', 'warning');
+        return;
     }
     
     // Create progress tracking popup - no robot animation for AceNet
-    const progressPopup = createProgressPopup(useInMemoryResults ? partNumbers.length : 0);
+    const progressPopup = createProgressPopup(partNumbers.length);
     runCheckAceNetBtn.disabled = true;
     
     // Set up progress listener for direct AceNet processing
@@ -441,32 +498,14 @@ runCheckAceNetBtn.addEventListener('click', async () => {
     try {
         let result;
         
-        if (useInMemoryResults) {
-            // Use in-memory part numbers - call a new direct AceNet processing function
-            result = await window.api.processAceNetDirect({
-                partNumbers: partNumbers,
-                username: currentUsernameInput.value,
-                password: currentPasswordInput.value,
-                store: currentStoreInput.value
-            });
-            console.log('AceNet Direct Result:', result);
-        } else {
-            // Use uploaded file - existing file-based processing
-            const fileResult = await window.api.selectFile();
-            if (!fileResult) {
-                alert('Failed to select part numbers file');
-                return;
-            }
-            
-            result = await window.api.processFile({
-                filePath: fileResult.path,
-                scriptType: 'check_acenet',
-                username: currentUsernameInput.value,
-                password: currentPasswordInput.value,
-                store: currentStoreInput.value,
-                sheetName: 'Big Beautiful Order'
-            });
-        }
+        // Use in-memory part numbers - call direct AceNet processing function
+        result = await window.api.processAceNetDirect({
+            partNumbers: partNumbers,
+            username: currentUsernameInput.value,
+            password: currentPasswordInput.value,
+            store: currentStoreInput.value
+        });
+        console.log('AceNet Direct Result:', result);
         
         if (result.success) {
             console.log('AceNet process completed successfully');
@@ -544,7 +583,7 @@ runCheckAceNetBtn.addEventListener('click', async () => {
             if (errorMessage.toLowerCase().includes('cancelled by user')) {
                 showCancellationPopup();
             } else {
-                alert('AceNet check failed: ' + errorMessage);
+                await showAlert('AceNet check failed: ' + errorMessage, 'error');
             }
         }
     } catch (error) {
@@ -560,7 +599,7 @@ runCheckAceNetBtn.addEventListener('click', async () => {
         if (errorMessage.toLowerCase().includes('cancelled by user')) {
             showCancellationPopup();
         } else {
-            alert('Error running AceNet check: ' + errorMessage);
+            await showAlert('Error running AceNet check: ' + errorMessage, 'error');
         }
     } finally {
         runCheckAceNetBtn.disabled = false;
@@ -809,7 +848,7 @@ if (addItemBtn) {
 // Save On Order button handler
 const saveOnOrderBtn = document.getElementById('saveOnOrderBtn');
 if (saveOnOrderBtn) {
-    saveOnOrderBtn.addEventListener('click', () => {
+    saveOnOrderBtn.addEventListener('click', async () => {
         // Get current order data and save as on order
         const rows = orderTableBody.querySelectorAll('tr');
         const newOnOrderData = {};
@@ -858,7 +897,7 @@ if (saveOnOrderBtn) {
         console.log('=== END SAVE ON ORDER DEBUG ===');
         
         // Show confirmation
-        alert(`Saved ${Object.keys(newOnOrderData).length} items to On Order. Total items on order: ${Object.keys(onOrderData).length}`);
+        await showAlert(`Saved ${Object.keys(newOnOrderData).length} items to On Order. Total items on order: ${Object.keys(onOrderData).length}`, 'success');
         
         // Refresh the display to show updated on order quantities
         if (suggestedOrderResults.hasResults && suggestedOrderResults.orderData) {
@@ -895,10 +934,23 @@ if (saveToPOBtn) {
                     // Get cost if available
                     const costCell = row.cells[6]; // Cost/MOQ column
                     let cost = '';
-                    const costInput = costCell.querySelector('input');
+                    
+                    // First check for input field (manually added items)
+                    const costInput = costCell.querySelector('input.cost-input');
                     if (costInput) {
                         const costValue = parseFloat(costInput.value) || 0;
                         cost = costValue.toFixed(2);
+                    } else {
+                        // For regular items, cost is in a div - extract from text
+                        const costDiv = costCell.querySelector('div');
+                        if (costDiv) {
+                            const costText = costDiv.textContent.trim();
+                            // Extract number from $XX.XX format
+                            const costMatch = costText.match(/\$?(\d+\.?\d*)/);
+                            if (costMatch) {
+                                cost = parseFloat(costMatch[1]).toFixed(2);
+                            }
+                        }
                     }
                     
                     // Only include items with quantity > 0
@@ -912,23 +964,23 @@ if (saveToPOBtn) {
                 }
             });
             
-            if (orderData.length === 0) {
-                alert('No items with quantities > 0 found to save to PO.');
-                return;
-            }
+                if (orderData.length === 0) {
+        await showAlert('No items with quantities > 0 found to save to PO.', 'warning');
+        return;
+    }
             
             // Call the API to save the PO file
             const result = await window.api.saveToPO(orderData);
             
             if (result.success) {
-                alert(`PO file saved successfully!\nLocation: ${result.filePath}\nItems saved: ${orderData.length}`);
+                await showAlert(`PO file saved successfully!\nLocation: ${result.filePath}\nItems saved: ${orderData.length}`, 'success');
             } else {
-                alert('Error saving PO file: ' + result.error);
+                await showAlert('Error saving PO file: ' + result.error, 'error');
             }
             
         } catch (error) {
             console.error('Save to PO error:', error);
-            alert('Error saving PO file: ' + error.message);
+            await showAlert('Error saving PO file: ' + error.message, 'error');
         }
     });
 }
@@ -936,9 +988,10 @@ if (saveToPOBtn) {
 // Delete On Order checkbox handler
 const deleteOnOrderCheckbox = document.getElementById('deleteOnOrder');
 if (deleteOnOrderCheckbox) {
-    deleteOnOrderCheckbox.addEventListener('change', (e) => {
+    deleteOnOrderCheckbox.addEventListener('change', async (e) => {
         if (e.target.checked) {
-            if (confirm('This will clear all On Order data. Are you sure?')) {
+            const confirmed = await showConfirm('This will clear all On Order data. Are you sure?', 'Clear On Order Data');
+            if (confirmed) {
                 clearOnOrderData();
                 console.log('On Order data cleared');
                 
@@ -1053,94 +1106,25 @@ function createProgressPopup(totalItems) {
     popup.className = 'progress-popup';
     popup.innerHTML = `
         <div class="progress-popup-content">
-            <h3>Processing Part Numbers</h3>
-            <div class="progress-info">
-                <div class="progress-text">Initializing...</div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: 0%"></div>
-                </div>
-                <div class="progress-numbers">0 of ${totalItems} items checked</div>
+            <div class="popup-header">
+                <span class="popup-icon">⚙️</span>
+                <h3 class="popup-title">Processing Part Numbers</h3>
             </div>
-            <div class="progress-buttons">
-                <button id="pauseProcessBtn" class="btn btn-warning">Pause</button>
-                <button id="cancelProcessBtn" class="btn btn-danger">Cancel</button>
+            <div class="popup-progress">
+                <div class="popup-progress-text">Initializing...</div>
+                <div class="popup-progress-bar">
+                    <div class="popup-progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="popup-progress-numbers">0 of ${totalItems} items checked</div>
+            </div>
+            <div class="popup-actions">
+                <button id="pauseProcessBtn" class="popup-btn warning">Pause</button>
+                <button id="cancelProcessBtn" class="popup-btn danger">Cancel</button>
             </div>
         </div>
     `;
     
-    // Add styles
-    const style = document.createElement('style');
-    style.textContent = `
-        .progress-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
-        .progress-popup-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            min-width: 400px;
-            text-align: center;
-        }
-        .progress-info {
-            margin: 20px 0;
-        }
-        .progress-text {
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        .progress-bar-container {
-            width: 100%;
-            height: 20px;
-            background: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #4caf50, #45a049);
-            transition: width 0.3s ease;
-        }
-        .progress-numbers {
-            font-size: 14px;
-            color: #666;
-        }
-        .progress-buttons {
-            margin-top: 20px;
-        }
-        .progress-buttons button {
-            margin: 0 10px;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .btn-warning {
-            background: #ffa500;
-            color: white;
-        }
-        .btn-danger {
-            background: #f44336;
-            color: white;
-        }
-        .btn-warning:hover {
-            background: #ff8c00;
-        }
-        .btn-danger:hover {
-            background: #da190b;
-        }
-    `;
-    document.head.appendChild(style);
+    // No need for inline styles - using standardized CSS classes
     
     document.body.appendChild(popup);
     
@@ -1152,7 +1136,7 @@ function createProgressPopup(totalItems) {
         isPaused = !isPaused;
         const btn = popup.querySelector('#pauseProcessBtn');
         btn.textContent = isPaused ? 'Resume' : 'Pause';
-        btn.className = isPaused ? 'btn btn-success' : 'btn btn-warning';
+        btn.className = isPaused ? 'popup-btn success' : 'popup-btn warning';
         
         try {
             if (isPaused) {
@@ -1175,12 +1159,13 @@ function createProgressPopup(totalItems) {
             // Revert button state on error
             isPaused = !isPaused;
             btn.textContent = isPaused ? 'Resume' : 'Pause';
-            btn.className = isPaused ? 'btn btn-success' : 'btn btn-warning';
+            btn.className = isPaused ? 'popup-btn success' : 'popup-btn warning';
         }
     });
     
     popup.querySelector('#cancelProcessBtn').addEventListener('click', async () => {
-        if (confirm('Are you sure you want to cancel the AceNet check process?')) {
+        const confirmed = await showConfirm('Are you sure you want to cancel the AceNet check process?', 'Cancel Process');
+        if (confirmed) {
             try {
                 const result = await window.electronAPI.acenetCancel();
                 if (result.success) {
@@ -1189,11 +1174,11 @@ function createProgressPopup(totalItems) {
                     console.log('Process cancelled successfully');
                 } else {
                     console.error('Failed to cancel process:', result.error);
-                    alert('Failed to cancel process. Please try again.');
+                    await showAlert('Failed to cancel process. Please try again.', 'error');
                 }
             } catch (error) {
                 console.error('Failed to cancel process:', error);
-                alert('Failed to cancel process. Please try again.');
+                await showAlert('Failed to cancel process. Please try again.', 'error');
             }
         }
     });
@@ -1202,9 +1187,9 @@ function createProgressPopup(totalItems) {
         updateProgress: (current, total, message) => {
             if (isCancelled) return;
             
-            const progressBar = popup.querySelector('.progress-bar');
-            const progressText = popup.querySelector('.progress-text');
-            const progressNumbers = popup.querySelector('.progress-numbers');
+            const progressBar = popup.querySelector('.popup-progress-fill');
+            const progressText = popup.querySelector('.popup-progress-text');
+            const progressNumbers = popup.querySelector('.popup-progress-numbers');
             
             const percentage = (current / total) * 100;
             progressBar.style.width = percentage + '%';
@@ -1248,94 +1233,22 @@ function showCompletionPopup(result, totalProcessed) {
     
     popup.innerHTML = `
         <div class="completion-popup-content">
-            <h3>AceNet Check Complete</h3>
-            <div class="completion-message">
-                <div class="completion-icon">✅</div>
-                <div class="completion-summary">${summaryText.replace(/\n/g, '<br>')}</div>
+            <div class="popup-header">
+                <span class="popup-icon success">✅</span>
+                <h3 class="popup-title">AceNet Check Complete</h3>
             </div>
-            <div class="completion-buttons">
-                <button id="closeCompletionBtn" class="btn btn-secondary">Close</button>
-                <button id="openExcelBtn" class="btn btn-primary">Open Excel</button>
-                <button id="viewResultsBtn" class="btn btn-success">View Results</button>
+            <div class="popup-body">
+                <div class="popup-message">${summaryText.replace(/\n/g, '<br>')}</div>
+            </div>
+            <div class="popup-actions">
+                <button id="closeCompletionBtn" class="popup-btn secondary">Close</button>
+                <button id="openExcelBtn" class="popup-btn primary">Open Excel</button>
+                <button id="viewResultsBtn" class="popup-btn success">View Results</button>
             </div>
         </div>
     `;
     
-    // Add styles for completion popup
-    const style = document.createElement('style');
-    style.textContent = `
-        .completion-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10001;
-        }
-        .completion-popup-content {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            min-width: 500px;
-            max-width: 600px;
-            text-align: center;
-        }
-        .completion-message {
-            margin: 20px 0;
-        }
-        .completion-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-        .completion-summary {
-            text-align: left;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 14px;
-            line-height: 1.4;
-            white-space: pre-line;
-        }
-        .completion-buttons {
-            margin-top: 30px;
-        }
-        .completion-buttons button {
-            margin: 0 10px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        .btn-primary:hover {
-            background: #0056b3;
-        }
-        .btn-success:hover {
-            background: #218838;
-        }
-    `;
-    document.head.appendChild(style);
+    // No need for inline styles - using standardized CSS classes
     
     document.body.appendChild(popup);
     
@@ -1351,18 +1264,18 @@ function showCompletionPopup(result, totalProcessed) {
             
             if (exportResult.success) {
                 // Show success message and ask if user wants to open the file
-                const openFile = confirm(`Excel file created successfully!\nLocation: ${exportResult.filePath}\n\nWould you like to open the file now?`);
+                const openFile = await showConfirm(`Excel file created successfully!\nLocation: ${exportResult.filePath}\n\nWould you like to open the file now?`, 'Open Excel File');
                 
                 if (openFile) {
                     // Open the file using the system default application
                     await window.api.openFile(exportResult.filePath);
                 }
             } else {
-                alert('Error creating Excel file: ' + exportResult.error);
+                await showAlert('Error creating Excel file: ' + exportResult.error, 'error');
             }
         } catch (error) {
             console.error('Excel export error:', error);
-            alert('Error creating Excel file: ' + error.message);
+            await showAlert('Error creating Excel file: ' + error.message, 'error');
         }
         popup.remove();
     });
@@ -1386,74 +1299,26 @@ function showCancellationPopup() {
     
     popup.innerHTML = `
         <div class="cancellation-popup-content">
-            <div class="cancellation-icon">❌</div>
-            <h3>Process Cancelled</h3>
-            <p>The AceNet check process has been cancelled successfully.</p>
-            <button id="closeCancellationBtn" class="btn btn-primary">OK</button>
+            <div class="popup-header">
+                <span class="popup-icon error">❌</span>
+                <h3 class="popup-title">Process Cancelled</h3>
+            </div>
+            <div class="popup-body">
+                <p class="popup-message">The AceNet check process has been cancelled successfully.</p>
+            </div>
+            <div class="popup-actions">
+                <button id="closeCancellationBtn" class="popup-btn primary">OK</button>
+            </div>
         </div>
     `;
     
-    // Add styles for cancellation popup
-    const style = document.createElement('style');
-    style.textContent = `
-        .cancellation-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10001;
-        }
-        .cancellation-popup-content {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            min-width: 300px;
-            max-width: 400px;
-            text-align: center;
-        }
-        .cancellation-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-        .cancellation-popup-content h3 {
-            margin: 0 0 15px 0;
-            color: #333;
-            font-size: 20px;
-        }
-        .cancellation-popup-content p {
-            margin: 0 0 25px 0;
-            color: #666;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-        .cancellation-popup-content button {
-            padding: 10px 30px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            background: #007bff;
-            color: white;
-            font-size: 14px;
-        }
-        .cancellation-popup-content button:hover {
-            background: #0056b3;
-        }
-    `;
-    document.head.appendChild(style);
+    // No need for inline styles - using standardized CSS classes
     
     document.body.appendChild(popup);
     
     // Add event listener for OK button
     popup.querySelector('#closeCancellationBtn').addEventListener('click', () => {
         popup.remove();
-        style.remove(); // Also remove the styles
     });
 }
 
@@ -1674,15 +1539,17 @@ if (partNumberFileInput) {
         const file = event.target.files[0];
         if (file) {
             try {
-                // Show processing modal
-                showProcessingModal();
+                // Show file upload modal
+                showFileUploadModal();
                 
                 // Process the uploaded file to extract part numbers
                 const result = await window.api.processPartNumberFile(file.path);
                 
                 if (result.success && result.partNumbers.length > 0) {
-                    // Hide processing modal
-                    hideProcessingModal();
+                    // Show success state with file information
+                    setTimeout(() => {
+                        showFileUploadSuccess(result.partNumbers.length, file.name);
+                    }, 2500); // Wait for processing animation to complete
                     
                     // CLEAR ANY EXISTING DATA - Override previous suggested order or file results
                     orderTableBody.innerHTML = '';
@@ -1765,23 +1632,219 @@ if (partNumberFileInput) {
                 }
             }, 500);
                     
-                    // Show success message with instruction
-                    alert(`Successfully loaded ${result.partNumbers.length} part numbers from the uploaded file!\n\nThe data is now displayed in the "Suggested Order" section below. You can now run "Check AceNet" to process these part numbers.`);
+                    // Success message is now handled by the modal
                     
                 } else if (result.success && result.partNumbers.length === 0) {
-                    hideProcessingModal();
-                    alert('No part numbers found in the uploaded file. Please check the file format and content.');
+                    hideFileUploadModal();
+                    await showAlert('No part numbers found in the uploaded file. Please check the file format and content.', 'warning');
                 } else {
-                    hideProcessingModal();
-                    alert('Failed to process file: ' + (result.error || 'Unknown error'));
+                    hideFileUploadModal();
+                    await showAlert('Failed to process file: ' + (result.error || 'Unknown error'), 'error');
                 }
                 
             } catch (error) {
-                hideProcessingModal();
+                hideFileUploadModal();
                 console.error('Error processing part number file:', error);
-                alert('Error processing file: ' + error.message);
+                await showAlert('Error processing file: ' + error.message, 'error');
             }
         }
+    });
+}
+
+// File Upload Modal Functions
+function showFileUploadModal() {
+    const fileUploadModal = document.getElementById('fileUploadModal');
+    if (fileUploadModal) {
+        fileUploadModal.style.display = 'flex';
+        
+        // Reset to processing state
+        const processingState = document.getElementById('fileUploadProcessingState');
+        const successState = document.getElementById('fileUploadSuccessState');
+        if (processingState && successState) {
+            processingState.style.display = 'block';
+            successState.style.display = 'none';
+        }
+        
+        // Animate through processing steps
+        animateFileUploadSteps();
+    }
+}
+
+function hideFileUploadModal() {
+    const fileUploadModal = document.getElementById('fileUploadModal');
+    if (fileUploadModal) {
+        fileUploadModal.style.display = 'none';
+    }
+}
+
+function showFileUploadSuccess(partCount, fileName) {
+    const processingState = document.getElementById('fileUploadProcessingState');
+    const successState = document.getElementById('fileUploadSuccessState');
+    
+    if (processingState && successState) {
+        processingState.style.display = 'none';
+        successState.style.display = 'block';
+        
+        // Update success information
+        const partCountElement = document.getElementById('uploadedPartCount');
+        const fileNameElement = document.getElementById('uploadedFileName');
+        
+        if (partCountElement) partCountElement.textContent = partCount;
+        if (fileNameElement) fileNameElement.textContent = fileName;
+    }
+}
+
+function animateFileUploadSteps() {
+    const steps = document.querySelectorAll('.file-upload-steps .processing-step');
+    let currentStep = 0;
+    
+    const animateStep = () => {
+        if (currentStep > 0) {
+            steps[currentStep - 1].classList.remove('current');
+            steps[currentStep - 1].classList.add('completed');
+        }
+        
+        if (currentStep < steps.length) {
+            steps[currentStep].classList.add('current');
+            currentStep++;
+            setTimeout(animateStep, 800); // 800ms between steps
+        }
+    };
+    
+    // Reset all steps
+    steps.forEach(step => {
+        step.classList.remove('current', 'completed');
+    });
+    
+    // Start animation
+    setTimeout(animateStep, 300);
+}
+
+// File Upload Modal Event Listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Close file upload modal button
+    const closeFileUploadBtn = document.getElementById('closeFileUploadBtn');
+    if (closeFileUploadBtn) {
+        closeFileUploadBtn.addEventListener('click', () => {
+            hideFileUploadModal();
+        });
+    }
+    
+    // Run AceNet from upload button
+    const runAceNetFromUploadBtn = document.getElementById('runAceNetFromUploadBtn');
+    if (runAceNetFromUploadBtn) {
+        runAceNetFromUploadBtn.addEventListener('click', () => {
+            hideFileUploadModal();
+            // Trigger the Check AceNet button
+            const checkAceNetBtn = document.getElementById('runCheckAceNetBtn');
+            if (checkAceNetBtn && !checkAceNetBtn.disabled) {
+                checkAceNetBtn.click();
+            }
+        });
+    }
+});
+
+// =================================================================
+// STANDARDIZED POPUP HELPER FUNCTIONS
+// =================================================================
+
+// Show standardized alert popup
+function showAlert(message, type = 'info', title = null) {
+    return new Promise((resolve) => {
+        const popup = document.createElement('div');
+        popup.className = 'popup-overlay';
+        
+        const iconMap = {
+            'info': '💡',
+            'success': '✅', 
+            'error': '❌',
+            'warning': '⚠️'
+        };
+        
+        const defaultTitles = {
+            'info': 'Information',
+            'success': 'Success',
+            'error': 'Error', 
+            'warning': 'Warning'
+        };
+        
+        popup.innerHTML = `
+            <div class="popup-content size-medium alert">
+                <div class="popup-header">
+                    <span class="popup-icon ${type}">${iconMap[type] || iconMap.info}</span>
+                    <h3 class="popup-title">${title || defaultTitles[type] || defaultTitles.info}</h3>
+                </div>
+                <div class="popup-body">
+                    <div class="popup-message" style="white-space: pre-line; text-align: center; font-family: inherit;">${message}</div>
+                </div>
+                <div class="popup-actions">
+                    <button class="popup-btn primary" id="alertOkBtn">OK</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        
+        popup.querySelector('#alertOkBtn').addEventListener('click', () => {
+            popup.remove();
+            resolve();
+        });
+        
+        // Close on escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                popup.remove();
+                document.removeEventListener('keydown', handleEscape);
+                resolve();
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    });
+}
+
+// Show standardized confirm popup
+function showConfirm(message, title = 'Confirm Action') {
+    return new Promise((resolve) => {
+        const popup = document.createElement('div');
+        popup.className = 'popup-overlay';
+        
+        popup.innerHTML = `
+            <div class="popup-content size-medium confirmation">
+                <div class="popup-header">
+                    <span class="popup-icon warning">❓</span>
+                    <h3 class="popup-title">${title}</h3>
+                </div>
+                <div class="popup-body">
+                    <div class="popup-message" style="white-space: pre-line; text-align: center; font-family: inherit;">${message}</div>
+                </div>
+                <div class="popup-actions">
+                    <button class="popup-btn secondary" id="confirmCancelBtn">Cancel</button>
+                    <button class="popup-btn primary" id="confirmOkBtn">OK</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(popup);
+        
+        popup.querySelector('#confirmOkBtn').addEventListener('click', () => {
+            popup.remove();
+            resolve(true);
+        });
+        
+        popup.querySelector('#confirmCancelBtn').addEventListener('click', () => {
+            popup.remove();
+            resolve(false);
+        });
+        
+        // Close on escape key (defaults to cancel)
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                popup.remove();
+                document.removeEventListener('keydown', handleEscape);
+                resolve(false);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
     });
 }
 
