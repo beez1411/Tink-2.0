@@ -4,6 +4,36 @@ const fs = require('fs');
 const os = require('os');
 const { spawn } = require('child_process');
 
+// Helper function to find accessible desktop or documents directory
+function findAccessibleDirectory() {
+  const alternateDesktops = [
+    path.join(os.homedir(), 'Desktop'),
+    path.join(os.homedir(), 'OneDrive', 'Desktop'), // OneDrive Desktop
+    path.join(os.homedir(), 'OneDrive - Ace Hardware', 'Desktop'), // Corporate OneDrive
+    path.join(os.homedir(), 'Documents'), // Fallback to Documents
+    os.homedir() // Final fallback to home directory
+  ];
+  
+  // Find the first existing directory with write permissions
+  for (const testPath of alternateDesktops) {
+    try {
+      if (fs.existsSync(testPath)) {
+        // Test if we can write to this directory
+        const testFile = path.join(testPath, `test_${Date.now()}.tmp`);
+        fs.writeFileSync(testFile, 'test');
+        fs.unlinkSync(testFile); // Clean up test file
+        
+        return testPath;
+      }
+    } catch (testError) {
+      // Continue to next path if this one doesn't work
+      continue;
+    }
+  }
+  
+  throw new Error('No accessible desktop or documents directory found');
+}
+
 // Try to load auto-updater, but don't crash if it fails
 let autoUpdater = null;
 try {
@@ -195,11 +225,11 @@ ipcMain.handle('process-file', async (event, options) => {
 
     // Handle special case for AceNet using suggested order file
     let actualInputFile = filePath;
-    let outputDir = filePath ? path.dirname(filePath) : path.join(os.homedir(), 'Desktop');
+    let outputDir = filePath ? path.dirname(filePath) : findAccessibleDirectory();
     
     if (scriptType === 'check_acenet' && filePath === 'USE_SUGGESTED_ORDER') {
       // Look for suggested order files on desktop and in project directory
-      const desktop = path.join(os.homedir(), 'Desktop');
+      const desktop = findAccessibleDirectory();
       const projectDir = __dirname;
       
       // Search in both desktop and project directory
@@ -487,8 +517,8 @@ ipcMain.handle('save-to-po', async (event, orderData) => {
     // Create filename: Tink PO YYYYMMDD.txt
     const filename = `Tink PO ${dateStr}.txt`;
     
-    // Save to user's desktop
-    const desktopPath = path.join(os.homedir(), 'Desktop');
+    // Use helper function to find accessible directory
+    const desktopPath = findAccessibleDirectory();
     const filePath = path.join(desktopPath, filename);
     
     // Create file content with tab-separated values
@@ -505,23 +535,34 @@ ipcMain.handle('save-to-po', async (event, orderData) => {
       content += `${partNumber}\t${supplierNumber}\t${quantity}\t${cost}\n`;
     });
     
-    // Write the file
+    // Write the file with proper error handling
     fs.writeFileSync(filePath, content, 'utf8');
     
     console.log(`PO file saved: ${filePath}`);
     console.log(`Items saved: ${orderData.length}`);
+    console.log(`Desktop path used: ${desktopPath}`);
     
     return {
       success: true,
       filePath: filePath,
-      itemCount: orderData.length
+      itemCount: orderData.length,
+      directory: desktopPath
     };
     
   } catch (error) {
     console.error('Error saving PO file:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      syscall: error.syscall,
+      path: error.path
+    });
+    
     return {
       success: false,
-      error: error.message
+      error: error.message,
+      details: `${error.code || 'UNKNOWN_ERROR'}: ${error.message}`
     };
   }
 });
@@ -542,8 +583,8 @@ ipcMain.handle('export-acenet-results', async (event, resultsData) => {
     // Create filename: AceNet Results YYYYMMDD.xlsx
     const filename = `AceNet Results ${dateStr}.xlsx`;
     
-    // Save to user's desktop
-    const desktopPath = path.join(os.homedir(), 'Desktop');
+    // Use helper function to find accessible directory
+    const desktopPath = findAccessibleDirectory();
     const filePath = path.join(desktopPath, filename);
     
     // Create new workbook

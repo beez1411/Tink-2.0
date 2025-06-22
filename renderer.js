@@ -973,9 +973,12 @@ if (saveToPOBtn) {
             const result = await window.api.saveToPO(orderData);
             
             if (result.success) {
-                await showAlert(`PO file saved successfully!\nLocation: ${result.filePath}\nItems saved: ${orderData.length}`, 'success');
+                await showAlert(`PO file saved successfully!\nLocation: ${result.filePath}\nDirectory: ${result.directory}\nItems saved: ${orderData.length}`, 'success');
             } else {
-                await showAlert('Error saving PO file: ' + result.error, 'error');
+                const errorMessage = result.details ? 
+                    `Error saving PO file: ${result.error}\n\nDetails: ${result.details}` :
+                    `Error saving PO file: ${result.error}`;
+                await showAlert(errorMessage, 'error');
             }
             
         } catch (error) {
