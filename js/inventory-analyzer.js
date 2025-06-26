@@ -72,6 +72,18 @@ class AdvancedInventoryAnalyzer {
         this.OVERSTOCK_MULTIPLIER = 2.0; // Like Python's 2x forecasted need check
         this.SLOW_MOVER_THRESHOLD = 0.2; // Like Python's velocity < 0.2
         this.Z_SCORE_95 = 1.65; // 95% service level like Python
+        
+        // ENHANCED: Seasonal intelligence constants
+        this.SEASONAL_DETECTION_THRESHOLD = 0.4; // CV threshold for seasonal classification
+        this.PEAK_DETECTION_THRESHOLD = 1.5; // Multiple of mean+std for peak detection
+        this.LOW_DETECTION_THRESHOLD = 0.3; // Multiple of mean for low detection
+        this.PRE_SEASON_WEEKS = 6; // Weeks before peak to start stocking up
+        this.POST_SEASON_WEEKS = 4; // Weeks before low to reduce stocking
+        this.SEASONAL_PEAK_MULTIPLIER = 1.8; // 80% increase for pre-peak stocking
+        this.SEASONAL_LOW_MULTIPLIER = 0.5; // 50% reduction for pre-low periods
+        
+        // Current week tracking (can be set dynamically)
+        this.currentWeek = this.getCurrentWeekOfYear();
     }
 
     log(message, data = null) {
@@ -308,25 +320,58 @@ class AdvancedInventoryAnalyzer {
         // Data quality checks like Python script
         this.performDataQualityChecks(itemData, salesSeries, partNumber);
 
+        // ENHANCED: Get trend analysis for better forecasting
+        const trendChangeData = this.detectTrendChange(salesSeries);
+        const weightedRecentTrend = this.calculateWeightedRecentTrend(salesSeries);
+        const performanceDecay = this.calculatePerformanceDecay(salesSeries);
+
         const forecastWeeks = daysThreshold / 7;
         let forecast = 0;
 
         try {
             if (label === 'steady') {
-                // Last 26 weeks average like Python
-                const recentSales = salesSeries.slice(-26);
-                const avg = recentSales.length > 0 ? ss.mean(recentSales) : 0;
-                forecast = avg * forecastWeeks;
+                // ENHANCED: Use weighted recent trend for steady items when available
+                if (weightedRecentTrend > 0 && salesSeries.length >= 26) {
+                    forecast = weightedRecentTrend * forecastWeeks;
+                } else {
+                    // Fallback to last 26 weeks average like Python
+                    const recentSales = salesSeries.slice(-26);
+                    const avg = recentSales.length > 0 ? ss.mean(recentSales) : 0;
+                    forecast = avg * forecastWeeks;
+                }
                 
             } else if (label === 'seasonal') {
                 // Enhanced seasonal logic closer to Python's STL approach
                 forecast = this.forecastSeasonal(salesSeries, forecastWeeks);
                 
+                // ENHANCED: Apply trend adjustments to seasonal forecast
+                if (trendChangeData.isDecliningSharply || trendChangeData.isDeclinedFromHistorical) {
+                    const trendMultiplier = Math.min(trendChangeData.trendChangeMultiplier, performanceDecay.decayFactor);
+                    forecast *= trendMultiplier;
+                }
+                
             } else { // erratic or fallback
-                // Use median of last 20 weeks like Python
-                const recentSales = salesSeries.slice(-20);
-                const median = recentSales.length > 0 ? ss.median(recentSales) : 0;
-                forecast = median * forecastWeeks;
+                // ENHANCED: Use weighted trend for erratic items when available
+                if (weightedRecentTrend > 0 && salesSeries.length >= 26) {
+                    forecast = weightedRecentTrend * forecastWeeks;
+                } else {
+                    // Use median of last 20 weeks like Python
+                    const recentSales = salesSeries.slice(-20);
+                    const median = recentSales.length > 0 ? ss.median(recentSales) : 0;
+                    forecast = median * forecastWeeks;
+                }
+            }
+
+            // ENHANCED: Apply performance decay for all forecast types when declining
+            if (trendChangeData.isDecliningSharply || trendChangeData.isDeclinedFromHistorical) {
+                const decayMultiplier = Math.min(trendChangeData.trendChangeMultiplier, performanceDecay.decayFactor);
+                const originalForecast = forecast;
+                forecast *= decayMultiplier;
+                
+                // Log the adjustment for debugging
+                if (this.debugMode && decayMultiplier < 0.9) {
+                    this.log(`Trend-adjusted forecast for ${partNumber}: ${originalForecast.toFixed(2)} → ${forecast.toFixed(2)} (${Math.round(decayMultiplier * 100)}% due to ${performanceDecay.decayReason})`);
+                }
             }
 
             // Log forecast accuracy if we have actual data
@@ -334,15 +379,26 @@ class AdvancedInventoryAnalyzer {
                 this.forecastAccuracyLog.push({
                     partNumber,
                     forecast,
-                    actual: itemData.WEEK_CURRENT
+                    actual: itemData.WEEK_CURRENT,
+                    trendAdjusted: trendChangeData.isDecliningSharply || trendChangeData.isDeclinedFromHistorical
                 });
             }
 
         } catch (error) {
             this.log(`Forecasting error for ${partNumber}: ${error.message}`);
-            // Fallback to simple average
-            const recentSales = salesSeries.slice(-12);
-            forecast = recentSales.length > 0 ? ss.mean(recentSales) * forecastWeeks : 0;
+            
+            // ENHANCED: Fallback with trend awareness
+            if (weightedRecentTrend > 0) {
+                forecast = weightedRecentTrend * forecastWeeks;
+            } else {
+                const recentSales = salesSeries.slice(-12);
+                forecast = recentSales.length > 0 ? ss.mean(recentSales) * forecastWeeks : 0;
+            }
+            
+            // Apply decay even to fallback forecasts
+            if (trendChangeData.isDecliningSharply) {
+                forecast *= trendChangeData.trendChangeMultiplier;
+            }
         }
 
         return Math.max(0, forecast);
@@ -737,7 +793,21 @@ class AdvancedInventoryAnalyzer {
             overstockPrevention: 0,
             slowMoverHandling: 0,
             phase1Orders: 0,
-            phase2MinStockAdjustments: 0
+            phase2MinStockAdjustments: 0,
+            // ENHANCED: Seasonal intelligence debug counters
+            seasonalItemsDetected: 0,
+            volatileItemsDetected: 0,
+            trendingUpItems: 0,
+            trendingDownItems: 0,
+            seasonalPeakAdjustments: 0,
+            seasonalLowAdjustments: 0,
+            enhancedSafetyStockApplications: 0,
+            seasonalCategoryBreakdown: {
+                stable: 0,
+                volatile: 0,
+                seasonal: 0,
+                trending: 0
+            }
         };
 
         // Calculate week columns found
@@ -776,8 +846,8 @@ class AdvancedInventoryAnalyzer {
         debug.itemsBelowMinStock = itemsBelowMinStock;
         debug.totalSalesValue = totalSalesValue;
         
-        // PHASE 1: DYNAMIC ORDER LOGIC (like Python script)
-        this.log('Starting Phase 1: Dynamic Order Logic');
+        // PHASE 1: ENHANCED DYNAMIC ORDER LOGIC WITH SEASONAL INTELLIGENCE
+        this.log('Starting Phase 1: Enhanced Dynamic Order Logic with Seasonal Intelligence');
         
         for (let i = 0; i < items.length; i++) {
             const row = items[i];
@@ -806,16 +876,31 @@ class AdvancedInventoryAnalyzer {
                 debug.dataQualityIssues++;
             }
             
+            // ENHANCED: Analyze seasonal patterns for this item
+            const seasonalMetrics = this.analyzeSeasonalPatterns(sales, partNumber);
+            
+            // ENHANCED: Track seasonal intelligence statistics
+            debug.seasonalCategoryBreakdown[seasonalMetrics.demandCategory]++;
+            if (seasonalMetrics.isSeasonal) debug.seasonalItemsDetected++;
+            if (seasonalMetrics.salesVolatility > 1.0) debug.volatileItemsDetected++;
+            if (seasonalMetrics.isTrendingUp) debug.trendingUpItems++;
+            if (seasonalMetrics.isTrendingDown) debug.trendingDownItems++;
+            if (seasonalMetrics.meanWeeklySales > 0) debug.enhancedSafetyStockApplications++;
+            
             // Get sales velocity and forecast like Python script
             const velocity = this.getSalesVelocity(sales, 8); // 8 weeks like Python
             const forecastedNeed = velocity * (daysThreshold / 7);
             const forecast = this.forecastDemand(sales, clusterLabel, daysThreshold, row);
             if (forecast > 0) debug.itemsWithForecast++;
             
-            // Calculate safety stock like Python (Z = 1.65, 95% service level)
+            // ENHANCED: Calculate dynamic safety stock based on seasonal patterns
             const leadTimeWeeks = daysThreshold / 7;
+            const dynamicSafetyStock = this.calculateDynamicSafetyStock(seasonalMetrics, leadTimeWeeks);
+            
+            // Fallback to original calculation if no seasonal data
             const demandStd = this.calculateDemandStandardDeviation(sales.slice(-26));
-            const safetyStock = this.Z_SCORE_95 * demandStd * Math.sqrt(leadTimeWeeks);
+            const originalSafetyStock = this.Z_SCORE_95 * demandStd * Math.sqrt(leadTimeWeeks);
+            const safetyStock = seasonalMetrics.meanWeeklySales > 0 ? dynamicSafetyStock : originalSafetyStock;
             
             // Get on order quantity
             const onOrderQty = (this.onOrderData && this.onOrderData[partNumber]) || 0;
@@ -838,7 +923,8 @@ class AdvancedInventoryAnalyzer {
             // 2. Slow mover check
             } else if (velocity < this.SLOW_MOVER_THRESHOLD) {
                 if (currentStock < minOrderQty && minOrderQty > 0) {
-                    orderQty = minOrderQty;
+                    // FIXED: Apply MOQ rounding (though for slow movers this usually equals minOrderQty)
+                    orderQty = this.roundToMOQ(minOrderQty, minOrderQty);
                     orderReason = 'Stockout risk (slow mover)';
                     this.stockEventLog.push({
                         partNumber,
@@ -851,19 +937,44 @@ class AdvancedInventoryAnalyzer {
                     orderQty = 0;
                 }
                 
-            // 3. Normal velocity items
+            // 3. Normal velocity items with ENHANCED seasonal intelligence
             } else {
+                // ENHANCED: Apply seasonal order quantity calculation
+                const seasonalOrder = this.calculateSeasonalOrderQuantity(
+                    seasonalMetrics, 
+                    currentStock, 
+                    safetyStock, 
+                    daysThreshold / 7
+                );
+                
                 const shortage = forecastedNeed + safetyStock - currentStock;
                 if (shortage > 0 && minOrderQty > 0) {
-                    orderQty = Math.ceil(shortage / minOrderQty) * minOrderQty;
-                    orderReason = `Dynamic forecast-based order (shortage: ${Math.round(shortage)})`;
+                    // Use the higher of: traditional calculation or seasonal-enhanced calculation
+                    const traditionalQty = Math.ceil(shortage / minOrderQty) * minOrderQty;
+                    const rawOrderQty = Math.max(traditionalQty, seasonalOrder.orderQuantity);
+                    // FIXED: Always apply MOQ rounding to final quantity
+                    orderQty = this.roundToMOQ(rawOrderQty, minOrderQty);
+                    
+                    if (seasonalOrder.orderQuantity > traditionalQty) {
+                        orderReason = `Enhanced seasonal order: ${seasonalOrder.adjustmentReason} (base: ${traditionalQty}, enhanced: ${seasonalOrder.orderQuantity}, MOQ rounded: ${orderQty})`;
+                        
+                        // ENHANCED: Track seasonal adjustment types
+                        if (seasonalOrder.adjustmentReason.includes('Pre-seasonal peak')) {
+                            debug.seasonalPeakAdjustments++;
+                        } else if (seasonalOrder.adjustmentReason.includes('Seasonal low')) {
+                            debug.seasonalLowAdjustments++;
+                        }
+                    } else {
+                        orderReason = `Dynamic forecast-based order (shortage: ${Math.round(shortage)}, MOQ rounded: ${orderQty})`;
+                    }
                     
                     if (currentStock < safetyStock) {
                         this.stockEventLog.push({
                             partNumber,
                             event: 'Stockout risk',
                             currentStock,
-                            safetyStock
+                            safetyStock: safetyStock,
+                            seasonalCategory: seasonalMetrics.demandCategory
                         });
                     }
                 } else {
@@ -874,6 +985,9 @@ class AdvancedInventoryAnalyzer {
             // Add to order items if quantity > 0
             if (orderQty > 0) {
                 debug.phase1Orders++;
+                
+                // ENHANCED: Calculate enhanced min/max levels
+                const enhancedLevels = this.calculateEnhancedMinMaxLevels(seasonalMetrics, safetyStock);
                 
                 orderItems.push({
                     partNumber,
@@ -901,7 +1015,28 @@ class AdvancedInventoryAnalyzer {
                     orderReason: orderReason || 'Phase 1 dynamic order',
                     qualityIssues: qualityIssues.join(', ') || 'None',
                     confidence: 0.8,
-                    orderPhase: 'Phase 1 - Dynamic'
+                    orderPhase: 'Phase 1 - Dynamic',
+                    // ENHANCED: Seasonal intelligence data
+                    seasonalCategory: seasonalMetrics.demandCategory,
+                    salesVolatility: Math.round(seasonalMetrics.salesVolatility * 100) / 100,
+                    isSeasonal: seasonalMetrics.isSeasonal,
+                    seasonalPeaks: seasonalMetrics.seasonalPeaks.length,
+                    seasonalLows: seasonalMetrics.seasonalLows.length,
+                    trendDirection: seasonalMetrics.isTrendingUp ? 'UP' : 
+                                   seasonalMetrics.isTrendingDown ? 'DOWN' : 'STABLE',
+                    enhancedMinStock: enhancedLevels.enhancedMin,
+                    enhancedMaxStock: enhancedLevels.enhancedMax,
+                    dynamicSafetyStock: Math.round(dynamicSafetyStock),
+                    currentWeek: this.currentWeek,
+                    // ENHANCED: Recent trend analysis data
+                    weightedRecentTrend: Math.round(seasonalMetrics.weightedRecentTrend * 100) / 100,
+                    isDecliningSharply: seasonalMetrics.trendChangeData.isDecliningSharply,
+                    isDeclinedFromHistorical: seasonalMetrics.trendChangeData.isDeclinedFromHistorical,
+                    recentPerformanceRatio: Math.round(seasonalMetrics.trendChangeData.recentPerformanceRatio * 100) / 100,
+                    performanceDecayFactor: Math.round(seasonalMetrics.performanceDecay.decayFactor * 100) / 100,
+                    decayReason: seasonalMetrics.performanceDecay.decayReason,
+                    trendChangeMultiplier: Math.round(seasonalMetrics.trendChangeData.trendChangeMultiplier * 100) / 100,
+                    recommendedMultiplier: Math.round(seasonalMetrics.recommendedMultiplier * 100) / 100
                 });
             }
         }
@@ -945,8 +1080,10 @@ class AdvancedInventoryAnalyzer {
                         let found = false;
                         for (const item of orderItems) {
                             if (item.partNumber === partNumber) {
-                                item.suggestedQty += addQty;
-                                item.orderReason += ` + MINSTOCK adjustment (+${addQty})`;
+                                // FIXED: Apply MOQ rounding to the total after adding
+                                const newTotal = item.suggestedQty + addQty;
+                                item.suggestedQty = this.roundToMOQ(newTotal, minOrderQty);
+                                item.orderReason += ` + MINSTOCK adjustment (total rounded to MOQ)`;
                                 found = true;
                                 debug.phase2MinStockAdjustments++;
                                 break;
@@ -954,8 +1091,12 @@ class AdvancedInventoryAnalyzer {
                         }
                         
                         if (!found) {
-                            // Create new order for MINSTOCK requirement
+                            // Create new order for MINSTOCK requirement with seasonal analysis
                             debug.phase2MinStockAdjustments++;
+                            
+                            // ENHANCED: Analyze seasonal patterns for Phase 2 items too
+                            const seasonalMetrics = this.analyzeSeasonalPatterns(sales, partNumber);
+                            const enhancedLevels = this.calculateEnhancedMinMaxLevels(seasonalMetrics, addQty);
                             
                             orderItems.push({
                                 partNumber,
@@ -983,7 +1124,19 @@ class AdvancedInventoryAnalyzer {
                                 orderReason: `Phase 2 MINSTOCK requirement (needed: ${needed}, rounded: ${addQty})`,
                                 qualityIssues: 'None',
                                 confidence: 0.95,
-                                orderPhase: 'Phase 2 - MINSTOCK'
+                                orderPhase: 'Phase 2 - MINSTOCK',
+                                // ENHANCED: Include seasonal data for Phase 2 items
+                                seasonalCategory: seasonalMetrics.demandCategory,
+                                salesVolatility: Math.round(seasonalMetrics.salesVolatility * 100) / 100,
+                                isSeasonal: seasonalMetrics.isSeasonal,
+                                seasonalPeaks: seasonalMetrics.seasonalPeaks.length,
+                                seasonalLows: seasonalMetrics.seasonalLows.length,
+                                trendDirection: seasonalMetrics.isTrendingUp ? 'UP' : 
+                                               seasonalMetrics.isTrendingDown ? 'DOWN' : 'STABLE',
+                                enhancedMinStock: enhancedLevels.enhancedMin,
+                                enhancedMaxStock: enhancedLevels.enhancedMax,
+                                dynamicSafetyStock: addQty,
+                                currentWeek: this.currentWeek
                             });
                         }
                     }
@@ -1017,6 +1170,42 @@ class AdvancedInventoryAnalyzer {
             this.log(`Stock event log (sample):`, this.stockEventLog.slice(0, 5));
         }
         
+        debug.itemsNeedingOrder = orderItems.length;
+        
+        // ENHANCED: Log seasonal intelligence results
+        this.log(`=== SEASONAL INTELLIGENCE SUMMARY ===`);
+        this.log(`Seasonal items detected: ${debug.seasonalItemsDetected}`);
+        this.log(`High-volatility items: ${debug.volatileItemsDetected}`);
+        this.log(`Trending up items: ${debug.trendingUpItems}`);
+        this.log(`Trending down items: ${debug.trendingDownItems}`);
+        this.log(`Pre-peak adjustments applied: ${debug.seasonalPeakAdjustments}`);
+        this.log(`Pre-low adjustments applied: ${debug.seasonalLowAdjustments}`);
+        this.log(`Enhanced safety stock applications: ${debug.enhancedSafetyStockApplications}`);
+        this.log(`Category breakdown:`, debug.seasonalCategoryBreakdown);
+        
+        // ENHANCED: Recent trend weighting summary
+        const decliners = orderItems.filter(item => item.seasonalCategory === 'declining');
+        const sharpDecliners = orderItems.filter(item => item.isDecliningSharply);
+        const historicalDecliners = orderItems.filter(item => item.isDeclinedFromHistorical);
+        const trendAdjusted = orderItems.filter(item => item.recommendedMultiplier < 0.95);
+        
+        this.log(`=== RECENT TREND WEIGHTING SUMMARY ===`);
+        this.log(`Items categorized as declining: ${decliners.length}`);
+        this.log(`Items with sharp recent decline: ${sharpDecliners.length}`);
+        this.log(`Items declined from historical highs: ${historicalDecliners.length}`);
+        this.log(`Items with trend adjustments (<95%): ${trendAdjusted.length}`);
+        
+        if (decliners.length > 0) {
+            this.log(`Sample declining items:`, decliners.slice(0, 3).map(item => ({
+                partNumber: item.partNumber,
+                category: item.seasonalCategory,
+                recentRatio: item.recentPerformanceRatio,
+                decayFactor: item.performanceDecayFactor,
+                decayReason: item.decayReason,
+                finalMultiplier: item.recommendedMultiplier
+            })));
+        }
+        
         return { orderItems, debug };
     }
 
@@ -1045,7 +1234,7 @@ class AdvancedInventoryAnalyzer {
         if (minStock > 0 && effectiveStock < minStock) {
             criteria.push({
                 trigger: true,
-                qty: Math.max(minStock - effectiveStock, minOrderQty),
+                qty: this.roundToMOQ(minStock - effectiveStock, minOrderQty),
                 reason: `Below minimum stock (${minStock}), considering ${onOrderQty} on order`,
                 confidence: 0.9
             });
@@ -1055,7 +1244,7 @@ class AdvancedInventoryAnalyzer {
         if (effectiveStock < reorderPoint) {
             criteria.push({
                 trigger: true,
-                qty: Math.max(reorderPoint - effectiveStock, minOrderQty),
+                qty: this.roundToMOQ(reorderPoint - effectiveStock, minOrderQty),
                 reason: `Below reorder point (${Math.round(reorderPoint)}), considering ${onOrderQty} on order`,
                 confidence: 0.8
             });
@@ -1068,7 +1257,7 @@ class AdvancedInventoryAnalyzer {
             if (effectiveStock < urgencyQty) {
                 criteria.push({
                     trigger: true,
-                    qty: Math.max(urgencyQty - effectiveStock, minOrderQty),
+                    qty: this.roundToMOQ(urgencyQty - effectiveStock, minOrderQty),
                     reason: `Out of stock with recent sales, ${onOrderQty} on order`,
                     confidence: 0.95
                 });
@@ -1079,7 +1268,7 @@ class AdvancedInventoryAnalyzer {
         if (avgWeeklySales > 0 && effectiveStock < (avgWeeklySales * 2)) {
             criteria.push({
                 trigger: true,
-                qty: Math.max(Math.ceil(avgWeeklySales * 4) - effectiveStock, minOrderQty),
+                qty: this.roundToMOQ(Math.ceil(avgWeeklySales * 4) - effectiveStock, minOrderQty),
                 reason: `Low effective stock relative to sales velocity, ${onOrderQty} on order`,
                 confidence: 0.7
             });
@@ -1091,7 +1280,7 @@ class AdvancedInventoryAnalyzer {
             if (effectiveStock < seasonalTarget) {
                 criteria.push({
                     trigger: true,
-                    qty: Math.max(seasonalTarget - effectiveStock, minOrderQty),
+                    qty: this.roundToMOQ(seasonalTarget - effectiveStock, minOrderQty),
                     reason: `Seasonal item approaching peak season, ${onOrderQty} on order`,
                     confidence: 0.85
                 });
@@ -1110,8 +1299,8 @@ class AdvancedInventoryAnalyzer {
             reason = bestCriterion.reason;
             confidence = bestCriterion.confidence;
             
-            // Ensure minimum order quantity is respected
-            suggestedQty = Math.max(suggestedQty, minOrderQty);
+            // FIXED: Round to nearest multiple of MOQ instead of just ensuring minimum
+            suggestedQty = this.roundToMOQ(suggestedQty, minOrderQty);
         }
         
         // CRITICAL: Always ensure we stock to at least MINSTOCK level if MINSTOCK > 0
@@ -1119,7 +1308,8 @@ class AdvancedInventoryAnalyzer {
             const qtyNeededForMinStock = minStock - effectiveStock;
             if (qtyNeededForMinStock > 0 && (suggestedQty < qtyNeededForMinStock || !needsOrder)) {
                 needsOrder = true;
-                suggestedQty = Math.max(qtyNeededForMinStock, minOrderQty);
+                // FIXED: Round to MOQ instead of just ensuring minimum
+                suggestedQty = this.roundToMOQ(qtyNeededForMinStock, minOrderQty);
                 if (!reason) { // Only update reason if no other reason was set
                     reason = `Stock to minimum level (${minStock}), ${onOrderQty} on order`;
                     confidence = 0.9;
@@ -1158,6 +1348,450 @@ class AdvancedInventoryAnalyzer {
         if (value === null || value === undefined || value === '') return null;
         const num = parseFloat(value);
         return isNaN(num) ? null : num;
+    }
+
+    // ENHANCED: Get current week of year for seasonal timing
+    getCurrentWeekOfYear() {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 1);
+        const diff = (now - start) + ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+        const oneWeek = 1000 * 60 * 60 * 24 * 7;
+        return Math.floor(diff / oneWeek) + 1;
+    }
+
+    // ENHANCED: Advanced seasonal pattern analysis with recent trend weighting
+    analyzeSeasonalPatterns(weeklySales, itemId) {
+        const sales = Array.isArray(weeklySales) ? weeklySales : [];
+        
+        if (sales.length < 26) {  // Need at least 26 weeks for meaningful analysis
+            return {
+                meanWeeklySales: 0,
+                salesVolatility: 0,
+                seasonalPeaks: [],
+                seasonalLows: [],
+                trendSlope: 0,
+                wowVolatility: 0,
+                isSeasonal: false,
+                isTrendingUp: false,
+                isTrendingDown: false,
+                demandCategory: 'stable',
+                // ENHANCED: New trend analysis fields
+                weightedRecentTrend: 0,
+                trendChangeData: {},
+                performanceDecay: {},
+                recommendedMultiplier: 1.0
+            };
+        }
+
+        // ENHANCED: Get weighted recent trend and performance decay analysis
+        const weightedRecentTrend = this.calculateWeightedRecentTrend(sales);
+        const trendChangeData = this.detectTrendChange(sales);
+        const performanceDecay = this.calculatePerformanceDecay(sales);
+
+        // Basic statistical measures (now using weighted trend for better accuracy)
+        const nonZeroSales = sales.filter(x => x > 0);
+        const meanSales = nonZeroSales.length > 0 ? ss.mean(nonZeroSales) : 0;
+        const stdSales = sales.length > 1 ? ss.standardDeviation(sales) : 0;
+        const cv = meanSales > 0 ? stdSales / meanSales : 0;
+
+        // Rolling average for smoother trend detection (4-week window)
+        const windowSize = 4;
+        const rollingAvg = [];
+        
+        if (sales.length >= windowSize) {
+            for (let i = windowSize - 1; i < sales.length; i++) {
+                const window = sales.slice(i - windowSize + 1, i + 1);
+                rollingAvg.push(ss.mean(window));
+            }
+        } else {
+            rollingAvg.push(...sales);
+        }
+
+        // Peak and low detection using statistical thresholds
+        const seasonalPeaks = [];
+        const seasonalLows = [];
+        
+        const peakThreshold = meanSales * this.PEAK_DETECTION_THRESHOLD;
+        const lowThreshold = meanSales * this.LOW_DETECTION_THRESHOLD;
+        
+        for (let i = 1; i < rollingAvg.length - 1; i++) {
+            const weekNum = i + Math.floor(windowSize / 2);
+            
+            // Peak detection: local maximum above threshold
+            if (rollingAvg[i] > rollingAvg[i-1] && 
+                rollingAvg[i] > rollingAvg[i+1] && 
+                rollingAvg[i] > peakThreshold) {
+                seasonalPeaks.push(weekNum);
+            }
+            
+            // Low detection: local minimum below threshold (but > 0)
+            if (rollingAvg[i] < rollingAvg[i-1] && 
+                rollingAvg[i] < rollingAvg[i+1] && 
+                rollingAvg[i] < lowThreshold && 
+                rollingAvg[i] > 0) {
+                seasonalLows.push(weekNum);
+            }
+        }
+
+        // ENHANCED: Trend analysis using weighted recent data
+        const recentSales = sales.slice(-12);
+        let trendSlope = 0;
+        
+        if (recentSales.length > 1) {
+            try {
+                const x = Array.from({length: recentSales.length}, (_, i) => i);
+                const regression = ss.linearRegression(x.map((xi, i) => [xi, recentSales[i]]));
+                trendSlope = regression.m || 0;
+            } catch (error) {
+                trendSlope = 0;
+            }
+        }
+
+        // Week-over-week volatility calculation
+        const wowChanges = [];
+        for (let i = 1; i < sales.length; i++) {
+            if (sales[i-1] > 0) {
+                const change = Math.abs(sales[i] - sales[i-1]) / sales[i-1];
+                wowChanges.push(change);
+            }
+        }
+        const wowVolatility = wowChanges.length > 0 ? ss.mean(wowChanges) : 0;
+
+        // ENHANCED: Classification logic with trend change awareness
+        const isSeasonal = seasonalPeaks.length >= 2 && cv > this.SEASONAL_DETECTION_THRESHOLD;
+        const isTrendingUp = trendSlope > meanSales * 0.05; // 5% of mean per week
+        const isTrendingDown = trendSlope < -meanSales * 0.05 || trendChangeData.isDecliningSharply;
+
+        // ENHANCED: Demand category classification with decline detection
+        let demandCategory = 'stable';
+        if (trendChangeData.isDecliningSharply || trendChangeData.isDeclinedFromHistorical) {
+            demandCategory = 'declining';
+        } else if (isSeasonal) {
+            demandCategory = 'seasonal';
+        } else if (cv > 1.0) {
+            demandCategory = 'volatile';
+        } else if (isTrendingUp || isTrendingDown) {
+            demandCategory = 'trending';
+        }
+
+        // ENHANCED: Calculate overall recommended multiplier
+        const recommendedMultiplier = Math.min(
+            trendChangeData.trendChangeMultiplier,
+            performanceDecay.decayFactor
+        );
+
+        return {
+            meanWeeklySales: meanSales,
+            salesVolatility: cv,
+            seasonalPeaks,
+            seasonalLows,
+            trendSlope,
+            wowVolatility,
+            isSeasonal,
+            isTrendingUp,
+            isTrendingDown,
+            demandCategory,
+            // ENHANCED: New trend analysis fields
+            weightedRecentTrend,
+            trendChangeData,
+            performanceDecay,
+            recommendedMultiplier
+        };
+    }
+
+    // ENHANCED: Dynamic safety stock calculation with recent trend weighting
+    calculateDynamicSafetyStock(seasonalMetrics, leadTimeWeeks = 2) {
+        const meanSales = seasonalMetrics.meanWeeklySales;
+        const volatility = seasonalMetrics.salesVolatility;
+        const wowVolatility = seasonalMetrics.wowVolatility;
+        
+        // ENHANCED: Use weighted recent trend if available
+        const effectiveMeanSales = seasonalMetrics.weightedRecentTrend > 0 ? 
+            seasonalMetrics.weightedRecentTrend : meanSales;
+        
+        if (effectiveMeanSales === 0) {
+            return 1; // Minimum safety stock
+        }
+
+        // Base safety stock (lead time demand using recent trend)
+        const baseSafetyStock = effectiveMeanSales * leadTimeWeeks;
+
+        // Volatility adjustment multiplier
+        // Higher volatility requires more safety stock
+        const volatilityMultiplier = 1 + (volatility * 0.4) + (wowVolatility * 0.2);
+
+        // Seasonal adjustment
+        let seasonalMultiplier = 1.0;
+        if (seasonalMetrics.isSeasonal) {
+            // More peaks = more variability = more safety stock needed
+            const peakFactor = seasonalMetrics.seasonalPeaks.length * 0.15;
+            seasonalMultiplier = 1.2 + peakFactor;
+        }
+
+        // ENHANCED: Trend adjustment with decline detection
+        let trendMultiplier = 1.0;
+        if (seasonalMetrics.demandCategory === 'declining') {
+            // Strong reduction for declining items
+            trendMultiplier = seasonalMetrics.recommendedMultiplier * 0.8;
+        } else if (seasonalMetrics.isTrendingUp) {
+            trendMultiplier = 1.4; // Stock more for growing demand
+        } else if (seasonalMetrics.isTrendingDown) {
+            trendMultiplier = 0.7; // Stock less for declining demand
+        }
+
+        // ENHANCED: Service level adjustment with decline category
+        const serviceLevelMultiplier = {
+            'stable': 1.0,
+            'volatile': 1.3,
+            'seasonal': 1.2,
+            'trending': 1.1,
+            'declining': 0.8  // ENHANCED: Reduced safety stock for declining items
+        }[seasonalMetrics.demandCategory] || 1.0;
+
+        // Calculate final dynamic safety stock
+        const dynamicSafetyStock = baseSafetyStock * 
+                                  volatilityMultiplier * 
+                                  seasonalMultiplier * 
+                                  trendMultiplier * 
+                                  serviceLevelMultiplier;
+
+        return Math.max(1, Math.round(dynamicSafetyStock));
+    }
+
+    // ENHANCED: Seasonal order quantity calculation with recent trend weighting
+    calculateSeasonalOrderQuantity(seasonalMetrics, currentStock, safetyStock, forecastWeeks = 4) {
+        // ENHANCED: Use weighted recent trend for more accurate forecasting
+        const effectiveMeanSales = seasonalMetrics.weightedRecentTrend > 0 ? 
+            seasonalMetrics.weightedRecentTrend : seasonalMetrics.meanWeeklySales;
+        
+        // Base order calculation using recent weighted trend
+        const baseOrderQty = Math.max(0, (forecastWeeks * effectiveMeanSales + safetyStock) - currentStock);
+        
+        // Seasonal timing adjustments
+        let seasonalAdjustment = 1.0;
+        let adjustmentReason = "Standard order";
+        
+        if (seasonalMetrics.isSeasonal) {
+            // Check if approaching seasonal peak (within 6 weeks)
+            const approachingPeak = seasonalMetrics.seasonalPeaks.some(peakWeek => {
+                const weekDiff = (peakWeek - this.currentWeek + 52) % 52;
+                return weekDiff > 0 && weekDiff <= this.PRE_SEASON_WEEKS;
+            });
+            
+            // Check if approaching seasonal low (within 4 weeks)
+            const approachingLow = seasonalMetrics.seasonalLows.some(lowWeek => {
+                const weekDiff = (lowWeek - this.currentWeek + 52) % 52;
+                return weekDiff > 0 && weekDiff <= this.POST_SEASON_WEEKS;
+            });
+            
+            if (approachingPeak) {
+                seasonalAdjustment = this.SEASONAL_PEAK_MULTIPLIER;
+                adjustmentReason = "Pre-seasonal peak stocking";
+            } else if (approachingLow) {
+                seasonalAdjustment = this.SEASONAL_LOW_MULTIPLIER;
+                adjustmentReason = "Seasonal low adjustment";
+            }
+        }
+
+        // ENHANCED: Trend adjustments with decline detection
+        let trendAdjustment = 1.0;
+        if (seasonalMetrics.demandCategory === 'declining') {
+            // Apply the recommended multiplier for declining items
+            trendAdjustment = seasonalMetrics.recommendedMultiplier;
+            
+            if (seasonalMetrics.trendChangeData.isDecliningSharply) {
+                adjustmentReason = `Sharp decline detected (${Math.round(seasonalMetrics.trendChangeData.recentPerformanceRatio * 100)}% of previous period)`;
+            } else if (seasonalMetrics.trendChangeData.isDeclinedFromHistorical) {
+                adjustmentReason = `Historical decline detected (${seasonalMetrics.performanceDecay.decayReason})`;
+            } else {
+                adjustmentReason = "Performance decline adjustment";
+            }
+        } else if (seasonalMetrics.isTrendingUp) {
+            trendAdjustment = 1.3;
+            adjustmentReason += " + upward trend";
+        } else if (seasonalMetrics.isTrendingDown) {
+            trendAdjustment = 0.8;
+            adjustmentReason += " + downward trend";
+        }
+
+        // Final order quantity
+        const finalOrderQty = baseOrderQty * seasonalAdjustment * trendAdjustment;
+        
+        return {
+            orderQuantity: Math.max(0, Math.round(finalOrderQty)),
+            adjustmentReason,
+            seasonalAdjustment,
+            trendAdjustment,
+            // ENHANCED: Additional debugging info
+            effectiveMeanSales,
+            baseOrderQty,
+            declineMultiplier: seasonalMetrics.recommendedMultiplier
+        };
+    }
+
+    // ENHANCED: Calculate enhanced min/max stock levels
+    calculateEnhancedMinMaxLevels(seasonalMetrics, safetyStock) {
+        const meanSales = seasonalMetrics.meanWeeklySales;
+        
+        // Enhanced minimum stock level = dynamic safety stock
+        const enhancedMin = safetyStock;
+        
+        // Enhanced maximum stock level calculation
+        let baseMaxWeeks = 6; // Base 6-week supply
+        
+        // Adjust based on seasonality
+        if (seasonalMetrics.isSeasonal) {
+            // Higher max for seasonal items to handle peaks
+            const seasonalFactor = 1 + (seasonalMetrics.seasonalPeaks.length * 0.3);
+            baseMaxWeeks *= seasonalFactor;
+        }
+        
+        // Volatility adjustment for max stock
+        if (seasonalMetrics.salesVolatility > 1.0) {
+            baseMaxWeeks *= 1.2; // 20% more for high volatility items
+        }
+        
+        const enhancedMax = enhancedMin + (meanSales * baseMaxWeeks);
+        
+        return {
+            enhancedMin: Math.round(enhancedMin),
+            enhancedMax: Math.round(enhancedMax)
+        };
+    }
+
+    // ENHANCED: Round quantity to nearest multiple of MOQ
+    roundToMOQ(quantity, minOrderQty) {
+        if (!minOrderQty || minOrderQty <= 1) {
+            return quantity;
+        }
+        
+        // If quantity is already 0 or less, return 0
+        if (quantity <= 0) {
+            return 0;
+        }
+        
+        // Round up to the nearest multiple of MOQ
+        return Math.ceil(quantity / minOrderQty) * minOrderQty;
+    }
+
+    // ENHANCED: Weighted average forecasting that prioritizes recent data
+    calculateWeightedRecentTrend(sales, alpha = 0.3) {
+        if (!sales || sales.length === 0) return 0;
+        
+        let weightedSum = 0;
+        let totalWeight = 0;
+        
+        // Use exponential smoothing with higher weight for recent weeks
+        const lookbackWeeks = Math.min(26, sales.length);
+        for (let i = 0; i < lookbackWeeks; i++) {
+            const weight = Math.pow(1 - alpha, i); // Higher weight for recent data
+            const saleValue = sales[sales.length - 1 - i];
+            weightedSum += saleValue * weight;
+            totalWeight += weight;
+        }
+        
+        return totalWeight > 0 ? weightedSum / totalWeight : 0;
+    }
+
+    // ENHANCED: Detect trend changes and declining performance
+    detectTrendChange(sales) {
+        if (!sales || sales.length < 24) {
+            return {
+                isDecliningSharply: false,
+                isDeclinedFromHistorical: false,
+                trendChangeMultiplier: 1.0,
+                recentPerformanceRatio: 1.0
+            };
+        }
+
+        const recent12Weeks = sales.slice(-12);
+        const previous12Weeks = sales.slice(-24, -12);
+        const recentAvg = recent12Weeks.length > 0 ? ss.mean(recent12Weeks) : 0;
+        const previousAvg = previous12Weeks.length > 0 ? ss.mean(previous12Weeks) : 0;
+        
+        // Compare to historical performance if we have enough data
+        let historicalAvg = 0;
+        let isDeclinedFromHistorical = false;
+        
+        if (sales.length >= 104) {
+            const historical52Weeks = sales.slice(-104, -52);
+            historicalAvg = historical52Weeks.length > 0 ? ss.mean(historical52Weeks) : 0;
+            isDeclinedFromHistorical = historicalAvg > 0 && recentAvg < historicalAvg * 0.6; // 40% down from 2-year history
+        }
+        
+        // Detect sharp recent decline
+        const isDecliningSharply = previousAvg > 0 && recentAvg < previousAvg * 0.7; // 30% decline
+        
+        // Calculate trend change multiplier
+        let trendChangeMultiplier = 1.0;
+        if (isDecliningSharply && isDeclinedFromHistorical) {
+            trendChangeMultiplier = 0.5; // Strong reduction for sustained decline
+        } else if (isDecliningSharply) {
+            trendChangeMultiplier = 0.7; // Moderate reduction for recent decline
+        } else if (isDeclinedFromHistorical) {
+            trendChangeMultiplier = 0.8; // Light reduction for historical decline
+        }
+        
+        // Calculate recent performance ratio for additional context
+        const recentPerformanceRatio = previousAvg > 0 ? recentAvg / previousAvg : 1.0;
+        
+        return {
+            isDecliningSharply,
+            isDeclinedFromHistorical,
+            trendChangeMultiplier,
+            recentPerformanceRatio,
+            recentAvg,
+            previousAvg,
+            historicalAvg
+        };
+    }
+
+    // ENHANCED: Calculate performance decay factor for sustained decline
+    calculatePerformanceDecay(sales) {
+        if (!sales || sales.length < 52) {
+            return {
+                decayFactor: 1.0,
+                decayReason: 'Insufficient data for decay analysis'
+            };
+        }
+
+        const last26Weeks = sales.slice(-26);
+        const weeks27to52 = sales.slice(-52, -26);
+        
+        const recentAvg = last26Weeks.length > 0 ? ss.mean(last26Weeks) : 0;
+        const year1Avg = weeks27to52.length > 0 ? ss.mean(weeks27to52) : 0;
+        
+        let decayFactor = 1.0;
+        let decayReason = 'No significant decay detected';
+        
+        if (year1Avg > 0) {
+            const decay1 = recentAvg / year1Avg;
+            
+            // Check longer history if available
+            if (sales.length >= 104) {
+                const weeks53to78 = sales.slice(-78, -52);
+                const weeks79to104 = sales.slice(-104, -78);
+                const year2FirstHalf = weeks53to78.length > 0 ? ss.mean(weeks53to78) : 0;
+                const year2SecondHalf = weeks79to104.length > 0 ? ss.mean(weeks79to104) : 0;
+                
+                const year2Avg = (year2FirstHalf + year2SecondHalf) / 2;
+                const decay2 = year2Avg > 0 ? recentAvg / year2Avg : 1;
+                
+                // Strong decay if consistently declining
+                if (decay1 < 0.8 && decay2 < 0.6) {
+                    decayFactor = 0.5;
+                    decayReason = 'Strong sustained decline over 2 years';
+                } else if (decay1 < 0.9 && decay2 < 0.8) {
+                    decayFactor = 0.7;
+                    decayReason = 'Moderate sustained decline';
+                }
+            } else if (decay1 < 0.8) {
+                decayFactor = 0.75;
+                decayReason = 'Recent decline from year-ago performance';
+            }
+        }
+        
+        return { decayFactor, decayReason };
     }
 }
 
