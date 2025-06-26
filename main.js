@@ -113,6 +113,13 @@ app.whenReady().then(() => {
       
       autoUpdater.on('error', (err) => {
         console.log('Error in auto-updater. ' + err);
+        // Notify renderer process about update errors
+        if (mainWindow) {
+          mainWindow.webContents.send('update-error', {
+            message: `Auto-update failed: ${err.message}`,
+            error: err.toString()
+          });
+        }
       });
       
       autoUpdater.on('download-progress', (progressObj) => {

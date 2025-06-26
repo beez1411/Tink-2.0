@@ -1458,6 +1458,12 @@ if (window.api) {
     window.api.onUpdateDownloaded((info) => {
         showUpdateReadyNotification(`Version ${info.version} has been downloaded and is ready to install.`);
     });
+    
+    // Listen for update errors
+    window.api.onUpdateError((error) => {
+        console.error('Auto-update error:', error);
+        showUpdateErrorNotification(error.message);
+    });
 }
 
 // Update notification functions
@@ -1527,6 +1533,33 @@ function updateDownloadProgress(percent) {
         if (progressFill) progressFill.style.width = `${percent}%`;
         if (progressText) progressText.textContent = `${Math.round(percent)}%`;
     }
+}
+
+function showUpdateErrorNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'update-notification error';
+    notification.innerHTML = `
+        <div class="update-content">
+            <h3>Update Error</h3>
+            <p>${message}</p>
+            <div class="update-buttons">
+                <button id="dismissError">Dismiss</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Add event listener
+    notification.querySelector('#dismissError').addEventListener('click', () => {
+        notification.remove();
+    });
+    
+    // Auto remove after 10 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 10000);
 }
 
 // Event listener for upload button

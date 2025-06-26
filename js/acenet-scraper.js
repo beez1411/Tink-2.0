@@ -426,21 +426,57 @@ class AceNetScraper {
         }
     }
 
-    async findElementByXPath(frame, xpath) {
-        try {
-            const result = await frame.evaluate((xpathQuery) => {
-                const result = document.evaluate(xpathQuery, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-                return result.singleNodeValue ? { found: true, text: result.singleNodeValue.textContent.trim() } : { found: false, text: '' };
-            }, xpath);
-            return result;
-        } catch (error) {
-            console.log(`XPath error for ${xpath}: ${error.message}`);
-            return { found: false, text: '' };
+    async findElementByXPath(frame, xpath, maxAttempts = 1, retryDelay = 3000) {
+        let lastError = null;
+        
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            try {
+                const element = await frame.evaluate((xpath) => {
+                    const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                    const node = result.singleNodeValue;
+                    if (node) {
+                        return {
+                            found: true,
+                            text: node.textContent?.trim() || '',
+                            innerHTML: node.innerHTML
+                        };
+                    }
+                    return { found: false, text: '', innerHTML: '' };
+                }, xpath);
+                
+                console.log(`XPath search (attempt ${attempt + 1}/${maxAttempts}): found=${element.found}, text='${element.text}'`);
+                
+                if (element.found) {
+                    return element;
+                }
+                
+                // If not found and we have more attempts, wait and retry
+                if (attempt < maxAttempts - 1) {
+                    console.log(`Element not found, retrying after ${retryDelay}ms delay...`);
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                }
+                
+            } catch (error) {
+                console.log(`XPath search attempt ${attempt + 1}/${maxAttempts} failed: ${error.message}`);
+                lastError = error;
+                
+                // If not the last attempt, wait and retry
+                if (attempt < maxAttempts - 1) {
+                    console.log(`Retrying after ${retryDelay}ms delay...`);
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                }
+            }
         }
+        
+        // All attempts failed
+        if (lastError) {
+            throw lastError;
+        }
+        return { found: false, text: '', innerHTML: '' };
     }
 
-    async checkPartNumber(partNumber, outputFile, progressCallback) {
-        console.log(`Processing PARTNUMBER: '${partNumber}'`);
+    async checkPartNumber(partNumber, outputFile, progressCallback, isFirstSearch = false) {
+        console.log(`Processing PARTNUMBER: '${partNumber}'${isFirstSearch ? ' (FIRST SEARCH)' : ''}`);
         
         // Check for pause/cancel flags at the start of processing
         await this.checkControlFlags();
@@ -454,8 +490,10 @@ class AceNetScraper {
             
             console.log("Entered PARTNUMBER in main window input field");
             
-            // Wait for popup window
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Wait for popup window - longer delay for first search like Python script
+            const waitTime = isFirstSearch ? 10000 : 1000; // 10 seconds for first, 1 second for others
+            console.log(`Waiting ${waitTime}ms for popup window...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
             
             // Get all pages (windows)
             const pages = await this.browser.pages();
@@ -531,15 +569,21 @@ class AceNetScraper {
                         console.log(`Found correct iframe (${i}) with discovery element`);
                         break;
                     } else {
-                        // Try to find some key AceNet elements as fallback
+                        // Try to find key AceNet elements as fallback (more comprehensive check)
                         const statusElement = await frame.$('#ctl00_ctl00_contentMainPlaceHolder_MainContent_imagesVideos_mainStatusDiv');
                         const orderElement = await frame.$('#spnQOO');
-                        console.log(`Iframe ${i}: Status element=${statusElement ? 'YES' : 'NO'}, Order element=${orderElement ? 'YES' : 'NO'}`);
+                        const locationElement = await frame.evaluate(() => {
+                            const result = document.evaluate('/html/body/form/div[4]/div[1]/div[11]/div[1]/div[3]/div[17]/div[2]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                            return result.singleNodeValue ? true : false;
+                        });
                         
-                        // If we found key elements, use this iframe
-                        if (statusElement || orderElement) {
+                        console.log(`Iframe ${i}: Status element=${statusElement ? 'YES' : 'NO'}, Order element=${orderElement ? 'YES' : 'NO'}, Location element=${locationElement ? 'YES' : 'NO'}`);
+                        
+                        // If we found at least 2 key elements, use this iframe (more conservative)
+                        const elementCount = (statusElement ? 1 : 0) + (orderElement ? 1 : 0) + (locationElement ? 1 : 0);
+                        if (elementCount >= 1) { // Lowered threshold but still validation
                             frameFound = true;
-                            console.log(`Using iframe ${i} based on key elements found`);
+                            console.log(`Using iframe ${i} based on ${elementCount} key elements found`);
                             break;
                         }
                     }
@@ -564,9 +608,11 @@ class AceNetScraper {
             let isCancelled = false;
             let isNotInRSC = false;
             
-            // Step 1: Check for "Not in RSC" and "Cancelled" status (priority checks)
+            // Step 1: Check for "Not in RSC" and "Cancelled" status (priority checks with explicit wait)
             console.log("Step 1: Checking Cancelled and Not in RSC status...");
             try {
+                // Wait for status element like Python script does with WebDriverWait
+                await frame.waitForSelector('#ctl00_ctl00_contentMainPlaceHolder_MainContent_imagesVideos_mainStatusDiv', { timeout: 10000 });
                 const statusDiv = await frame.$('#ctl00_ctl00_contentMainPlaceHolder_MainContent_imagesVideos_mainStatusDiv');
                 if (statusDiv) {
                     const statusText = await frame.evaluate(el => el.textContent.trim(), statusDiv);
@@ -604,10 +650,12 @@ class AceNetScraper {
                 return;
             }
             
-            // Step 2: Check No Discovery element
+            // Step 2: Check No Discovery element (with retry logic like Python)
             console.log("Step 2: Checking No Discovery element...");
             try {
-                const discoveryResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]');
+                // Use multiple attempts for discovery element (3 for first search, 2 for others)
+                const maxAttempts = isFirstSearch ? 3 : 2;
+                const discoveryResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]', maxAttempts);
                 console.log(`No Discovery element found: ${discoveryResult.found}, text: '${discoveryResult.text}'`);
                 
                 if (!discoveryResult.found || !discoveryResult.text.trim()) {
@@ -633,9 +681,11 @@ class AceNetScraper {
                 console.log("No Asterisk element error, skipping.");
             }
             
-            // Step 4: Check On Order
+            // Step 4: Check On Order (with wait like Python script)
             console.log("Step 4: Checking On Order...");
             try {
+                // Wait for element like Python script does with WebDriverWait
+                await frame.waitForSelector('#spnQOO', { timeout: 10000 });
                 const orderSpan = await frame.$('#spnQOO');
                 if (orderSpan) {
                     const orderText = await frame.evaluate(el => el.textContent.trim(), orderSpan);
@@ -1295,7 +1345,8 @@ class AceNetScraper {
                 progressCallback(i + 1, partNumbers.length, `Processing ${partNumber}`);
             }
             
-            await this.checkPartNumber(partNumber, outputFile, progressCallback);
+            // Pass isFirstSearch flag to match Python logic
+            await this.checkPartNumber(partNumber, outputFile, progressCallback, i === 0);
             
             // Add delay to avoid overwhelming the server
             await new Promise(resolve => setTimeout(resolve, 1000));

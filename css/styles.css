@@ -1632,6 +1632,12 @@ a {
     max-width: 350px;
 }
 
+.update-notification.error {
+    background: #fff;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
 .update-content {
     padding: 1.5em;
 }

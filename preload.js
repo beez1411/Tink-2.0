@@ -35,6 +35,10 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('update-downloaded', (event, info) => callback(info));
   },
   
+  onUpdateError: (callback) => {
+    ipcRenderer.on('update-error', (event, error) => callback(error));
+  },
+  
   restartApp: () => ipcRenderer.invoke('restart-app'),
   
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),

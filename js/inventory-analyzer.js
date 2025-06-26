@@ -1,8 +1,57 @@
+/*
+ * ENHANCED INVENTORY ANALYZER - PYTHON SCRIPT COMPATIBILITY
+ * =========================================================
+ * 
+ * This enhanced version implements key improvements to match the robustness 
+ * of the original Python "Stable - Suggested Order.py" script:
+ * 
+ * KEY ENHANCEMENTS IMPLEMENTED:
+ * 
+ * 1. ADVANCED STATISTICAL ANALYSIS:
+ *    - 6-feature clustering (variance, peak/mean, autocorr, coeff_var, zero_weeks, slope)
+ *    - Enhanced seasonal decomposition (simplified STL-like approach)
+ *    - Proper autocorrelation and trend slope calculations
+ *    - Statistical safety stock using Z-scores (95% service level)
+ * 
+ * 2. TWO-PHASE ORDERING LOGIC (MATCHES PYTHON):
+ *    Phase 1 - Dynamic Order Logic:
+ *    - Overstock prevention (2x forecasted need check)
+ *    - Slow mover handling (velocity < 0.2 threshold)
+ *    - Velocity-based forecasting (8-week velocity calculation)
+ *    - Safety stock calculation (Z=1.65, 26-week lookback)
+ *    
+ *    Phase 2 - MINSTOCK Post-Check Logic:
+ *    - Comprehensive MINSTOCK validation (>= 2 threshold)
+ *    - Post-order tracking like Python script
+ *    - Automatic quantity adjustment to meet MINSTOCK
+ * 
+ * 3. COMPREHENSIVE LOGGING SYSTEM:
+ *    - Forecast accuracy tracking
+ *    - Data quality issue logging
+ *    - Stock event logging (overstock, stockout risks)
+ *    - Phase-based order tracking
+ * 
+ * 4. ENHANCED FORECASTING:
+ *    - Seasonal forecasting with STL-like decomposition
+ *    - Fallback logic for insufficient data
+ *    - Data quality checks during forecasting
+ *    - Multiple forecasting strategies by demand pattern
+ * 
+ * 5. IMPROVED ERROR HANDLING:
+ *    - Robust statistical calculations with fallbacks
+ *    - Better edge case handling
+ *    - Comprehensive data validation
+ * 
+ * This implementation now closely matches the Python script's sophisticated
+ * ordering logic and should produce consistent results.
+ */
+
 const Papa = require('papaparse');
 const ss = require('simple-statistics');
 const { kmeans } = require('ml-kmeans');
 const ExcelJS = require('exceljs');
 const fs = require('fs').promises;
+const path = require('path');
 
 class AdvancedInventoryAnalyzer {
     constructor() {
@@ -11,12 +60,26 @@ class AdvancedInventoryAnalyzer {
         this.Z_SCORE = 1.65; // 95% service level
         this.SEASONAL_THRESHOLD = 0.3; // Threshold for seasonal pattern detection
         this.ERRATIC_THRESHOLD = 2.0; // Threshold for erratic pattern detection
+        this.debugInfo = {};
+        this.onOrderData = {};
+        
+        // Enhanced logging system like Python script
+        this.forecastAccuracyLog = [];
+        this.dataQualityLog = [];
+        this.stockEventLog = [];
+        
+        // Configuration constants
+        this.OVERSTOCK_MULTIPLIER = 2.0; // Like Python's 2x forecasted need check
+        this.SLOW_MOVER_THRESHOLD = 0.2; // Like Python's velocity < 0.2
+        this.Z_SCORE_95 = 1.65; // 95% service level like Python
     }
 
     log(message, data = null) {
-        if (this.debugMode) {
-            console.error(`[ADVANCED INVENTORY ANALYZER] ${message}`);
-            if (data) console.error(data);
+        const timestamp = new Date().toISOString();
+        const logMessage = `[${timestamp}] ${message}`;
+        console.log(logMessage);
+        if (data) {
+            console.log(JSON.stringify(data, null, 2));
         }
     }
 
@@ -43,58 +106,46 @@ class AdvancedInventoryAnalyzer {
         }
     }
 
-    // Enhanced feature engineering with more sophisticated metrics
+    // Enhanced feature engineering to match Python's 6-feature approach
     featureEngineering(salesMatrix) {
         const features = [];
         
         for (let i = 0; i < salesMatrix.length; i++) {
             const series = salesMatrix[i];
             
-            // Basic statistics with safety checks
-            let mean, variance, std;
-            try {
-                if (series.length === 0) {
-                    mean = variance = std = 0;
-                } else {
-                    mean = ss.mean(series);
-                    variance = series.length <= 1 ? 0 : ss.variance(series);
-                    std = Math.sqrt(variance);
-                }
-            } catch (error) {
-                mean = variance = std = 0;
+            if (!series || series.length === 0) {
+                features.push([0, 0, 0, 0, 0, 0]);
+                continue;
             }
+
+            // Feature 1: Variance
+            const variance = ss.variance(series);
             
-            // Peak to mean ratio
+            // Feature 2: Peak to mean ratio
+            const mean = ss.mean(series);
             const peak = Math.max(...series);
-            const peakToMean = mean === 0 ? 0 : peak / mean;
+            const peakToMean = mean > 0 ? peak / mean : 0;
             
-            // Autocorrelation (lag-1)
+            // Feature 3: Autocorrelation (lag-1)
             const autocorr = this.calculateAutocorrelation(series);
             
-            // Coefficient of variation
-            const coeffVar = mean === 0 ? 0 : std / mean;
+            // Feature 4: Coefficient of variation (std/mean) - ADDED FROM PYTHON
+            const std = Math.sqrt(variance);
+            const coeffVar = mean > 0 ? std / mean : 0;
             
-            // Zero sales weeks
-            const zeroWeeks = series.filter(val => val === 0).length;
+            // Feature 5: Zero-sales weeks - ADDED FROM PYTHON
+            const zeroWeeks = series.filter(x => x === 0).length;
             
-            // Trend slope
+            // Feature 6: Trend slope - ENHANCED
             const slope = this.calculateTrendSlope(series);
-            
-            // Seasonality detection (simplified STL-like approach)
-            const seasonality = this.detectSeasonality(series);
-            
-            // Sales velocity (recent vs historical)
-            const recentVelocity = this.calculateVelocityChange(series);
-            
+
             features.push([
-                variance,
-                peakToMean,
-                autocorr,
-                coeffVar,
-                zeroWeeks,
-                slope,
-                seasonality,
-                recentVelocity
+                variance || 0,
+                peakToMean || 0,
+                autocorr || 0,
+                coeffVar || 0,
+                zeroWeeks || 0,
+                slope || 0
             ]);
         }
         
@@ -193,184 +244,251 @@ class AdvancedInventoryAnalyzer {
         };
     }
 
-    // Sophisticated cluster label assignment
+    // Enhanced cluster label assignment to match Python logic
     assignClusterLabels(centers) {
         if (!centers || centers.length === 0) {
             return { 0: 'steady' };
         }
 
-        const metrics = centers.map((center, idx) => ({
+        const labelMap = {};
+        
+        // Extract statistics for each cluster
+        const clusterMetrics = centers.map((center, idx) => ({
             idx,
             variance: center[0] || 0,
             peakToMean: center[1] || 0,
             autocorr: center[2] || 0,
             coeffVar: center[3] || 0,
             zeroWeeks: center[4] || 0,
-            slope: center[5] || 0,
-            seasonality: center[6] || 0,
-            velocity: center[7] || 0
+            slope: center[5] || 0
         }));
 
-        const labelMap = {};
+        // Assign labels using Python's approach
+        // Steady: lowest variance
+        const steadyIdx = clusterMetrics.reduce((min, current) => 
+            current.variance < min.variance ? current : min
+        ).idx;
+
+        // Seasonal: highest autocorrelation
+        const seasonalIdx = clusterMetrics.reduce((max, current) => 
+            current.autocorr > max.autocorr ? current : max
+        ).idx;
+
+        // Erratic: highest peak-to-mean ratio
+        const erraticIdx = clusterMetrics.reduce((max, current) => 
+            current.peakToMean > max.peakToMean ? current : max
+        ).idx;
+
+        // Handle overlaps like Python script
+        const used = new Set([steadyIdx, seasonalIdx, erraticIdx]);
         
-        // Assign labels based on multiple criteria
-        for (const metric of metrics) {
-            let score = {
-                steady: 0,
-                seasonal: 0,
-                erratic: 0
-            };
-            
-            // Steady: low variance, low coefficient of variation, consistent sales
-            if (metric.variance < ss.mean(metrics.map(m => m.variance))) score.steady += 2;
-            if (metric.coeffVar < 0.5) score.steady += 2;
-            if (metric.autocorr > 0.3) score.steady += 1;
-            if (metric.zeroWeeks < 10) score.steady += 1;
-            
-            // Seasonal: high seasonality correlation, moderate variance
-            if (Math.abs(metric.seasonality) > this.SEASONAL_THRESHOLD) score.seasonal += 3;
-            if (metric.autocorr > 0.5) score.seasonal += 2;
-            if (metric.variance > ss.mean(metrics.map(m => m.variance)) * 0.5) score.seasonal += 1;
-            
-            // Erratic: high variance, high peak-to-mean, low autocorrelation
-            if (metric.peakToMean > this.ERRATIC_THRESHOLD) score.erratic += 3;
-            if (metric.coeffVar > 1.0) score.erratic += 2;
-            if (metric.autocorr < 0.2) score.erratic += 2;
-            if (metric.zeroWeeks > 20) score.erratic += 1;
-            
-            // Assign label based on highest score
-            const maxScore = Math.max(score.steady, score.seasonal, score.erratic);
-            if (maxScore === 0) {
-                labelMap[metric.idx] = 'steady'; // Default
-            } else if (score.seasonal === maxScore) {
-                labelMap[metric.idx] = 'seasonal';
-            } else if (score.erratic === maxScore) {
-                labelMap[metric.idx] = 'erratic';
+        for (let i = 0; i < centers.length; i++) {
+            if (i === steadyIdx) {
+                labelMap[i] = 'steady';
+            } else if (i === seasonalIdx) {
+                labelMap[i] = 'seasonal';
+            } else if (i === erraticIdx) {
+                labelMap[i] = 'erratic';
             } else {
-                labelMap[metric.idx] = 'steady';
+                labelMap[i] = `cluster_${i}`;
             }
         }
-        
+
         return labelMap;
     }
 
-    // Advanced demand forecasting with multiple methods
+    // Enhanced demand forecasting to closely match Python logic
     forecastDemand(salesSeries, label, daysThreshold, itemData = {}) {
-        if (!salesSeries || salesSeries.length === 0) return 0;
+        const partNumber = itemData.PARTNUMBER || 'Unknown';
         
-        const totalSales = salesSeries.reduce((a, b) => a + b, 0);
-        if (totalSales === 0) return 0;
-        
-        const availableWeeks = salesSeries.length;
-        const forecastWeeks = daysThreshold / 7;
-        
-        let forecast = 0;
-        
-        switch (label) {
-            case 'steady':
-                forecast = this.forecastSteady(salesSeries, forecastWeeks);
-                break;
-            case 'seasonal':
-                forecast = this.forecastSeasonal(salesSeries, forecastWeeks, itemData);
-                break;
-            case 'erratic':
-                forecast = this.forecastErratic(salesSeries, forecastWeeks);
-                break;
-            default:
-                forecast = this.forecastSteady(salesSeries, forecastWeeks);
+        if (!salesSeries || salesSeries.length === 0) {
+            return 0;
         }
-        
+
+        // Data quality checks like Python script
+        this.performDataQualityChecks(itemData, salesSeries, partNumber);
+
+        const forecastWeeks = daysThreshold / 7;
+        let forecast = 0;
+
+        try {
+            if (label === 'steady') {
+                // Last 26 weeks average like Python
+                const recentSales = salesSeries.slice(-26);
+                const avg = recentSales.length > 0 ? ss.mean(recentSales) : 0;
+                forecast = avg * forecastWeeks;
+                
+            } else if (label === 'seasonal') {
+                // Enhanced seasonal logic closer to Python's STL approach
+                forecast = this.forecastSeasonal(salesSeries, forecastWeeks);
+                
+            } else { // erratic or fallback
+                // Use median of last 20 weeks like Python
+                const recentSales = salesSeries.slice(-20);
+                const median = recentSales.length > 0 ? ss.median(recentSales) : 0;
+                forecast = median * forecastWeeks;
+            }
+
+            // Log forecast accuracy if we have actual data
+            if (itemData.WEEK_CURRENT !== undefined) {
+                this.forecastAccuracyLog.push({
+                    partNumber,
+                    forecast,
+                    actual: itemData.WEEK_CURRENT
+                });
+            }
+
+        } catch (error) {
+            this.log(`Forecasting error for ${partNumber}: ${error.message}`);
+            // Fallback to simple average
+            const recentSales = salesSeries.slice(-12);
+            forecast = recentSales.length > 0 ? ss.mean(recentSales) * forecastWeeks : 0;
+        }
+
         return Math.max(0, forecast);
     }
 
-    forecastSteady(salesSeries, forecastWeeks) {
-        // Use exponential smoothing for steady items
-        const alpha = 0.3; // Smoothing parameter
-        const lookback = Math.min(26, salesSeries.length);
-        const recentSales = salesSeries.slice(-lookback);
-        
-        let smoothed = recentSales[0] || 0;
-        for (let i = 1; i < recentSales.length; i++) {
-            smoothed = alpha * recentSales[i] + (1 - alpha) * smoothed;
+    // Enhanced seasonal forecasting (closer to STL approach)
+    forecastSeasonal(salesSeries, forecastWeeks) {
+        if (salesSeries.length < 56) {
+            // Not enough data for seasonal analysis, fallback
+            const recentSales = salesSeries.slice(-12);
+            return recentSales.length > 0 ? ss.mean(recentSales) * forecastWeeks : 0;
         }
-        
-        return smoothed * forecastWeeks;
-    }
 
-    forecastSeasonal(salesSeries, forecastWeeks, itemData = {}) {
-        // Enhanced seasonal forecasting
-        if (salesSeries.length >= 104) {
-            // Two years of data - use year-over-year comparison
-            const currentPeriod = Math.floor((new Date().getTime() - new Date().getTimezoneOffset() * 60000) / (7 * 24 * 60 * 60 * 1000)) % 52;
-            const lastYearSame = salesSeries[salesSeries.length - 52 + currentPeriod] || 0;
-            const twoYearsAgoSame = salesSeries[salesSeries.length - 104 + currentPeriod] || 0;
-            
-            // Weighted average with trend adjustment
-            const trend = this.calculateTrendSlope(salesSeries.slice(-26));
-            const seasonalBase = (lastYearSame * 0.7 + twoYearsAgoSame * 0.3);
-            const trendAdjusted = seasonalBase + (trend * forecastWeeks);
-            
-            return Math.max(0, trendAdjusted * forecastWeeks);
-        } else if (salesSeries.length >= 52) {
-            // One year of data
-            const currentPeriod = Math.floor((new Date().getTime() - new Date().getTimezoneOffset() * 60000) / (7 * 24 * 60 * 60 * 1000)) % 52;
-            const lastYearSame = salesSeries[salesSeries.length - 52 + currentPeriod] || 0;
-            const recentSales = salesSeries.slice(-13);
-            const recentAvg = recentSales.length > 0 ? ss.mean(recentSales) : 0;
-            
-            return Math.max(lastYearSame, recentAvg) * forecastWeeks;
-        } else {
-            // Fallback to recent average
-            const recentSales = salesSeries.slice(-Math.min(13, salesSeries.length));
-            const recentAvg = recentSales.length > 0 ? ss.mean(recentSales) : 0;
-            return recentAvg * forecastWeeks;
-        }
-    }
-
-    forecastErratic(salesSeries, forecastWeeks) {
-        // Use robust statistics for erratic items
-        const lookback = Math.min(20, salesSeries.length);
-        const recentSales = salesSeries.slice(-lookback);
-        
-        // Use median and interquartile range for robustness
-        let median;
         try {
-            if (recentSales.length === 0) {
-                median = 0;
-            } else {
-                median = ss.median(recentSales);
+            // Simplified seasonal decomposition approach
+            const period = 52; // 52 weeks seasonal period
+            
+            // Check for sufficient variation
+            const uniqueValues = [...new Set(salesSeries)].length;
+            if (uniqueValues < 2) {
+                // Fallback to same period last year like Python
+                const samePeriodLastYear = salesSeries.slice(-56, -52);
+                const fallbackAvg = samePeriodLastYear.length > 0 ? ss.mean(samePeriodLastYear) : 0;
+                return fallbackAvg * forecastWeeks;
             }
+
+            // Extract seasonal component (simplified)
+            const recentPeriod = salesSeries.slice(-period);
+            const trend = this.calculateTrendSlope(recentPeriod);
+            const seasonal = this.extractSeasonalComponent(salesSeries, period);
+            
+            // Forecast = trend + seasonal like Python's STL
+            const forecast = (trend + seasonal) * forecastWeeks;
+            return Math.max(0, forecast);
+            
         } catch (error) {
-            // Fallback to simple average if median calculation fails
-            const sum = recentSales.reduce((a, b) => a + b, 0);
-            median = recentSales.length > 0 ? sum / recentSales.length : 0;
-        }
-        let q75, q25;
-        
-        try {
-            if (recentSales.length === 0) {
-                q75 = q25 = 0;
-            } else if (recentSales.length === 1) {
-                // Handle single data point case
-                q75 = q25 = recentSales[0];
+            // Fallback logic like Python script
+            if (salesSeries.length >= 56) {
+                const samePeriodLastYear = salesSeries.slice(-56, -52);
+                const fallbackAvg = samePeriodLastYear.length > 0 ? ss.mean(samePeriodLastYear) : 0;
+                return fallbackAvg * forecastWeeks;
             } else {
-                q75 = ss.quantile(recentSales, 0.75);
-                q25 = ss.quantile(recentSales, 0.25);
+                const recentSales = salesSeries.slice(-12);
+                return recentSales.length > 0 ? ss.mean(recentSales) * forecastWeeks : 0;
             }
-        } catch (error) {
-            // Fallback to simple average if quantile calculation fails
-            const sum = recentSales.reduce((a, b) => a + b, 0);
-            const avg = recentSales.length > 0 ? sum / recentSales.length : 0;
-            q75 = q25 = avg;
         }
-        
-        // Conservative forecast using median with some upward adjustment for active items
-        const forecast = median + (q75 - q25) * 0.25;
-        
-        return forecast * forecastWeeks;
     }
 
-    // Calculate safety stock using advanced statistical methods
+    // Extract seasonal component (simplified STL-like approach)
+    extractSeasonalComponent(series, period) {
+        if (series.length < period * 2) {
+            return 0;
+        }
+
+        // Calculate moving average to remove trend
+        const movingAvgs = [];
+        const halfPeriod = Math.floor(period / 2);
+        
+        for (let i = halfPeriod; i < series.length - halfPeriod; i++) {
+            const window = series.slice(i - halfPeriod, i + halfPeriod + 1);
+            movingAvgs.push(ss.mean(window));
+        }
+
+        // Detrended series
+        const detrended = [];
+        for (let i = 0; i < movingAvgs.length; i++) {
+            detrended.push(series[i + halfPeriod] - movingAvgs[i]);
+        }
+
+        // Extract seasonal pattern from detrended data
+        const seasonalPattern = new Array(period).fill(0);
+        const counts = new Array(period).fill(0);
+        
+        for (let i = 0; i < detrended.length; i++) {
+            const seasonalIndex = (i + halfPeriod) % period;
+            seasonalPattern[seasonalIndex] += detrended[i];
+            counts[seasonalIndex]++;
+        }
+
+        // Average seasonal values
+        for (let i = 0; i < period; i++) {
+            if (counts[i] > 0) {
+                seasonalPattern[i] /= counts[i];
+            }
+        }
+
+        // Return the seasonal component for the most recent period
+        const currentSeasonalIndex = (series.length - 1) % period;
+        return seasonalPattern[currentSeasonalIndex] || 0;
+    }
+
+    // Enhanced data quality checks like Python script
+    performDataQualityChecks(itemData, salesSeries, partNumber) {
+        const issues = [];
+
+        // Check for negative sales
+        if (salesSeries.some(x => x < 0)) {
+            issues.push('Negative sales detected');
+        }
+
+        // Check for outlier spikes
+        const nonZeroSales = salesSeries.filter(x => x > 0);
+        if (nonZeroSales.length > 0) {
+            const median = ss.median(nonZeroSales);
+            const max = Math.max(...salesSeries);
+            if (max > 10 * median) {
+                issues.push('Outlier spike detected');
+            }
+        }
+
+        // Check for mostly zero sales
+        const zeroCount = salesSeries.filter(x => x === 0).length;
+        if (zeroCount > 80) {
+            issues.push('Mostly zero sales');
+        }
+
+        // Log issues
+        if (issues.length > 0) {
+            this.dataQualityLog.push({
+                partNumber,
+                issues: issues.join(', ')
+            });
+        }
+
+        return issues;
+    }
+
+    // Get sales velocity like Python script (8 weeks default)
+    getSalesVelocity(salesSeries, weeks = 8) {
+        const recentSales = salesSeries.slice(-weeks);
+        return recentSales.length > 0 ? ss.mean(recentSales) : 0;
+    }
+
+    // Calculate demand standard deviation like Python script
+    calculateDemandStandardDeviation(salesSeries) {
+        if (!salesSeries || salesSeries.length <= 1) {
+            return 0;
+        }
+        try {
+            return ss.standardDeviation(salesSeries);
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    // Calculate safety stock using advanced statistical methods (enhanced)
     calculateSafetyStock(salesSeries, daysThreshold, serviceLevel = 0.95) {
         if (!salesSeries || salesSeries.length < 4) return 0;
         
@@ -379,16 +497,7 @@ class AdvancedInventoryAnalyzer {
         const recentSales = salesSeries.slice(-lookback);
         
         // Calculate demand variability
-        let demandStd;
-        try {
-            if (recentSales.length <= 1) {
-                demandStd = 0;
-            } else {
-                demandStd = ss.standardDeviation(recentSales);
-            }
-        } catch (error) {
-            demandStd = 0;
-        }
+        const demandStd = this.calculateDemandStandardDeviation(recentSales);
         
         // Z-score for service level
         const zScore = this.getZScore(serviceLevel);
@@ -409,52 +518,6 @@ class AdvancedInventoryAnalyzer {
         };
         
         return zScores[serviceLevel] || 1.65; // Default to 95%
-    }
-
-    // Enhanced data quality checks
-    performDataQualityChecks(row, salesSeries, partNumber) {
-        const issues = [];
-        
-        // Check for negative sales
-        if (salesSeries.some(val => val < 0)) {
-            issues.push('Negative sales detected');
-        }
-        
-        // Check for outlier spikes
-        const nonZeroSales = salesSeries.filter(val => val > 0);
-        let median;
-        try {
-            if (nonZeroSales.length === 0) {
-                median = 0;
-            } else {
-                median = ss.median(nonZeroSales);
-            }
-        } catch (error) {
-            // Fallback to simple average if median calculation fails
-            const sum = nonZeroSales.reduce((a, b) => a + b, 0);
-            median = nonZeroSales.length > 0 ? sum / nonZeroSales.length : 0;
-        }
-        const maxSale = Math.max(...salesSeries);
-        if (median > 0 && maxSale > median * 10) {
-            issues.push('Outlier spike detected');
-        }
-        
-        // Check for mostly zero sales
-        const zeroCount = salesSeries.filter(val => val === 0).length;
-        if (zeroCount > salesSeries.length * 0.8) {
-            issues.push('Mostly zero sales');
-        }
-        
-        // Check for missing critical data
-        if (!row.STOCKONHAND && row.STOCKONHAND !== 0) {
-            issues.push('Missing stock data');
-        }
-        
-        if (!row.UNITCOST && row.UNITCOST !== 0) {
-            issues.push('Missing cost data');
-        }
-        
-        return issues;
     }
 
     // Main analysis function with enhanced logic
@@ -653,6 +716,7 @@ class AdvancedInventoryAnalyzer {
         return { salesData, weekColumns, validItems };
     }
 
+    // Two-phase ordering logic like Python script
     generateOrderRecommendations(items, salesData, clusterLabels, labelMap, daysThreshold, serviceLevel) {
         const orderItems = [];
         const debug = {
@@ -668,7 +732,12 @@ class AdvancedInventoryAnalyzer {
             itemsWithStock: 0,
             itemsBelowMinStock: 0,
             weekColumnsFound: 0, // Will be set later
-            totalSalesValue: 0
+            totalSalesValue: 0,
+            // Enhanced logging counters
+            overstockPrevention: 0,
+            slowMoverHandling: 0,
+            phase1Orders: 0,
+            phase2MinStockAdjustments: 0
         };
 
         // Calculate week columns found
@@ -707,6 +776,9 @@ class AdvancedInventoryAnalyzer {
         debug.itemsBelowMinStock = itemsBelowMinStock;
         debug.totalSalesValue = totalSalesValue;
         
+        // PHASE 1: DYNAMIC ORDER LOGIC (like Python script)
+        this.log('Starting Phase 1: Dynamic Order Logic');
+        
         for (let i = 0; i < items.length; i++) {
             const row = items[i];
             const sales = salesData[i];
@@ -723,7 +795,7 @@ class AdvancedInventoryAnalyzer {
             const minOrderQty = this.parseNumber(row.MINORDERQTY) || 1;
             const unitCost = this.parseNumber(row.UNITCOST) || 0;
             
-            // Safety check: Skip items with MINORDERQTY of 0 (should already be filtered, but double-check)
+            // Safety check: Skip items with MINORDERQTY of 0
             if (this.parseNumber(row.MINORDERQTY) === 0) {
                 continue;
             }
@@ -734,48 +806,89 @@ class AdvancedInventoryAnalyzer {
                 debug.dataQualityIssues++;
             }
             
-            // Advanced demand forecasting
+            // Get sales velocity and forecast like Python script
+            const velocity = this.getSalesVelocity(sales, 8); // 8 weeks like Python
+            const forecastedNeed = velocity * (daysThreshold / 7);
             const forecast = this.forecastDemand(sales, clusterLabel, daysThreshold, row);
             if (forecast > 0) debug.itemsWithForecast++;
             
-            // Calculate safety stock
-            const safetyStock = this.calculateSafetyStock(sales, daysThreshold, serviceLevel);
+            // Calculate safety stock like Python (Z = 1.65, 95% service level)
+            const leadTimeWeeks = daysThreshold / 7;
+            const demandStd = this.calculateDemandStandardDeviation(sales.slice(-26));
+            const safetyStock = this.Z_SCORE_95 * demandStd * Math.sqrt(leadTimeWeeks);
             
-            // Determine if item needs ordering using sophisticated logic
-            const orderAnalysis = this.analyzeOrderNeed(
-                partNumber,
-                currentStock, 
-                minStock, 
-                minOrderQty, 
-                forecast, 
-                safetyStock, 
-                sales, 
-                clusterLabel
-            );
+            // Get on order quantity
+            const onOrderQty = (this.onOrderData && this.onOrderData[partNumber]) || 0;
             
-            if (orderAnalysis.needsOrder) {
-                debug.itemsNeedingOrder++;
+            let orderQty = 0;
+            let orderReason = '';
+            
+            // PYTHON SCRIPT LOGIC: Dynamic order logic
+            // 1. Overstock prevention check
+            if (currentStock > this.OVERSTOCK_MULTIPLIER * forecastedNeed) {
+                orderQty = 0;
+                this.stockEventLog.push({
+                    partNumber,
+                    event: 'Overstock',
+                    currentStock,
+                    forecastedNeed
+                });
+                debug.overstockPrevention++;
+                
+            // 2. Slow mover check
+            } else if (velocity < this.SLOW_MOVER_THRESHOLD) {
+                if (currentStock < minOrderQty && minOrderQty > 0) {
+                    orderQty = minOrderQty;
+                    orderReason = 'Stockout risk (slow mover)';
+                    this.stockEventLog.push({
+                        partNumber,
+                        event: 'Stockout risk (slow mover)',
+                        currentStock,
+                        minOrderQty
+                    });
+                    debug.slowMoverHandling++;
+                } else {
+                    orderQty = 0;
+                }
+                
+            // 3. Normal velocity items
+            } else {
+                const shortage = forecastedNeed + safetyStock - currentStock;
+                if (shortage > 0 && minOrderQty > 0) {
+                    orderQty = Math.ceil(shortage / minOrderQty) * minOrderQty;
+                    orderReason = `Dynamic forecast-based order (shortage: ${Math.round(shortage)})`;
+                    
+                    if (currentStock < safetyStock) {
+                        this.stockEventLog.push({
+                            partNumber,
+                            event: 'Stockout risk',
+                            currentStock,
+                            safetyStock
+                        });
+                    }
+                } else {
+                    orderQty = 0;
+                }
+            }
+            
+            // Add to order items if quantity > 0
+            if (orderQty > 0) {
+                debug.phase1Orders++;
                 
                 orderItems.push({
                     partNumber,
                     description,
                     category: clusterLabel,
                     currentStock,
-                    safetyStock,
-                    suggestedQty: orderAnalysis.suggestedQty,
+                    safetyStock: Math.round(safetyStock),
+                    suggestedQty: orderQty,
                     cost: unitCost,
-                    supplierNumber: row.SUPPLIER_NUMBER1 || row.SUPPLIERNUMBER || row.SUPPLIER_NUMBER || row.SUPPLIER || '10', // Preserve original supplier number
-                    demandStd: (() => {
-                        try {
-                            const recentSalesForStd = sales.slice(-26);
-                            return recentSalesForStd.length <= 1 ? 0 : ss.standardDeviation(recentSalesForStd);
-                        } catch (error) {
-                            return 0;
-                        }
-                    })(),
+                    supplierNumber: row.SUPPLIER_NUMBER1 || row.SUPPLIERNUMBER || row.SUPPLIER_NUMBER || row.SUPPLIER || '10',
+                    demandStd: Math.round(demandStd * 100) / 100,
                     daysThreshold,
-                    // Additional fields for analysis
                     forecast: Math.round(forecast * 100) / 100,
+                    velocity: Math.round(velocity * 100) / 100,
+                    forecastedNeed: Math.round(forecastedNeed * 100) / 100,
                     minStock,
                     minOrderQty,
                     recentSales: sales.slice(-4).reduce((a, b) => a + b, 0),
@@ -785,15 +898,24 @@ class AdvancedInventoryAnalyzer {
                     })(),
                     totalSales104Weeks: sales.reduce((a, b) => a + b, 0),
                     stockTurnover: this.calculateStockTurnover(sales, currentStock),
-                    orderReason: orderAnalysis.reason,
+                    orderReason: orderReason || 'Phase 1 dynamic order',
                     qualityIssues: qualityIssues.join(', ') || 'None',
-                    confidence: orderAnalysis.confidence
+                    confidence: 0.8,
+                    orderPhase: 'Phase 1 - Dynamic'
                 });
             }
         }
 
-        // COMPREHENSIVE FINAL MINSTOCK CHECK
-        // This ensures ALL items are checked against MINSTOCK regardless of previous ordering logic
+        // PHASE 2: MINSTOCK POST-CHECK LOGIC (like Python script)
+        this.log('Starting Phase 2: MINSTOCK Post-Check Logic');
+        
+        // Build post-order-on-hand tracking like Python script
+        const postOrderOnHand = {};
+        for (const item of orderItems) {
+            const pn = item.partNumber;
+            postOrderOnHand[pn] = (postOrderOnHand[pn] || 0) + item.suggestedQty;
+        }
+        
         for (let i = 0; i < items.length; i++) {
             const row = items[i];
             const partNumber = row.PARTNUMBER || `Item_${i}`;
@@ -809,62 +931,62 @@ class AdvancedInventoryAnalyzer {
                 continue;
             }
             
-            // Check if this item is already in the order
-            const existingOrderIndex = orderItems.findIndex(item => item.partNumber === partNumber);
-            
-            // Get on order quantity for this part
-            const onOrderQty = (this.onOrderData && this.onOrderData[partNumber]) || 0;
-            
-            // Calculate effective stock (current stock + on order + any already ordered quantity)
-            let effectiveStock = currentStock + onOrderQty;
-            if (existingOrderIndex >= 0) {
-                effectiveStock += orderItems[existingOrderIndex].suggestedQty;
-            }
-            
-            // If MINSTOCK > 0 and effective stock is below MINSTOCK, ensure we order to meet MINSTOCK
-            if (minStock > 0 && effectiveStock < minStock) {
-                const qtyNeededForMinStock = minStock - effectiveStock;
-                const adjustedQty = Math.max(qtyNeededForMinStock, minOrderQty);
+            // MINSTOCK logic exactly like Python script
+            if (minStock >= 2) { // Only check MINSTOCK if >= 2 like Python
+                const ordered = postOrderOnHand[partNumber] || 0;
+                const postOrder = currentStock + ordered;
                 
-                if (existingOrderIndex >= 0) {
-                    // Update existing order to meet MINSTOCK
-                    const currentQty = orderItems[existingOrderIndex].suggestedQty;
-                    const newQty = currentQty + adjustedQty;
-                    orderItems[existingOrderIndex].suggestedQty = newQty;
+                if (postOrder < minStock && minOrderQty > 0) {
+                    const needed = minStock - postOrder;
+                    const addQty = Math.ceil(needed / minOrderQty) * minOrderQty;
                     
-                    // Update the order reason to include MINSTOCK requirement
-                    if (!orderItems[existingOrderIndex].orderReason.includes('minimum stock')) {
-                        orderItems[existingOrderIndex].orderReason += ` + Ensure minimum stock level (${minStock})`;
+                    if (addQty > 0) {
+                        // Check if item already exists in order
+                        let found = false;
+                        for (const item of orderItems) {
+                            if (item.partNumber === partNumber) {
+                                item.suggestedQty += addQty;
+                                item.orderReason += ` + MINSTOCK adjustment (+${addQty})`;
+                                found = true;
+                                debug.phase2MinStockAdjustments++;
+                                break;
+                            }
+                        }
+                        
+                        if (!found) {
+                            // Create new order for MINSTOCK requirement
+                            debug.phase2MinStockAdjustments++;
+                            
+                            orderItems.push({
+                                partNumber,
+                                description,
+                                category: 'minstock-required',
+                                currentStock,
+                                safetyStock: 0,
+                                suggestedQty: addQty,
+                                cost: unitCost,
+                                supplierNumber: row.SUPPLIER_NUMBER1 || row.SUPPLIERNUMBER || row.SUPPLIER_NUMBER || row.SUPPLIER || '10',
+                                demandStd: 0,
+                                daysThreshold,
+                                forecast: 0,
+                                velocity: 0,
+                                forecastedNeed: 0,
+                                minStock,
+                                minOrderQty,
+                                recentSales: sales.slice(-4).reduce((a, b) => a + b, 0),
+                                avgWeeklySales: (() => {
+                                    const recentSalesForAvg = sales.slice(-12);
+                                    return recentSalesForAvg.length > 0 ? ss.mean(recentSalesForAvg) : 0;
+                                })(),
+                                totalSales104Weeks: sales.reduce((a, b) => a + b, 0),
+                                stockTurnover: this.calculateStockTurnover(sales, currentStock),
+                                orderReason: `Phase 2 MINSTOCK requirement (needed: ${needed}, rounded: ${addQty})`,
+                                qualityIssues: 'None',
+                                confidence: 0.95,
+                                orderPhase: 'Phase 2 - MINSTOCK'
+                            });
+                        }
                     }
-                } else {
-                    // Create new order item for MINSTOCK requirement
-                    debug.itemsNeedingOrder++;
-                    
-                    orderItems.push({
-                        partNumber,
-                        description,
-                        category: 'minstock-required',
-                        currentStock,
-                        safetyStock: 0,
-                        suggestedQty: adjustedQty,
-                        cost: unitCost,
-                        supplierNumber: row.SUPPLIER_NUMBER1 || row.SUPPLIERNUMBER || row.SUPPLIER_NUMBER || row.SUPPLIER || '10', // Preserve original supplier number
-                        demandStd: 0,
-                        daysThreshold,
-                        forecast: 0,
-                        minStock,
-                        minOrderQty,
-                        recentSales: sales.slice(-4).reduce((a, b) => a + b, 0),
-                        avgWeeklySales: (() => {
-                            const recentSalesForAvg = sales.slice(-12);
-                            return recentSalesForAvg.length > 0 ? ss.mean(recentSalesForAvg) : 0;
-                        })(),
-                        totalSales104Weeks: sales.reduce((a, b) => a + b, 0),
-                        stockTurnover: this.calculateStockTurnover(sales, currentStock),
-                        orderReason: `MINSTOCK requirement - Stock to minimum level (${minStock}), ${onOrderQty} on order`,
-                        qualityIssues: 'None',
-                        confidence: 0.95
-                    });
                 }
             }
         }
@@ -873,6 +995,27 @@ class AdvancedInventoryAnalyzer {
         orderItems.sort((a, b) => {
             return a.partNumber.localeCompare(b.partNumber);
         });
+        
+        // Enhanced logging like Python script
+        this.log(`Order generation complete. Phase 1: ${debug.phase1Orders} orders, Phase 2: ${debug.phase2MinStockAdjustments} MINSTOCK adjustments`);
+        this.log(`Total order items: ${orderItems.length}`);
+        this.log(`Overstock prevention applied: ${debug.overstockPrevention} times`);
+        this.log(`Slow mover handling applied: ${debug.slowMoverHandling} times`);
+        
+        // Log sample forecast accuracy if available
+        if (this.forecastAccuracyLog.length > 0) {
+            this.log(`Forecast accuracy log (sample):`, this.forecastAccuracyLog.slice(0, 5));
+        }
+        
+        // Log sample data quality issues if available
+        if (this.dataQualityLog.length > 0) {
+            this.log(`Data quality issues (sample):`, this.dataQualityLog.slice(0, 5));
+        }
+        
+        // Log sample stock events if available
+        if (this.stockEventLog.length > 0) {
+            this.log(`Stock event log (sample):`, this.stockEventLog.slice(0, 5));
+        }
         
         return { orderItems, debug };
     }
