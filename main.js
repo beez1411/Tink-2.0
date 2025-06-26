@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -83,8 +83,94 @@ function createWindow() {
   }
 }
 
+// Create native menu
+function createMenu() {
+  const template = [
+    {
+      label: 'File',
+      submenu: [
+        { role: 'quit' }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'close' }
+      ]
+    },
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'Check for Updates...',
+          click: async () => {
+            if (autoUpdater) {
+              try {
+                await autoUpdater.checkForUpdatesAndNotify();
+                if (mainWindow) {
+                  mainWindow.webContents.send('manual-update-check');
+                }
+              } catch (error) {
+                console.error('Manual update check failed:', error);
+                dialog.showErrorBox('Update Check Failed', `Could not check for updates: ${error.message}`);
+              }
+            } else {
+              dialog.showMessageBox(mainWindow, {
+                type: 'info',
+                title: 'Updates Unavailable',
+                message: 'Auto-updater is not available in development mode.'
+              });
+            }
+          }
+        },
+        {
+          label: 'About Tink 2.0',
+          click: () => {
+            dialog.showMessageBox(mainWindow, {
+              type: 'info',
+              title: 'About Tink 2.0',
+              message: 'Tink 2.0',
+              detail: `Version: 2.0.8\nInventory processing application\n© 2024 1411 Capital Inc`
+            });
+          }
+        }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
 app.whenReady().then(() => {
   createWindow();
+  createMenu();
 
   // Configure auto-updater if available
   if (autoUpdater) {
