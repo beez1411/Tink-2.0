@@ -1020,7 +1020,8 @@ input[type="number"]::-webkit-outer-spin-button {
 .acenet-results-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 0.75rem;
     margin-bottom: 1rem;
     flex-shrink: 0;
 }
@@ -1116,8 +1117,9 @@ input[type="number"]::-webkit-outer-spin-button {
         transform: none !important;
     }
     
-    /* Hide the print button */
-    #printAcenetResultsBtn {
+    /* Hide the print and excel buttons */
+    #printAcenetResultsBtn,
+    #openExcelAcenetResultsBtn {
         display: none !important;
         visibility: hidden !important;
     }

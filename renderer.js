@@ -29,6 +29,68 @@ let suggestedOrderResults = {
 // Global storage for on order data
 let onOrderData = {};
 
+// Global storage for AceNet results (for Excel export)
+let globalAceNetResults = null;
+
+// Remember Me functionality
+function loadRememberedCredentials() {
+    const rememberedData = localStorage.getItem('rememberedCredentials');
+    if (rememberedData) {
+        try {
+            const credentials = JSON.parse(rememberedData);
+            
+            // Load username
+            if (credentials.username && usernameInput) {
+                usernameInput.value = credentials.username;
+            }
+            
+            // Load password
+            if (credentials.password && passwordInput) {
+                passwordInput.value = credentials.password;
+            }
+            
+            // Load store selection
+            if (credentials.storeNumber && storeNumberInput) {
+                storeNumberInput.value = credentials.storeNumber;
+            }
+            
+            // Check the remember me checkbox
+            const rememberMeCheckbox = document.getElementById('rememberMe');
+            if (rememberMeCheckbox) {
+                rememberMeCheckbox.checked = true;
+            }
+            
+            console.log('Loaded remembered credentials for username:', credentials.username);
+        } catch (error) {
+            console.error('Error loading remembered credentials:', error);
+        }
+    }
+}
+
+function saveRememberedCredentials() {
+    const rememberMeCheckbox = document.getElementById('rememberMe');
+    
+    if (rememberMeCheckbox && rememberMeCheckbox.checked) {
+        const credentials = {
+            username: usernameInput ? usernameInput.value : '',
+            password: passwordInput ? passwordInput.value : '',
+            storeNumber: storeNumberInput ? storeNumberInput.value : ''
+        };
+        
+        try {
+            localStorage.setItem('rememberedCredentials', JSON.stringify(credentials));
+            console.log('Saved credentials for username:', credentials.username);
+        } catch (error) {
+            console.error('Error saving remembered credentials:', error);
+        }
+    }
+}
+
+function clearRememberedCredentials() {
+    localStorage.removeItem('rememberedCredentials');
+    console.log('Cleared remembered credentials');
+}
+
 // Load on order data from localStorage on startup
 function loadOnOrderData() {
     const saved = localStorage.getItem('onOrderData');
@@ -207,6 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial setup
     forceInputFieldAccessibility();
     
+    // Load remembered credentials if they exist
+    loadRememberedCredentials();
+    
     // Connect the HTML Fix Input Fields button to functionality
     const fixButton = document.getElementById('fixInputFieldsBtn');
     if (fixButton) {
@@ -222,6 +287,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 2000);
         });
     }
+    
+    // Remember Me functionality event listeners
+    const rememberMeCheckbox = document.getElementById('rememberMe');
+    if (rememberMeCheckbox) {
+        rememberMeCheckbox.addEventListener('change', () => {
+            if (rememberMeCheckbox.checked) {
+                // Save current credentials when checkbox is checked
+                saveRememberedCredentials();
+            } else {
+                // Clear saved credentials when checkbox is unchecked
+                clearRememberedCredentials();
+            }
+        });
+    }
+    
+    // Add event listeners to save credentials when they change (if remember me is checked)
+    const credentialInputs = [usernameInput, passwordInput, storeNumberInput];
+    credentialInputs.forEach(input => {
+        if (input) {
+            input.addEventListener('input', () => {
+                const rememberMe = document.getElementById('rememberMe');
+                if (rememberMe && rememberMe.checked) {
+                    saveRememberedCredentials();
+                }
+            });
+            
+            input.addEventListener('change', () => {
+                const rememberMe = document.getElementById('rememberMe');
+                if (rememberMe && rememberMe.checked) {
+                    saveRememberedCredentials();
+                }
+            });
+        }
+    });
     
     // Minimal periodic checks to avoid layout interference
     setInterval(forceInputFieldAccessibility, 15000); // Check every 15 seconds - much less aggressive
@@ -252,6 +351,8 @@ window.addEventListener('load', () => {
     // Double-check input field accessibility
     setTimeout(() => {
         window.initializeInputFields();
+        // Load remembered credentials again as backup
+        loadRememberedCredentials();
         console.log('Input fields are now fully accessible');
     }, 100);
     
@@ -260,6 +361,8 @@ window.addEventListener('load', () => {
         window.initializeInputFields();
         checkSidebarScrolling();
         ensureSidebarAccessibility();
+        // Load credentials one more time to ensure they're set
+        loadRememberedCredentials();
         console.log('Final input field accessibility check complete');
     }, 500);
 });
@@ -511,6 +614,9 @@ runCheckAceNetBtn.addEventListener('click', async () => {
             console.log('AceNet process completed successfully');
             console.log('Result categorizedResults:', result.categorizedResults);
             console.log('Result totalProcessed:', result.totalProcessed);
+            
+            // Store results globally for Excel export functionality
+            globalAceNetResults = result;
             
             // Debug: Log detailed categorization results
             if (result.categorizedResults && Array.isArray(result.categorizedResults)) {
@@ -1013,6 +1119,38 @@ if (deleteOnOrderCheckbox) {
 if (printAcenetResultsBtn) {
     printAcenetResultsBtn.addEventListener('click', () => {
         window.print();
+    });
+}
+
+// Open in Excel button for AceNet results
+const openExcelAcenetResultsBtn = document.getElementById('openExcelAcenetResultsBtn');
+if (openExcelAcenetResultsBtn) {
+    openExcelAcenetResultsBtn.addEventListener('click', async () => {
+        try {
+            // Check if we have stored AceNet results
+            if (!globalAceNetResults || !globalAceNetResults.categorizedResults) {
+                await showAlert('No AceNet results available. Please run AceNet check first.', 'warning');
+                return;
+            }
+            
+            // Export results to Excel using the same functionality as the completion popup
+            const exportResult = await window.api.exportAceNetResults(globalAceNetResults);
+            
+            if (exportResult.success) {
+                // Show success message and ask if user wants to open the file
+                const openFile = await showConfirm(`Excel file created successfully!\nLocation: ${exportResult.filePath}\n\nWould you like to open the file now?`, 'Open Excel File');
+                
+                if (openFile) {
+                    // Open the file using the system default application
+                    await window.api.openFile(exportResult.filePath);
+                }
+            } else {
+                await showAlert('Error creating Excel file: ' + exportResult.error, 'error');
+            }
+        } catch (error) {
+            console.error('Excel export error:', error);
+            await showAlert('Error creating Excel file: ' + error.message, 'error');
+        }
     });
 }
 
@@ -1883,4 +2021,5 @@ function showConfirm(message, title = 'Confirm Action') {
         document.addEventListener('keydown', handleEscape);
     });
 }
+
 

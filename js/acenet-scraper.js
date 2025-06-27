@@ -7,6 +7,18 @@ const os = require('os');
 
 class AceNetScraper {
     constructor() {
+        /*
+         * Phase 1 Performance Optimizations Implemented:
+         * 1. Batch Excel Writing: All results buffered and written once at the end
+         * 2. Reduced Processing Delays: 1000ms -> 150ms between part numbers  
+         * 3. Balanced Wait Times: Critical waits adjusted for reliability (Phase 1.1)
+         * 4. Smart Excel Write Logic: Only writes immediately in legacy mode
+         * 
+         * Phase 1.1 Adjustment: Restored critical timing for popup/iframe detection
+         * Phase 1.2 Optimization: Further reduced inter-part delay (300ms -> 150ms)
+         * Expected Performance Improvement: 35-50% faster processing with high reliability
+         */
+        
         this.browser = null;
         this.page = null;
         this.mainWindow = null;
@@ -14,14 +26,18 @@ class AceNetScraper {
         this.maxRestarts = 50;
         this.restartCount = 0;
         
+        // Results buffer for batch Excel writing (Phase 1 optimization)
+        this.resultsBuffer = [];
+        
         // Configuration for double-checking behavior
         this.config = {
             enableDoubleCheck: true,        // Enable/disable double-check for "Not in AceNet"
             doubleCheckRetries: 2,          // Number of retry attempts during double-check
             doubleCheckDelay: 3000,         // Delay before double-check (ms)
             popupWaitTime: 2000,            // Standard popup wait time (ms)
-            firstSearchWaitTime: 5000,      // Wait time for first search (ms)
-            networkTimeoutRetry: true       // Retry on network timeouts
+            firstSearchWaitTime: 5000,      // Wait time for first search (ms) - reduced from 10000
+            networkTimeoutRetry: true,      // Retry on network timeouts
+            processingDelay: 150            // Further reduced delay between part numbers (Phase 1.2 optimization)
         };
     }
 
@@ -265,14 +281,20 @@ class AceNetScraper {
             await workbook.xlsx.readFile(outputFile);
             const worksheet = workbook.getWorksheet('No Discovery Check');
             
+            if (!worksheet) {
+                console.log("Worksheet 'No Discovery Check' not found.");
+                return;
+            }
+            
             // Collect PARTNUMBERs and their columns (A, C, E, G, I)
             const partNumberColumns = {};
-            const checkColumns = ['A', 'C', 'E', 'G', 'I'];
-            
-            checkColumns.forEach(col => {
+            ['A', 'C', 'E', 'G', 'I'].forEach(col => {
                 let row = 2;
-                while (worksheet.getCell(`${col}${row}`).value) {
-                    const partNumber = worksheet.getCell(`${col}${row}`).value;
+                while (true) {
+                    const cell = worksheet.getCell(`${col}${row}`);
+                    if (!cell.value) break;
+                    
+                    const partNumber = cell.value.toString();
                     if (!partNumberColumns[partNumber]) {
                         partNumberColumns[partNumber] = [];
                     }
@@ -282,11 +304,11 @@ class AceNetScraper {
             });
             
             // Apply red color to PARTNUMBERs in multiple columns
-            Object.keys(partNumberColumns).forEach(partNumber => {
-                const locations = partNumberColumns[partNumber];
+            Object.entries(partNumberColumns).forEach(([partNumber, locations]) => {
                 if (locations.length > 1) {
                     locations.forEach(({ col, row }) => {
-                        worksheet.getCell(`${col}${row}`).font = { color: { argb: 'FFFF0000' } };
+                        const cell = worksheet.getCell(`${col}${row}`);
+                        cell.font = { ...cell.font, color: { argb: 'FFFF0000' } };
                         console.log(`Colored PARTNUMBER '${partNumber}' red in column ${col}, row ${row}`);
                     });
                 }
@@ -295,7 +317,75 @@ class AceNetScraper {
             await workbook.xlsx.writeFile(outputFile);
             console.log("Color-coding completed successfully.");
         } catch (error) {
-            console.log(`Failed to color-code Excel: ${error.message}`);
+            console.error("Error during color-coding:", error);
+        }
+    }
+
+    // Phase 1 optimization: Batch write all results to Excel at once
+    async batchWriteToExcel(outputFile, results) {
+        console.log(`Batch writing ${results.length} results to Excel...`);
+        
+        try {
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.readFile(outputFile);
+            const worksheet = workbook.getWorksheet('No Discovery Check');
+            
+            if (!worksheet) {
+                console.log("Worksheet 'No Discovery Check' not found.");
+                return;
+            }
+            
+            // Column mapping
+            const columnMap = {
+                "No Discovery": 'A',
+                "No Asterisk(*)": 'C',
+                "Cancelled": 'E',
+                "On Order": 'G',
+                "No Location": 'I',
+                "Not in AceNet": 'K',
+                "Not in RSC": 'M'
+            };
+            
+            // Track current row for each column
+            const columnRows = {};
+            Object.values(columnMap).forEach(col => {
+                columnRows[col] = 2; // Start at row 2 (after header)
+                // Find existing data to determine next row
+                let row = 2;
+                while (worksheet.getCell(`${col}${row}`).value) {
+                    row++;
+                }
+                columnRows[col] = row;
+            });
+            
+            // Write all results
+            results.forEach(result => {
+                const col = columnMap[result.category];
+                if (col) {
+                    const row = columnRows[col];
+                    worksheet.getCell(`${col}${row}`).value = result.partNumber;
+                    columnRows[col]++;
+                    console.log(`Batch wrote ${result.partNumber} to ${result.category} (column ${col}, row ${row})`);
+                }
+            });
+            
+            // Auto-size columns
+            Object.entries(columnMap).forEach(([category, col]) => {
+                const maxLength = Math.max(
+                    category.length,
+                    ...Array.from({ length: columnRows[col] - 2 }, (_, i) => {
+                        const cell = worksheet.getCell(`${col}${i + 2}`);
+                        return cell.value ? cell.value.toString().length : 0;
+                    })
+                );
+                worksheet.getColumn(col).width = maxLength * 1.2;
+            });
+            
+            await workbook.xlsx.writeFile(outputFile);
+            console.log(`Successfully batch wrote ${results.length} results to Excel`);
+        } catch (error) {
+            console.error("Error during batch Excel write:", error);
+            throw error;
         }
     }
 
@@ -475,7 +565,14 @@ class AceNetScraper {
         return { found: false, text: '', innerHTML: '' };
     }
 
-    async checkPartNumber(partNumber, outputFile, progressCallback, isFirstSearch = false) {
+    // Unified method to check part numbers - can output to Excel or return results
+    async checkPartNumber(partNumber, options = {}) {
+        const { 
+            outputFile = null,           // If provided, writes to Excel
+            isFirstSearch = false,       // First search gets longer waits
+            returnResults = false        // If true, returns result objects instead of writing to Excel
+        } = options;
+        
         console.log(`Processing PARTNUMBER: '${partNumber}'${isFirstSearch ? ' (FIRST SEARCH)' : ''}`);
         
         // Check for pause/cancel flags at the start of processing
@@ -490,8 +587,8 @@ class AceNetScraper {
             
             console.log("Entered PARTNUMBER in main window input field");
             
-            // Wait for popup window - longer delay for first search like Python script
-            const waitTime = isFirstSearch ? 10000 : 1000; // 10 seconds for first, 1 second for others
+            // Wait for popup window - balanced timing (Phase 1.1 adjustment)
+            const waitTime = isFirstSearch ? this.config.firstSearchWaitTime : 3000; // Restored to 3000 for reliability
             console.log(`Waiting ${waitTime}ms for popup window...`);
             await new Promise(resolve => setTimeout(resolve, waitTime));
             
@@ -503,30 +600,115 @@ class AceNetScraper {
             const mainUrl = this.page.url();
             if (mainUrl.includes('/search/product?q=')) {
                 console.log(`PARTNUMBER '${partNumber}' not found in AceNet (main window redirected to search page).`);
-                await this.appendToExcel(outputFile, "Not in AceNet", partNumber);
+                
+                // Handle double-check if enabled and returning results
+                if (returnResults && this.config.enableDoubleCheck) {
+                    console.log(`Double-checking enabled - re-verifying...`);
+                    const doubleCheckResult = await this.doubleCheckPartNumber(partNumber, 'Search page redirect');
+                    return [doubleCheckResult];
+                }
+                
+                // Handle result - Phase 1 optimization: no immediate Excel writing
+                const result = { category: 'Not in AceNet', details: 'Redirected to search page' };
+                if (returnResults) {
+                    return [result];
+                } else if (outputFile) {
+                    // Legacy mode: direct Excel writing (kept for compatibility)
+                    await this.appendToExcel(outputFile, "Not in AceNet", partNumber);
+                }
                 
                 // Navigate back to main page
                 await this.page.goto('https://acenet.aceservices.com/', { waitUntil: 'networkidle2' });
                 await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
-                return;
+                return returnResults ? [result] : undefined;
             }
             
-            // Find popup window
+            // Find popup window - look for the correct one like double-check does
             let popupPage = null;
-            for (const page of pages) {
+            console.log("Looking for popup window...");
+            for (let i = 0; i < pages.length; i++) {
+                const page = pages[i];
                 if (page !== this.page) {
-                    popupPage = page;
-                    break;
+                    try {
+                        const pageUrl = await page.url();
+                        console.log(`Checking popup candidate ${i}: ${pageUrl}`);
+                        
+                        // Look for the item-detail-direct-sku page specifically or valid AceNet content
+                        if (pageUrl && (
+                            pageUrl.includes('item-detail-direct-sku') ||
+                            (pageUrl.includes('acenet') && !pageUrl.includes('search') && pageUrl !== 'about:blank')
+                        )) {
+                            // Verify the page has loaded content (like double-check does)
+                            const hasContent = await page.evaluate(() => {
+                                return document.body && document.body.innerHTML.length > 1000;
+                            });
+                            
+                            if (hasContent) {
+                                popupPage = page;
+                                console.log(`Found valid popup with content at ${pageUrl}`);
+                                break;
+                            } else {
+                                console.log(`Page ${pageUrl} doesn't have sufficient content yet, checking next...`);
+                            }
+                        } else if (pageUrl === 'about:blank') {
+                            // If it's about:blank, wait a bit more and check again - balanced timing (Phase 1.1)
+                            console.log(`Page ${i} is about:blank, waiting for it to load...`);
+                            await new Promise(resolve => setTimeout(resolve, 1500));
+                            const newUrl = await page.url();
+                            console.log(`After waiting, page ${i} URL is now: ${newUrl}`);
+                            if (newUrl && newUrl !== 'about:blank' && newUrl.includes('acenet')) {
+                                const hasContent = await page.evaluate(() => {
+                                    return document.body && document.body.innerHTML.length > 1000;
+                                });
+                                if (hasContent) {
+                                    popupPage = page;
+                                    console.log(`Found valid popup after waiting: ${newUrl}`);
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.log(`Error checking page ${i}: ${e.message}`);
+                    }
+                }
+            }
+            
+            // If no popup found, fallback to first non-main page
+            if (!popupPage) {
+                for (const page of pages) {
+                    if (page !== this.page) {
+                        popupPage = page;
+                        console.log("Using fallback popup (first non-main page)");
+                        break;
+                    }
                 }
             }
             
             if (!popupPage) {
                 console.log(`Error: Popup window not found for PARTNUMBER '${partNumber}'.`);
-                await this.appendToExcel(outputFile, "Not in AceNet", partNumber);
-                return;
+                
+                // Handle double-check if enabled and returning results
+                if (returnResults && this.config.enableDoubleCheck) {
+                    console.log(`Double-checking enabled - re-verifying...`);
+                    const doubleCheckResult = await this.doubleCheckPartNumber(partNumber, 'Popup window not found');
+                    return [doubleCheckResult];
+                }
+                
+                // Handle result - Phase 1 optimization: no immediate Excel writing
+                const result = { category: 'Not in AceNet', details: 'Popup window not found' };
+                if (returnResults) {
+                    return [result];
+                } else if (outputFile) {
+                    // Legacy mode: direct Excel writing (kept for compatibility)
+                    await this.appendToExcel(outputFile, "Not in AceNet", partNumber);
+                }
+                return returnResults ? [result] : undefined;
             }
             
             console.log("Switched to popup window");
+            
+            // Wait for iframes to load before processing - balanced timing (Phase 1.1 adjustment)
+            await new Promise(resolve => setTimeout(resolve, 1500));
             
             // Debug popup page
             await this.debugPageContent(popupPage, "POPUP PAGE");
@@ -534,6 +716,12 @@ class AceNetScraper {
             // Check for iframes in popup
             const iframes = await popupPage.$$('iframe');
             console.log(`Found ${iframes.length} iframe(s). Attempting to switch...`);
+            
+            // Wait for iframes to have content - balanced timing (Phase 1.1 adjustment)
+            if (iframes.length > 0) {
+                console.log("Waiting for iframes to load content...");
+                await new Promise(resolve => setTimeout(resolve, 800));
+            }
             
             let frameFound = false;
             let frame = null;
@@ -548,47 +736,63 @@ class AceNetScraper {
                         continue;
                     }
                     
-                    // Debug frame content
-                    try {
-                        const frameUrl = await frame.url();
-                        console.log(`Iframe ${i}: URL='${frameUrl}'`);
-                    } catch (e) {
-                        console.log(`Iframe ${i}: Could not get URL: ${e.message}`);
-                    }
+                    console.log(`Switched to iframe ${i}`);
                     
-                    // Test if we can find the discovery element using XPath via evaluate
+                    // Primary test: Look for the discovery element specifically (like Python)
                     console.log(`Iframe ${i}: Looking for discovery element...`);
-                    const discoveryElements = await frame.evaluate(() => {
-                        const result = document.evaluate('/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]', document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-                        return result.snapshotLength;
-                    });
-                    console.log(`Iframe ${i}: Found ${discoveryElements} discovery elements`);
-                    
-                    if (discoveryElements > 0) {
-                        frameFound = true;
-                        console.log(`Found correct iframe (${i}) with discovery element`);
-                        break;
-                    } else {
-                        // Try to find key AceNet elements as fallback (more comprehensive check)
-                        const statusElement = await frame.$('#ctl00_ctl00_contentMainPlaceHolder_MainContent_imagesVideos_mainStatusDiv');
-                        const orderElement = await frame.$('#spnQOO');
-                        const locationElement = await frame.evaluate(() => {
-                            const result = document.evaluate('/html/body/form/div[4]/div[1]/div[11]/div[1]/div[3]/div[17]/div[2]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                    try {
+                        const discoveryElement = await frame.evaluate(() => {
+                            const result = document.evaluate('/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                             return result.singleNodeValue ? true : false;
                         });
                         
-                        console.log(`Iframe ${i}: Status element=${statusElement ? 'YES' : 'NO'}, Order element=${orderElement ? 'YES' : 'NO'}, Location element=${locationElement ? 'YES' : 'NO'}`);
-                        
-                        // If we found at least 2 key elements, use this iframe (more conservative)
-                        const elementCount = (statusElement ? 1 : 0) + (orderElement ? 1 : 0) + (locationElement ? 1 : 0);
-                        if (elementCount >= 1) { // Lowered threshold but still validation
+                        if (discoveryElement) {
                             frameFound = true;
-                            console.log(`Using iframe ${i} based on ${elementCount} key elements found`);
+                            console.log(`Found correct iframe (${i}) with discovery element`);
                             break;
+                        } else {
+                            console.log(`No Discovery element not found in iframe ${i}`);
+                            
+                            // Check if iframe has substantial content but discovery element not loaded yet
+                            const hasSubstantialContent = await frame.evaluate(() => {
+                                const htmlLength = document.documentElement.outerHTML.length;
+                                const hasForm = document.querySelector('form');
+                                const hasInputs = document.querySelectorAll('input').length > 5;
+                                return htmlLength > 2000 || (hasForm && hasInputs);
+                            });
+                            
+                            if (hasSubstantialContent) {
+                                console.log(`Iframe ${i} has substantial content, waiting for elements to load...`);
+                                await new Promise(resolve => setTimeout(resolve, 1500)); // Balanced timing (Phase 1.1 adjustment)
+                                
+                                // Try discovery element again
+                                const retryDiscovery = await frame.evaluate(() => {
+                                    const result = document.evaluate('/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                                    return result.singleNodeValue ? true : false;
+                                });
+                                
+                                if (retryDiscovery) {
+                                    frameFound = true;
+                                    console.log(`Found correct iframe (${i}) with discovery element after retry`);
+                                    break;
+                                }
+                            }
+                            
+                            // Debug iframe content like Python script
+                            try {
+                                const htmlContent = await frame.evaluate(() => document.documentElement.outerHTML.substring(0, 500));
+                                console.log(`--- DEBUG: First 500 chars of iframe ${i} HTML ---`);
+                                console.log(htmlContent);
+                                console.log(`--- END DEBUG ---`);
+                            } catch (debugError) {
+                                console.log(`Could not get iframe ${i} HTML for debug: ${debugError.message}`);
+                            }
                         }
+                    } catch (error) {
+                        console.log(`Failed to check discovery element in iframe ${i}: ${error.message}`);
                     }
                 } catch (error) {
-                    console.log(`Failed to access iframe ${i}: ${error.message}`);
+                    console.log(`Failed to switch to iframe ${i}: ${error.message}`);
                     continue;
                 }
             }
@@ -596,15 +800,32 @@ class AceNetScraper {
             if (!frameFound || !frame) {
                 console.log(`PARTNUMBER '${partNumber}' not found in AceNet (no valid iframe content).`);
                 console.log(`DEBUG: Iframe detection failed - frameFound=${frameFound}, frame=${frame ? 'exists' : 'null'}`);
-                await this.appendToExcel(outputFile, "Not in AceNet", partNumber);
+                
+                // Handle double-check if enabled and returning results
+                if (returnResults && this.config.enableDoubleCheck) {
+                    console.log(`Double-checking enabled - re-verifying...`);
+                    const doubleCheckResult = await this.doubleCheckPartNumber(partNumber, 'No valid iframe content');
+                    await popupPage.close();
+                    return [doubleCheckResult];
+                }
+                
+                // Handle result - Phase 1 optimization: no immediate Excel writing
+                const result = { category: 'Not in AceNet', details: 'No valid iframe content' };
                 await popupPage.close();
-                return;
+                if (returnResults) {
+                    return [result];
+                } else if (outputFile) {
+                    // Legacy mode: direct Excel writing (kept for compatibility)
+                    await this.appendToExcel(outputFile, "Not in AceNet", partNumber);
+                }
+                return returnResults ? [result] : undefined;
             }
             
             // Check control flags before starting detailed processing
             await this.checkControlFlags();
             
             // Now perform the checks in the same order as Python script
+            const categories = [];
             let isCancelled = false;
             let isNotInRSC = false;
             
@@ -623,20 +844,31 @@ class AceNetScraper {
                         const notInRSCRegex = /not\s+carried\s+in\s+your\s+rsc|not\s+carried\s+by\s+rsc|not\s+in\s+rsc/i;
                         if (notInRSCRegex.test(statusText)) {
                             console.log("Outputting PARTNUMBER to Not in RSC due to matching status.");
-                            await this.appendToExcel(outputFile, "Not in RSC", partNumber);
+                            categories.push({ category: 'Not in RSC', details: statusText });
+                            // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                            if (!returnResults && outputFile) {
+                                await this.appendToExcel(outputFile, "Not in RSC", partNumber);
+                            }
                             isNotInRSC = true;
                         }
                         
-                        // Check for Cancelled (if not Not in RSC)
-                        if (!isNotInRSC) {
-                            const cancelledRegex = /cancel(?:led|lation)?|close(?:out|-out|d out)/i;
-                            const replacementRegex = /replacement|discontinued/i;
-                            
-                            if (cancelledRegex.test(statusText) && !replacementRegex.test(statusText)) {
-                                console.log("Outputting PARTNUMBER to Cancelled due to matching status.");
+                        // If Not in RSC, skip all other checks for this PARTNUMBER (like Python)
+                        if (isNotInRSC) {
+                            await popupPage.close();
+                            return returnResults ? categories : undefined;
+                        }
+                        
+                        // Check for Cancelled/Closeout (if not Not in RSC) - This takes priority over all other categories
+                        const cancelledRegex = /cancel(?:led|lation)?|close(?:out|-out|d out)|item\s+cancelled\s+by\s+ace|closeout:\s*check\s+availability/i;
+                        
+                        if (cancelledRegex.test(statusText)) {
+                            console.log("Outputting PARTNUMBER to Cancelled due to matching status.");
+                            categories.push({ category: 'Cancelled', details: statusText });
+                            // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                            if (!returnResults && outputFile) {
                                 await this.appendToExcel(outputFile, "Cancelled", partNumber);
-                                isCancelled = true;
                             }
+                            isCancelled = true;
                         }
                     }
                 }
@@ -644,27 +876,43 @@ class AceNetScraper {
                 console.log(`Status element not found, skipping: ${error.message}`);
             }
             
-            // If Not in RSC or Cancelled, skip all other checks
-            if (isNotInRSC || isCancelled) {
+            // If Cancelled, skip all other checks for this PARTNUMBER (like Python)
+            if (isCancelled) {
                 await popupPage.close();
-                return;
+                return returnResults ? categories : undefined;
             }
             
             // Step 2: Check No Discovery element (with retry logic like Python)
             console.log("Step 2: Checking No Discovery element...");
-            try {
-                // Use multiple attempts for discovery element (3 for first search, 2 for others)
-                const maxAttempts = isFirstSearch ? 3 : 2;
-                const discoveryResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]', maxAttempts);
-                console.log(`No Discovery element found: ${discoveryResult.found}, text: '${discoveryResult.text}'`);
-                
-                if (!discoveryResult.found || !discoveryResult.text.trim()) {
-                    console.log("Outputting PARTNUMBER to No Discovery due to element absence or empty text.");
+            let elementFound = false;
+            let discoveryText = "";
+            const maxAttempts = isFirstSearch ? 3 : 2;
+            
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                try {
+                    const discoveryResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]', 1, 3000);
+                    discoveryText = discoveryResult.text ? discoveryResult.text.trim() : "";
+                    elementFound = discoveryResult.found;
+                    console.log(`No Discovery element found with text: '${discoveryText}' (attempt ${attempt + 1})`);
+                    if (elementFound) break;
+                } catch (error) {
+                    console.log(`No Discovery element not found (attempt ${attempt + 1}): ${error.message}`);
+                    if (attempt < maxAttempts - 1) {
+                        console.log("Retrying after 3-second delay...");
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                    }
+                    continue;
+                }
+            }
+            
+            // Only add to "No Discovery" if element is not found OR text is empty (like Python)
+            if ((!elementFound || !discoveryText.trim()) && !isCancelled) {
+                console.log("Outputting PARTNUMBER to No Discovery due to element absence or empty text.");
+                categories.push({ category: 'No Discovery', details: elementFound ? 'Empty text' : 'Element not found' });
+                // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                if (!returnResults && outputFile) {
                     await this.appendToExcel(outputFile, "No Discovery", partNumber);
                 }
-            } catch (error) {
-                console.log(`No Discovery element error: ${error.message}`);
-                await this.appendToExcel(outputFile, "No Discovery", partNumber);
             }
             
             // Step 3: Check for non-blank text with no asterisk
@@ -675,7 +923,11 @@ class AceNetScraper {
                 
                 if (linkResult.found && linkResult.text && !linkResult.text.includes('*')) {
                     console.log("Outputting PARTNUMBER to No Asterisk(*).");
-                    await this.appendToExcel(outputFile, "No Asterisk(*)", partNumber);
+                    categories.push({ category: 'No Asterisk(*)', details: linkResult.text });
+                    // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                    if (!returnResults && outputFile) {
+                        await this.appendToExcel(outputFile, "No Asterisk(*)", partNumber);
+                    }
                 }
             } catch (error) {
                 console.log("No Asterisk element error, skipping.");
@@ -695,7 +947,11 @@ class AceNetScraper {
                         const orderValue = parseFloat(orderText);
                         if (!isNaN(orderValue) && orderValue > 0) {
                             console.log("Outputting PARTNUMBER to On Order due to value > 0.");
-                            await this.appendToExcel(outputFile, "On Order", partNumber);
+                            categories.push({ category: 'On Order', details: `${orderValue} on order` });
+                            // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                            if (!returnResults && outputFile) {
+                                await this.appendToExcel(outputFile, "On Order", partNumber);
+                            }
                         } else {
                             console.log("Order value <= 0, skipping.");
                         }
@@ -711,29 +967,54 @@ class AceNetScraper {
             console.log("Step 5: Checking No Location...");
             try {
                 const locationResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[3]/div[17]/div[2]');
-                console.log(`No Location element found: ${locationResult.found}, text: '${locationResult.text}' (raw: ${JSON.stringify(locationResult.text)})`);
+                const locationText = locationResult.text ? locationResult.text.trim() : "";
+                console.log(`No Location text: '${locationText}' (raw: ${JSON.stringify(locationText)})`);
                 
-                if (!locationResult.found) {
-                    console.log("No Location element not found: outputting to No Location.");
-                    await this.appendToExcel(outputFile, "No Location", partNumber);
-                } else if (!locationResult.text) {
-                    console.log("Outputting PARTNUMBER to No Location: element text is empty.");
-                    await this.appendToExcel(outputFile, "No Location", partNumber);
+                if (!locationText) {
+                    if (!locationResult.found) {
+                        console.log("Outputting PARTNUMBER to No Location: element not found.");
+                        categories.push({ category: 'No Location', details: 'Location element not found' });
+                        // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                        if (!returnResults && outputFile) {
+                            await this.appendToExcel(outputFile, "No Location", partNumber);
+                        }
+                    } else {
+                        console.log("Outputting PARTNUMBER to No Location: element text is empty.");
+                        categories.push({ category: 'No Location', details: 'Empty location text' });
+                        // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                        if (!returnResults && outputFile) {
+                            await this.appendToExcel(outputFile, "No Location", partNumber);
+                        }
+                    }
                 } else {
-                    console.log(`Skipping No Location: element contains text '${locationResult.text}'.`);
+                    console.log(`Skipping No Location: element contains text '${locationText}'.`);
                 }
             } catch (error) {
-                console.log(`No Location element error: ${error.message}`);
-                console.log("Outputting PARTNUMBER to No Location: element error.");
-                await this.appendToExcel(outputFile, "No Location", partNumber);
+                console.log(`No Location element not found: ${error.message}`);
+                console.log("Outputting PARTNUMBER to No Location: element not found.");
+                categories.push({ category: 'No Location', details: 'Location element not found' });
+                // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                if (!returnResults && outputFile) {
+                    await this.appendToExcel(outputFile, "No Location", partNumber);
+                }
             }
             
             // Close popup window
             await popupPage.close();
             
+            // Return results if requested, or undefined for Excel-only mode
+            if (returnResults) {
+                if (categories.length > 0) {
+                    console.log(`Returning ${categories.length} categories for ${partNumber}:`, categories.map(c => c.category).join(', '));
+                    return categories;
+                } else {
+                    console.log(`No issues found for ${partNumber}, returning OK`);
+                    return [{ category: 'OK', details: 'No issues found' }];
+                }
+            }
+            
         } catch (error) {
             console.log(`Error processing PARTNUMBER '${partNumber}': ${error.message}`);
-            await this.appendToExcel(outputFile, "Not in AceNet", partNumber);
             
             // Close any popup windows
             const pages = await this.browser.pages();
@@ -743,409 +1024,17 @@ class AceNetScraper {
                 }
             }
             
-            // Restart browser if too many errors
-            this.restartCount++;
-            if (this.restartCount > this.maxRestarts) {
-                throw new Error(`WebDriver has been restarted more than ${this.maxRestarts} times. Aborting script.`);
-            }
-        }
-    }
-
-    // Direct version of checkPartNumber that returns results instead of writing to Excel
-    async checkPartNumberDirect(partNumber, isFirstSearch = false) {
-        console.log(`DIRECT: Processing PARTNUMBER: '${partNumber}'${isFirstSearch ? ' (FIRST SEARCH)' : ''}`);
-        
-        // Check for pause/cancel flags at the start of processing
-        await this.checkControlFlags();
-        
-        try {
-            // Debug current page state before search
-            console.log(`DIRECT: Starting search for ${partNumber}`);
-            const currentUrl = this.page.url();
-            console.log(`DIRECT: Current URL before search: ${currentUrl}`);
+            // Handle error result
+            const result = { category: 'Not in AceNet', details: error.message };
             
-            // Clear and enter part number in search box
-            console.log(`DIRECT: Looking for search box...`);
-            await this.page.waitForSelector('#tbxSearchBox', { timeout: 10000 });
-            console.log(`DIRECT: Found search box, clearing and typing...`);
-            await this.page.evaluate(() => document.getElementById('tbxSearchBox').value = '');
-            await this.page.type('#tbxSearchBox', partNumber);
-            await this.page.keyboard.press('Enter');
-            
-            console.log(`DIRECT: Entered PARTNUMBER '${partNumber}' in main window input field`);
-            
-            // Wait for popup window - longer delay for first search
-            if (isFirstSearch) {
-                console.log(`DIRECT: First search - waiting 5 seconds for system to fully load...`);
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                
-                // For first search, retry if no popup appears
-                let retryCount = 0;
-                let popupFound = false;
-                while (retryCount < 3 && !popupFound) {
-                    const pages = await this.browser.pages();
-                    console.log(`DIRECT: First search retry ${retryCount + 1}: Found ${pages.length} pages`);
-                    
-                    if (pages.length > 1) {
-                        // Check if we have a valid popup
-                        for (let i = 1; i < pages.length; i++) {
-                            try {
-                                const pageUrl = await pages[i].url();
-                                if (pageUrl && pageUrl !== 'about:blank' && pageUrl.includes('acenet')) {
-                                    console.log(`DIRECT: Valid popup found on retry ${retryCount + 1}: ${pageUrl}`);
-                                    popupFound = true;
-                                    break;
-                                }
-                            } catch (e) {
-                                console.log(`DIRECT: Error checking page ${i}: ${e.message}`);
-                            }
-                        }
-                    }
-                    
-                    if (!popupFound) {
-                        console.log(`DIRECT: No valid popup found, retrying search...`);
-                        // Clear and retry the search
-                        await this.page.evaluate(() => document.getElementById('tbxSearchBox').value = '');
-                        await this.page.type('#tbxSearchBox', partNumber);
-                        await this.page.keyboard.press('Enter');
-                        await new Promise(resolve => setTimeout(resolve, 3000));
-                        retryCount++;
-                    }
-                }
-            } else {
-                console.log(`DIRECT: Waiting 2 seconds for popup...`);
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            }
-            
-            // Get all pages (windows)
-            const pages = await this.browser.pages();
-            console.log(`DIRECT: Found ${pages.length} pages/windows`);
-            
-            // Debug all page URLs
-            for (let i = 0; i < pages.length; i++) {
-                try {
-                    const pageUrl = await pages[i].url();
-                    const pageTitle = await pages[i].title();
-                    console.log(`DIRECT: Page ${i}: URL='${pageUrl}', Title='${pageTitle}'`);
-                } catch (e) {
-                    console.log(`DIRECT: Page ${i}: Could not get URL/Title: ${e.message}`);
-                }
-            }
-            
-            // Check if main window redirected to search page (part not found)
-            const mainUrl = this.page.url();
-            console.log(`DIRECT: Main window URL after search: ${mainUrl}`);
-            if (mainUrl.includes('/search/product?q=')) {
-                console.log(`DIRECT: PARTNUMBER '${partNumber}' might not be found (main window redirected to search page).`);
-                
-                // Double-check before marking as "Not in AceNet" if enabled
-                if (this.config.enableDoubleCheck) {
-                    console.log(`DIRECT: Double-checking enabled - re-verifying...`);
-                    const doubleCheckResult = await this.doubleCheckPartNumber(partNumber, 'Search page redirect');
-                    return [doubleCheckResult];
-                } else {
-                    console.log(`DIRECT: Double-check disabled - marking as Not in AceNet`);
-                    // Navigate back to main page
-                    await this.page.goto('https://acenet.aceservices.com/', { waitUntil: 'networkidle2' });
-                    await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
-                    return [{ category: 'Not in AceNet', details: 'Redirected to search page', verified: false }];
-                }
-            }
-            
-            // Find popup window - look for the item details page specifically
-            let popupPage = null;
-            console.log(`DIRECT: Looking for popup window among ${pages.length} pages...`);
-            for (let i = 0; i < pages.length; i++) {
-                const page = pages[i];
-                if (page !== this.page) {
-                    try {
-                        const pageUrl = await page.url();
-                        console.log(`DIRECT: Checking popup candidate ${i}: ${pageUrl}`);
-                        // Look for the item-detail-direct-sku page specifically
-                        if (pageUrl && pageUrl.includes('item-detail-direct-sku')) {
-                            console.log(`DIRECT: Found correct popup at index ${i}`);
-                            popupPage = page;
-                            break;
-                        } else if (pageUrl && pageUrl !== 'about:blank' && !popupPage) {
-                            // Fallback to any non-blank page that's not the main page
-                            console.log(`DIRECT: Using fallback popup at index ${i}`);
-                            popupPage = page;
-                        }
-                    } catch (e) {
-                        console.log(`DIRECT: Error checking page ${i}: ${e.message}`);
-                    }
-                }
-            }
-            
-            if (!popupPage) {
-                console.log(`DIRECT: Error: Popup window not found for PARTNUMBER '${partNumber}'.`);
-                console.log(`DIRECT: Only found ${pages.length} total pages, main page is at index 0`);
-                
-                // Double-check before marking as "Not in AceNet" if enabled
-                if (this.config.enableDoubleCheck) {
-                    console.log(`DIRECT: Double-checking enabled - re-verifying...`);
-                    const doubleCheckResult = await this.doubleCheckPartNumber(partNumber, 'Popup window not found');
-                    return [doubleCheckResult];
-                } else {
-                    console.log(`DIRECT: Double-check disabled - marking as Not in AceNet`);
-                    return [{ category: 'Not in AceNet', details: 'Popup window not found', verified: false }];
-                }
-            }
-            
-            console.log(`DIRECT: Switched to popup window`);
-            
-            // Wait for popup to fully load, especially for first search
-            if (isFirstSearch) {
-                console.log(`DIRECT: First search - ensuring popup is fully loaded...`);
-                try {
-                    // Wait for the popup to have a proper URL (not about:blank)
-                    let attempts = 0;
-                    while (attempts < 10) {
-                        const popupUrl = await popupPage.url();
-                        console.log(`DIRECT: Popup URL check ${attempts + 1}: ${popupUrl}`);
-                        if (popupUrl && popupUrl !== 'about:blank' && popupUrl.includes('acenet')) {
-                            console.log(`DIRECT: Popup fully loaded with URL: ${popupUrl}`);
-                            break;
-                        }
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        attempts++;
-                    }
-                    
-                    // Additional wait for iframes to load
-                    console.log(`DIRECT: Waiting for iframes to load...`);
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                } catch (error) {
-                    console.log(`DIRECT: Error waiting for popup to load: ${error.message}`);
-                }
-            }
-            
-            // Debug popup page
-            await this.debugPageContent(popupPage, "POPUP PAGE DIRECT");
-            
-            // Check for iframes in popup
-            const iframes = await popupPage.$$('iframe');
-            console.log(`Found ${iframes.length} iframe(s). Attempting to switch...`);
-            
-            let frameFound = false;
-            let frame = null;
-            
-            for (let i = 0; i < iframes.length; i++) {
-                const iframe = iframes[i];
-                try {
-                    console.log(`DIRECT: Trying iframe ${i}...`);
-                    frame = await iframe.contentFrame();
-                    if (!frame) {
-                        console.log(`DIRECT: Iframe ${i}: contentFrame is null`);
-                        continue;
-                    }
-                    
-                    // Debug frame content
-                    try {
-                        const frameUrl = await frame.url();
-                        console.log(`DIRECT: Iframe ${i}: URL='${frameUrl}'`);
-                    } catch (e) {
-                        console.log(`DIRECT: Iframe ${i}: Could not get URL: ${e.message}`);
-                    }
-                    
-                    // Test if we can find the discovery element using XPath via evaluate
-                    console.log(`DIRECT: Iframe ${i}: Looking for discovery element...`);
-                    const discoveryElements = await frame.evaluate(() => {
-                        const result = document.evaluate('/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]', document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-                        return result.snapshotLength;
-                    });
-                    console.log(`DIRECT: Iframe ${i}: Found ${discoveryElements} discovery elements`);
-                    
-                    if (discoveryElements > 0) {
-                        frameFound = true;
-                        console.log(`DIRECT: Found correct iframe (${i}) with discovery element`);
-                        break;
-                    } else {
-                        // Try to find some key AceNet elements as fallback
-                        const statusElement = await frame.$('#ctl00_ctl00_contentMainPlaceHolder_MainContent_imagesVideos_mainStatusDiv');
-                        const orderElement = await frame.$('#spnQOO');
-                        console.log(`DIRECT: Iframe ${i}: Status element=${statusElement ? 'YES' : 'NO'}, Order element=${orderElement ? 'YES' : 'NO'}`);
-                        
-                        // If we found key elements, use this iframe
-                        if (statusElement || orderElement) {
-                            frameFound = true;
-                            console.log(`DIRECT: Using iframe ${i} based on key elements found`);
-                            break;
-                        }
-                    }
-                } catch (error) {
-                    console.log(`DIRECT: Failed to access iframe ${i}: ${error.message}`);
-                    continue;
-                }
-            }
-            
-            if (!frameFound || !frame) {
-                console.log(`DIRECT: PARTNUMBER '${partNumber}' iframe content not accessible.`);
-                console.log(`DIRECT: DEBUG: Iframe detection failed - frameFound=${frameFound}, frame=${frame ? 'exists' : 'null'}`);
-                console.log(`DIRECT: DEBUG: Total iframes checked: ${iframes.length}`);
-                await popupPage.close();
-                
-                // Double-check before marking as "Not in AceNet" if enabled
-                if (this.config.enableDoubleCheck) {
-                    console.log(`DIRECT: Double-checking enabled - re-verifying...`);
-                    const doubleCheckResult = await this.doubleCheckPartNumber(partNumber, 'No valid iframe content');
-                    return [doubleCheckResult];
-                } else {
-                    console.log(`DIRECT: Double-check disabled - marking as Not in AceNet`);
-                    return [{ category: 'Not in AceNet', details: 'No valid iframe content', verified: false }];
-                }
-            }
-            
-            // Check control flags before starting detailed processing
-            await this.checkControlFlags();
-            
-            // Now perform the checks and collect ALL applicable categories
-            const categories = [];
-            
-            // Step 1: Check for "Not in RSC" and "Cancelled" status (priority checks)
-            console.log("Step 1: Checking Cancelled and Not in RSC status...");
-            try {
-                const statusDiv = await frame.$('#ctl00_ctl00_contentMainPlaceHolder_MainContent_imagesVideos_mainStatusDiv');
-                if (statusDiv) {
-                    const statusText = await frame.evaluate(el => el.textContent.trim(), statusDiv);
-                    console.log(`Status text: '${statusText}'`);
-                    
-                    if (statusText) {
-                        // Check for Not in RSC first (highest priority)
-                        const notInRSCRegex = /not\s+carried\s+in\s+your\s+rsc|not\s+carried\s+by\s+rsc|not\s+in\s+rsc/i;
-                        if (notInRSCRegex.test(statusText)) {
-                            console.log("PARTNUMBER categorized as Not in RSC due to matching status.");
-                            categories.push({ category: 'Not in RSC', details: statusText });
-                        }
-                        
-                        // Check for Cancelled (if not Not in RSC)
-                        const cancelledRegex = /cancel(?:led|lation)?|close(?:out|-out|d out)/i;
-                        const replacementRegex = /replacement|discontinued/i;
-                        
-                        if (cancelledRegex.test(statusText) && !replacementRegex.test(statusText)) {
-                            console.log("PARTNUMBER categorized as Cancelled due to matching status.");
-                            categories.push({ category: 'Cancelled', details: statusText });
-                            // If Cancelled, skip all other checks and return immediately
-                            await popupPage.close();
-                            return categories;
-                        }
-                    }
-                }
-            } catch (error) {
-                console.log(`Status element not found, skipping: ${error.message}`);
-            }
-            
-            // If Not in RSC was found, still continue with other checks (unlike Cancelled)
-            
-            // Step 2: Check No Discovery element
-            console.log("DIRECT: Step 2: Checking No Discovery element...");
-            try {
-                const discoveryResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]');
-                console.log(`DIRECT: No Discovery element found: ${discoveryResult.found}, text: '${discoveryResult.text}'`);
-                
-                if (!discoveryResult.found || !discoveryResult.text.trim()) {
-                    console.log("DIRECT: PARTNUMBER categorized as No Discovery due to element absence or empty text.");
-                    categories.push({ category: 'No Discovery', details: discoveryResult.found ? 'Empty text' : 'Element not found' });
-                }
-            } catch (error) {
-                console.log(`DIRECT: No Discovery element error: ${error.message}`);
-                categories.push({ category: 'No Discovery', details: error.message });
-            }
-            
-            // Step 3: Check for non-blank text with no asterisk
-            console.log("DIRECT: Step 3: Checking for non-blank text with no asterisk...");
-            try {
-                const linkResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]/a');
-                console.log(`DIRECT: No Asterisk element found: ${linkResult.found}, text: '${linkResult.text}'`);
-                
-                if (linkResult.found && linkResult.text && !linkResult.text.includes('*')) {
-                    console.log("DIRECT: PARTNUMBER categorized as No Asterisk(*).");
-                    categories.push({ category: 'No Asterisk(*)', details: linkResult.text });
-                }
-            } catch (error) {
-                console.log("DIRECT: No Asterisk element error, skipping.");
-            }
-            
-            // Step 4: Check On Order
-            console.log("DIRECT: Step 4: Checking On Order...");
-            try {
-                const orderSpan = await frame.$('#spnQOO');
-                if (orderSpan) {
-                    const orderText = await frame.evaluate(el => el.textContent.trim(), orderSpan);
-                    console.log(`DIRECT: On Order text: '${orderText}'`);
-                    
-                    try {
-                        const orderValue = parseFloat(orderText);
-                        if (!isNaN(orderValue) && orderValue > 0) {
-                            console.log("DIRECT: PARTNUMBER categorized as On Order due to value > 0.");
-                            categories.push({ category: 'On Order', details: `${orderValue} on order` });
-                        } else {
-                            console.log("DIRECT: Order value <= 0, skipping.");
-                        }
-                    } catch (error) {
-                        console.log("DIRECT: Order text is not a number, skipping.");
-                    }
-                }
-            } catch (error) {
-                console.log("DIRECT: On Order element error, skipping.");
-            }
-            
-            // Step 5: Check No Location
-            console.log("DIRECT: Step 5: Checking No Location...");
-            try {
-                const locationResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[3]/div[17]/div[2]');
-                console.log(`DIRECT: No Location element found: ${locationResult.found}, text: '${locationResult.text}' (raw: ${JSON.stringify(locationResult.text)})`);
-                
-                if (!locationResult.found) {
-                    console.log("DIRECT: No Location element not found: categorizing as No Location.");
-                    categories.push({ category: 'No Location', details: 'Location element not found' });
-                } else if (!locationResult.text) {
-                    console.log("DIRECT: PARTNUMBER categorized as No Location: element text is empty.");
-                    categories.push({ category: 'No Location', details: 'Empty location text' });
-                } else {
-                    console.log(`DIRECT: Skipping No Location: element contains text '${locationResult.text}'.`);
-                }
-            } catch (error) {
-                console.log(`DIRECT: No Location element error: ${error.message}`);
-                console.log("DIRECT: PARTNUMBER categorized as No Location: element error.");
-                categories.push({ category: 'No Location', details: error.message });
-            }
-            
-            // Close popup window
-            await popupPage.close();
-            
-            // Return all categories found (or OK if none)
-            if (categories.length > 0) {
-                console.log(`DIRECT: Returning ${categories.length} categories for ${partNumber}:`, categories.map(c => c.category).join(', '));
-                return categories;
-            } else {
-                console.log(`DIRECT: No issues found for ${partNumber}, returning OK`);
-                return [{ category: 'OK', details: 'No issues found' }];
-            }
-            
-        } catch (error) {
-            console.log(`DIRECT: ERROR processing PARTNUMBER '${partNumber}': ${error.message}`);
-            console.log(`DIRECT: ERROR stack: ${error.stack}`);
-            
-            // Close any popup windows
-            try {
-                const pages = await this.browser.pages();
-                for (const page of pages) {
-                    if (page !== this.page) {
-                        await page.close();
-                    }
-                }
-            } catch (closeError) {
-                console.log(`DIRECT: Error closing pages: ${closeError.message}`);
-            }
-            
-            // For serious errors, attempt a double-check with retry if enabled
-            if (this.config.enableDoubleCheck && (error.message.includes('timeout') || error.message.includes('navigation') || error.message.includes('disconnected'))) {
-                console.log(`DIRECT: Network/timeout error detected. Double-checking enabled - attempting re-verification...`);
+            // For serious errors with results mode, attempt a double-check with retry if enabled
+            if (returnResults && this.config.enableDoubleCheck && (error.message.includes('timeout') || error.message.includes('navigation') || error.message.includes('disconnected'))) {
+                console.log(`Network/timeout error detected. Double-checking enabled - attempting re-verification...`);
                 try {
                     const doubleCheckResult = await this.doubleCheckPartNumber(partNumber, error.message);
                     return [doubleCheckResult];
                 } catch (doubleCheckError) {
-                    console.log(`DIRECT: Double-check also failed: ${doubleCheckError.message}`);
+                    console.log(`Double-check also failed: ${doubleCheckError.message}`);
                     return [{ 
                         category: 'Not in AceNet', 
                         details: `Error: ${error.message}`, 
@@ -1154,7 +1043,21 @@ class AceNetScraper {
                 }
             }
             
-            return [{ category: 'Not in AceNet', details: error.message }];
+            // Handle result - Phase 1 optimization: no immediate Excel writing
+            if (returnResults) {
+                return [result];
+            } else if (outputFile) {
+                // Legacy mode: direct Excel writing (kept for compatibility)
+                await this.appendToExcel(outputFile, "Not in AceNet", partNumber);
+            }
+            
+            // Restart browser if too many errors (Excel mode only)
+            if (!returnResults) {
+                this.restartCount++;
+                if (this.restartCount > this.maxRestarts) {
+                    throw new Error(`WebDriver has been restarted more than ${this.maxRestarts} times. Aborting script.`);
+                }
+            }
         }
     }
 
@@ -1291,10 +1194,93 @@ class AceNetScraper {
                             });
                             
                             if (hasPartData) {
-                                console.log(`DOUBLE CHECK: Found valid part data - this is NOT 'Not in AceNet'`);
-                                await popupPage.close();
-                                // Return a neutral result and let normal processing continue
-                                return await this.checkPartNumberDirect(partNumber, false);
+                                console.log(`DOUBLE CHECK: Found valid part data - processing directly`);
+                                
+                                // Process the part directly here instead of calling checkPartNumber again
+                                try {
+                                    const categories = [];
+                                    
+                                    // Check for status (Not in RSC / Cancelled)
+                                    try {
+                                        const statusDiv = await frame.$('#ctl00_ctl00_contentMainPlaceHolder_MainContent_imagesVideos_mainStatusDiv');
+                                        if (statusDiv) {
+                                            const statusText = await frame.evaluate(el => el.textContent.trim(), statusDiv);
+                                            
+                                            if (statusText) {
+                                                // Check for Not in RSC
+                                                const notInRSCRegex = /not\s+carried\s+in\s+your\s+rsc|not\s+carried\s+by\s+rsc|not\s+in\s+rsc/i;
+                                                if (notInRSCRegex.test(statusText)) {
+                                                    categories.push({ category: 'Not in RSC', details: statusText });
+                                                    await popupPage.close();
+                                                    return categories.length > 0 ? categories : [{ category: 'OK', details: 'No issues found' }];
+                                                }
+                                                
+                                                // Check for Cancelled/Closeout - This takes priority over all other categories
+                                                const cancelledRegex = /cancel(?:led|lation)?|close(?:out|-out|d out)|item\s+cancelled\s+by\s+ace|closeout:\s*check\s+availability/i;
+                                                if (cancelledRegex.test(statusText)) {
+                                                    categories.push({ category: 'Cancelled', details: statusText });
+                                                    await popupPage.close();
+                                                    return categories.length > 0 ? categories : [{ category: 'OK', details: 'No issues found' }];
+                                                }
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.log(`DOUBLE CHECK: Error checking status: ${e.message}`);
+                                    }
+                                    
+                                    // Check Discovery
+                                    try {
+                                        const discoveryResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]');
+                                        if (!discoveryResult.found || !discoveryResult.text.trim()) {
+                                            categories.push({ category: 'No Discovery', details: 'Element not found or empty' });
+                                        }
+                                    } catch (e) {
+                                        categories.push({ category: 'No Discovery', details: 'Element not found' });
+                                    }
+                                    
+                                    // Check Asterisk
+                                    try {
+                                        const linkResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]/a');
+                                        if (linkResult.found && linkResult.text && !linkResult.text.includes('*')) {
+                                            categories.push({ category: 'No Asterisk(*)', details: linkResult.text });
+                                        }
+                                    } catch (e) {
+                                        // Skip if error
+                                    }
+                                    
+                                    // Check On Order
+                                    try {
+                                        const orderSpan = await frame.$('#spnQOO');
+                                        if (orderSpan) {
+                                            const orderText = await frame.evaluate(el => el.textContent.trim(), orderSpan);
+                                            const orderValue = parseFloat(orderText);
+                                            if (!isNaN(orderValue) && orderValue > 0) {
+                                                categories.push({ category: 'On Order', details: `${orderValue} on order` });
+                                            }
+                                        }
+                                    } catch (e) {
+                                        // Skip if error
+                                    }
+                                    
+                                    // Check Location
+                                    try {
+                                        const locationResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[3]/div[17]/div[2]');
+                                        const locationText = locationResult.text ? locationResult.text.trim() : "";
+                                        if (!locationText) {
+                                            categories.push({ category: 'No Location', details: 'Location element not found or empty' });
+                                        }
+                                    } catch (e) {
+                                        categories.push({ category: 'No Location', details: 'Location element not found' });
+                                    }
+                                    
+                                    await popupPage.close();
+                                    return categories.length > 0 ? categories : [{ category: 'OK', details: 'No issues found' }];
+                                    
+                                } catch (processError) {
+                                    console.log(`DOUBLE CHECK: Error processing part data: ${processError.message}`);
+                                    await popupPage.close();
+                                    return [{ category: 'Not in AceNet', details: 'Error processing part data', verified: false }];
+                                }
                             }
                         }
                     }
@@ -1331,6 +1317,9 @@ class AceNetScraper {
         // Initialize Excel output
         await this.initializeExcelOutput(outputFile);
         
+        // Clear results buffer for this run (Phase 1 optimization)
+        this.resultsBuffer = [];
+        
         // Login to AceNet
         await this.loginAndSelectStore(config.username, config.password, config.store);
         
@@ -1345,11 +1334,35 @@ class AceNetScraper {
                 progressCallback(i + 1, partNumbers.length, `Processing ${partNumber}`);
             }
             
-            // Pass isFirstSearch flag to match Python logic
-            await this.checkPartNumber(partNumber, outputFile, progressCallback, i === 0);
+            // Process part number and collect results instead of writing immediately (Phase 1 optimization)
+            const categories = await this.checkPartNumber(partNumber, { 
+                isFirstSearch: i === 0, 
+                returnResults: true  // Always return results for batching
+            });
             
-            // Add delay to avoid overwhelming the server
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Add results to buffer
+            if (categories && categories.length > 0) {
+                categories.forEach(categoryResult => {
+                    if (categoryResult.category !== 'OK') {  // Don't buffer 'OK' results
+                        this.resultsBuffer.push({
+                            partNumber: partNumber,
+                            category: categoryResult.category,
+                            details: categoryResult.details
+                        });
+                    }
+                });
+            }
+            
+            // Reduced delay to avoid overwhelming server (Phase 1 optimization)
+            await new Promise(resolve => setTimeout(resolve, this.config.processingDelay));
+        }
+        
+        // Batch write all results to Excel at once (Phase 1 optimization)
+        if (this.resultsBuffer.length > 0) {
+            console.log(`Writing ${this.resultsBuffer.length} results to Excel in batch...`);
+            await this.batchWriteToExcel(outputFile, this.resultsBuffer);
+        } else {
+            console.log("No results to write to Excel.");
         }
         
         // Color-code multi-column entries
@@ -1494,8 +1507,11 @@ async function runAceNetCheckDirect(partNumbers, username, password, store, prog
             console.error(`PROGRESS:${i + 1}/${partNumbers.length}:Processing ${partNumber}`);
             
             try {
-                // Use the direct checking method (no Excel output) - now returns array of categories
-                const categoryResults = await scraper.checkPartNumberDirect(partNumber, i === 0);
+                // Use the unified checking method (no Excel output) - now returns array of categories
+                const categoryResults = await scraper.checkPartNumber(partNumber, { 
+                    isFirstSearch: i === 0, 
+                    returnResults: true 
+                });
                 
                 // Add each category as a separate result entry
                 categoryResults.forEach(categoryResult => {
@@ -1515,8 +1531,8 @@ async function runAceNetCheckDirect(partNumbers, username, password, store, prog
                 });
             }
             
-            // Add delay to avoid overwhelming the server
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Reduced delay to avoid overwhelming server (Phase 1 optimization)
+            await new Promise(resolve => setTimeout(resolve, scraper.config.processingDelay));
         }
         
         // Return categorized results for UI display only

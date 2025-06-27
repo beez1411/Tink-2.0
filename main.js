@@ -152,11 +152,12 @@ function createMenu() {
         {
           label: 'About Tink 2.0',
           click: () => {
+            const packageJson = require('./package.json');
             dialog.showMessageBox(mainWindow, {
               type: 'info',
               title: 'About Tink 2.0',
               message: 'Tink 2.0',
-              detail: `Version: 2.0.8\nInventory processing application\n© 2024 1411 Capital Inc`
+              detail: `Version: ${packageJson.version}\nInventory processing application\n© 2024 1411 Capital Inc`
             });
           }
         }
