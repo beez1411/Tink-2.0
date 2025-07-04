@@ -662,7 +662,7 @@ ipcMain.handle('save-to-po', async (event, orderData) => {
 });
 
 // IPC handler to export AceNet results to Excel
-ipcMain.handle('export-acenet-results', async (event, resultsData) => {
+ipcMain.handle('export-acenet-results', async (event, resultsData, checkType = 'acenet') => {
   try {
     const ExcelJS = require('exceljs');
     const os = require('os');
@@ -674,8 +674,10 @@ ipcMain.handle('export-acenet-results', async (event, resultsData) => {
                    String(now.getMonth() + 1).padStart(2, '0') + 
                    String(now.getDate()).padStart(2, '0');
     
-    // Create filename: AceNet Results YYYYMMDD.xlsx
-    const filename = `AceNet Results ${dateStr}.xlsx`;
+    // Create appropriate filename based on check type
+    const filename = checkType === 'planogram' 
+      ? `On Planogram Results ${dateStr}.xlsx`
+      : `AceNet Results ${dateStr}.xlsx`;
     
     // Use helper function to find accessible directory
     const desktopPath = findAccessibleDirectory();
@@ -690,24 +692,39 @@ ipcMain.handle('export-acenet-results', async (event, resultsData) => {
     workbook.modified = new Date();
     
     // Create single worksheet with column-based layout
-    const worksheet = workbook.addWorksheet('AceNet Results');
+    const worksheetName = checkType === 'planogram' ? 'On Planogram Results' : 'AceNet Results';
+    const worksheet = workbook.addWorksheet(worksheetName);
     
-    // Define column mapping and colors to match UI and screenshot
-    const columnConfig = [
-      { column: 'A', header: 'No Discovery', color: 'FFFD7E14', key: 'No Discovery' },        // Orange
-      { column: 'B', header: '', color: null, key: 'spacer' },                               // Spacer
-      { column: 'C', header: 'No Asterisk(*)', color: 'FFFF1744', key: 'No Asterisk(*)' }, // Red
-      { column: 'D', header: '', color: null, key: 'spacer' },                               // Spacer
-      { column: 'E', header: 'Cancelled', color: 'FF6F42C1', key: 'Cancelled' },            // Purple
-      { column: 'F', header: '', color: null, key: 'spacer' },                               // Spacer
-      { column: 'G', header: 'On Order', color: 'FF28A745', key: 'On Order' },              // Green
-      { column: 'H', header: '', color: null, key: 'spacer' },                               // Spacer
-      { column: 'I', header: 'No Location', color: 'FF9C27B0', key: 'No Location' },        // Purple
-      { column: 'J', header: '', color: null, key: 'spacer' },                               // Spacer
-      { column: 'K', header: 'Not in AceNet', color: 'FF2196F3', key: 'Not in AceNet' },    // Blue
-      { column: 'L', header: '', color: null, key: 'spacer' },                               // Spacer
-      { column: 'M', header: 'Not in RSC', color: 'FF6C757D', key: 'Not in RSC' }           // Gray
-    ];
+    // Define different column configurations based on check type
+    let columnConfig;
+    
+    if (checkType === 'planogram') {
+      // For planogram: Only Has Asterisk, Cancelled (Closeout), and Not in RSC
+      columnConfig = [
+        { column: 'A', header: 'Has Asterisk', color: 'FF28A745', key: 'Has Asterisk (*)' },   // Green
+        { column: 'B', header: '', color: null, key: 'spacer' },                               // Spacer
+        { column: 'C', header: 'Cancelled', color: 'FF6F42C1', key: 'Cancelled' },            // Purple (Closeout)
+        { column: 'D', header: '', color: null, key: 'spacer' },                               // Spacer
+        { column: 'E', header: 'Not in RSC', color: 'FF6C757D', key: 'Not in RSC' }           // Gray
+      ];
+    } else {
+      // For standard AceNet: All columns except Has Asterisk
+      columnConfig = [
+        { column: 'A', header: 'No Discovery', color: 'FFFD7E14', key: 'No Discovery' },        // Orange
+        { column: 'B', header: '', color: null, key: 'spacer' },                               // Spacer
+        { column: 'C', header: 'No Asterisk(*)', color: 'FFFF1744', key: 'No Asterisk(*)' }, // Red
+        { column: 'D', header: '', color: null, key: 'spacer' },                               // Spacer
+        { column: 'E', header: 'Cancelled', color: 'FF6F42C1', key: 'Cancelled' },            // Purple
+        { column: 'F', header: '', color: null, key: 'spacer' },                               // Spacer
+        { column: 'G', header: 'On Order', color: 'FFFFC107', key: 'On Order' },              // Yellow
+        { column: 'H', header: '', color: null, key: 'spacer' },                               // Spacer
+        { column: 'I', header: 'No Location', color: 'FFE83E8C', key: 'No Location' },        // Pink
+        { column: 'J', header: '', color: null, key: 'spacer' },                               // Spacer
+        { column: 'K', header: 'Not in AceNet', color: 'FF2196F3', key: 'Not in AceNet' },    // Blue
+        { column: 'L', header: '', color: null, key: 'spacer' },                               // Spacer
+        { column: 'M', header: 'Not in RSC', color: 'FF6C757D', key: 'Not in RSC' }           // Gray
+      ];
+    }
     
     // Set up headers and column formatting
     columnConfig.forEach(config => {
@@ -735,6 +752,14 @@ ipcMain.handle('export-acenet-results', async (event, resultsData) => {
     // Process categorized results and populate columns
     let totalItems = 0;
     
+    console.log('Export data received:', {
+      hasResultsData: !!resultsData,
+      hasCategorizedResults: !!(resultsData && resultsData.categorizedResults),
+      isArray: Array.isArray(resultsData?.categorizedResults),
+      categoriesCount: resultsData?.categorizedResults?.length,
+      categories: resultsData?.categorizedResults?.map(c => ({ name: c.name, partsCount: c.parts?.length }))
+    });
+    
     if (resultsData && resultsData.categorizedResults && Array.isArray(resultsData.categorizedResults)) {
       // Create a map to find the correct column for each category
       const categoryToColumn = {};
@@ -746,7 +771,9 @@ ipcMain.handle('export-acenet-results', async (event, resultsData) => {
       
       resultsData.categorizedResults.forEach(category => {
         if (category && category.name && category.parts && Array.isArray(category.parts) && category.parts.length > 0) {
+          console.log(`Processing category: "${category.name}", parts: ${category.parts.length}`);
           const columnLetter = categoryToColumn[category.name];
+          console.log(`Column mapping: "${category.name}" -> column "${columnLetter}"`);
           
           if (columnLetter) {
             totalItems += category.parts.length;
@@ -901,8 +928,8 @@ ipcMain.handle('run-python', async (event, args) => {
 
 // IPC handler for direct AceNet processing with part numbers
 ipcMain.handle('process-acenet-direct', async (event, data) => {
-  const { partNumbers, username, password, store } = data;
-  console.log(`Processing ${partNumbers.length} part numbers directly with AceNet (Double-check enabled)`);
+  const { partNumbers, username, password, store, checkType } = data;
+  console.log(`Processing ${partNumbers.length} part numbers directly with AceNet (Double-check enabled) - Check type: ${checkType || 'standard'}`);
   
   try {
     const { runAceNetCheckDirect } = require('./js/acenet-scraper');
@@ -916,7 +943,7 @@ ipcMain.handle('process-acenet-direct', async (event, data) => {
         total: progress.total || partNumbers.length,
         message: progress.message || 'Processing...'
       });
-    });
+    }, checkType);
     
     return result;
   } catch (error) {

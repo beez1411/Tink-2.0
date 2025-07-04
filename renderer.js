@@ -9,6 +9,7 @@ const fileName = document.getElementById('fileName');
 const fileSize = document.getElementById('fileSize');
 const runSuggestedOrderBtn = document.getElementById('runSuggestedOrderBtn');
 const runCheckAceNetBtn = document.getElementById('runCheckAceNetBtn');
+const runCheckOnPlanogramBtn = document.getElementById('runCheckOnPlanogramBtn');
 const daysThreshold = document.getElementById('daysThreshold');
 const acenetOptions = document.getElementById('acenetOptions');
 const usernameInput = document.getElementById('username');
@@ -31,6 +32,7 @@ let onOrderData = {};
 
 // Global storage for AceNet results (for Excel export)
 let globalAceNetResults = null;
+let lastCheckType = 'acenet'; // Track the type of the last check performed
 
 // Remember Me functionality
 function loadRememberedCredentials() {
@@ -428,6 +430,7 @@ fileInput.addEventListener('change', async (e) => {
             fileInfo.style.display = 'block';
             runSuggestedOrderBtn.disabled = false;
             runCheckAceNetBtn.disabled = false; // Enable AceNet button when file is selected
+            runCheckOnPlanogramBtn.disabled = false; // Enable Planogram button when file is selected
         }
     }
 });
@@ -442,6 +445,7 @@ document.querySelector('.file-input-label').addEventListener('click', async (e) 
             fileInfo.style.display = 'block';
             runSuggestedOrderBtn.disabled = false;
             runCheckAceNetBtn.disabled = false; // Enable AceNet button when file is selected
+            runCheckOnPlanogramBtn.disabled = false; // Enable Planogram button when file is selected
         }
 });
 
@@ -617,6 +621,7 @@ runCheckAceNetBtn.addEventListener('click', async () => {
             
             // Store results globally for Excel export functionality
             globalAceNetResults = result;
+            lastCheckType = 'acenet'; // Track that this was a standard AceNet check
             
             // Debug: Log detailed categorization results
             if (result.categorizedResults && Array.isArray(result.categorizedResults)) {
@@ -893,20 +898,66 @@ function updateOrderTotal() {
 }
 
 function removeOrderItem(index) {
+    console.log(`Attempting to remove item at index: ${index}, total rows: ${orderTableBody.children.length}`);
+    
+    // Validate index
+    if (index < 0 || index >= orderTableBody.children.length) {
+        console.error(`Invalid index ${index} for deletion. Valid range: 0-${orderTableBody.children.length - 1}`);
+        return;
+    }
+    
     const row = orderTableBody.children[index];
     if (row) {
         row.remove();
         updateOrderTotal();
+        
+        console.log(`Row ${index} removed. Renumbering ${orderTableBody.children.length} remaining rows...`);
+        
         // Renumber the remaining rows
         Array.from(orderTableBody.children).forEach((row, newIndex) => {
             row.cells[0].textContent = newIndex + 1;
-            const removeBtn = row.querySelector('button');
-            if (removeBtn) {
-                removeBtn.setAttribute('onclick', `removeOrderItem(${newIndex})`);
+            
+            // Update all relevant onclick handlers in this row
+            // Update quantity adjustment buttons
+            const minusBtn = row.querySelector('.minus-btn');
+            const plusBtn = row.querySelector('.plus-btn');
+            const qtyInput = row.querySelector('.qty-input');
+            
+            if (minusBtn) {
+                const minOrderQty = parseInt(qtyInput.dataset.minOrderQty) || 1;
+                minusBtn.setAttribute('onclick', `adjustQuantity(${newIndex}, -${minOrderQty})`);
             }
-        });
-    }
-}
+            if (plusBtn) {
+                const minOrderQty = parseInt(qtyInput.dataset.minOrderQty) || 1;
+                plusBtn.setAttribute('onclick', `adjustQuantity(${newIndex}, ${minOrderQty})`);
+            }
+            if (qtyInput) {
+                qtyInput.dataset.index = newIndex;
+                qtyInput.setAttribute('onchange', `updateRowTotal(${newIndex})`);
+            }
+            
+            // Update delete button - be more specific with selector
+            const deleteBtn = row.querySelector('.btn-danger.btn-icon');
+            if (deleteBtn) {
+                deleteBtn.setAttribute('onclick', `removeOrderItem(${newIndex})`);
+            }
+            
+            // Update cost and MOQ inputs if present (for manually added items)
+            const costInput = row.querySelector('.cost-input');
+            const moqInput = row.querySelector('.moq-input');
+            if (costInput) {
+                costInput.setAttribute('onchange', `updateItemCost(${newIndex})`);
+            }
+                         if (moqInput) {
+                 moqInput.setAttribute('onchange', `updateItemMOQ(${newIndex})`);
+             }
+             
+             console.log(`Updated row ${newIndex} handlers`);
+         });
+         
+         console.log(`Renumbering complete. Table now has ${orderTableBody.children.length} rows.`);
+     }
+ }
 
 // Order management button handlers
 if (addItemBtn) {
@@ -1127,14 +1178,15 @@ const openExcelAcenetResultsBtn = document.getElementById('openExcelAcenetResult
 if (openExcelAcenetResultsBtn) {
     openExcelAcenetResultsBtn.addEventListener('click', async () => {
         try {
-            // Check if we have stored AceNet results
+            // Check if we have stored results
             if (!globalAceNetResults || !globalAceNetResults.categorizedResults) {
-                await showAlert('No AceNet results available. Please run AceNet check first.', 'warning');
+                const checkTypeName = lastCheckType === 'planogram' ? 'On Planogram' : 'AceNet';
+                await showAlert(`No ${checkTypeName} results available. Please run ${checkTypeName} check first.`, 'warning');
                 return;
             }
             
-            // Export results to Excel using the same functionality as the completion popup
-            const exportResult = await window.api.exportAceNetResults(globalAceNetResults);
+            // Export results to Excel using the appropriate check type
+            const exportResult = await window.api.exportAceNetResults(globalAceNetResults, lastCheckType);
             
             if (exportResult.success) {
                 // Show success message and ask if user wants to open the file
@@ -1239,6 +1291,164 @@ function displayAceNetResults(categorizedResults) {
     console.log('=== END DISPLAY DEBUG ===');
     
     resultsContent.appendChild(resultsContainer);
+}
+
+// Display On Planogram results (filtered for asterisk items)
+function displayOnPlanogramResults(categorizedResults) {
+    const resultsContent = document.getElementById('acenetResultsContent');
+    const resultsTitle = document.querySelector('#acenetResultsToggle');
+    
+    // Update title to reflect this is a planogram check
+    if (resultsTitle) {
+        resultsTitle.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            On Planogram Check Results
+            <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        `;
+    }
+    
+    resultsContent.innerHTML = '';
+    
+    // Filter results to show only "Has Asterisk" items (opposite of "No Asterisk")
+    const planogramResults = categorizedResults.filter(category => 
+        category.key === 'hasAsterisk' || // This will be our new category
+        category.key === 'cancelled' || // Still show cancelled items
+        category.key === 'notInAceNet' // Still show not in AceNet items
+    );
+    
+    if (planogramResults.length === 0) {
+        resultsContent.innerHTML = '<p>No items found that should be on planogram (no items with asterisk in discovery).</p>';
+        return;
+    }
+    
+    const resultsContainer = document.createElement('div');
+    resultsContainer.className = 'acenet-categorized-results';
+    
+    planogramResults.forEach((category, index) => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category-section';
+        
+        const categoryTitle = document.createElement('h3');
+        categoryTitle.className = `category-header category-${category.key}`;
+        categoryTitle.textContent = category.name;
+        
+        categoryDiv.appendChild(categoryTitle);
+        
+        const partsList = document.createElement('ul');
+        partsList.className = 'parts-list';
+        
+        category.parts.forEach(part => {
+            const listItem = document.createElement('li');
+            
+            // Check if this part needs manual review
+            const partData = typeof part === 'object' ? part : { partNumber: part };
+            const partNumber = partData.partNumber || part;
+            
+            // Create text content
+            let displayText = partNumber;
+            if (partData.needsManualReview) {
+                displayText += ' ⚠️ (NEEDS MANUAL REVIEW)';
+                listItem.style.backgroundColor = '#fff3cd';
+                listItem.style.border = '1px solid #ffeaa7';
+                listItem.style.padding = '5px';
+                listItem.style.borderRadius = '3px';
+                listItem.title = 'This item was flagged but may need manual verification.';
+            }
+            
+            listItem.textContent = displayText;
+            listItem.style.fontSize = '14px';
+            listItem.style.marginBottom = '5px';
+            partsList.appendChild(listItem);
+        });
+        
+        categoryDiv.appendChild(partsList);
+        resultsContainer.appendChild(categoryDiv);
+    });
+    
+    resultsContent.appendChild(resultsContainer);
+}
+
+// Show completion popup for On Planogram check
+function showOnPlanogramCompletionPopup(result) {
+    const modal = document.createElement('div');
+    modal.className = 'popup-overlay';
+    modal.innerHTML = `
+        <div class="popup-content size-large">
+            <div class="popup-header">
+                <span class="popup-icon success">✅</span>
+                <h3 class="popup-title">On Planogram Check Complete!</h3>
+            </div>
+            <div class="popup-body">
+                <div class="popup-summary">
+                    <div class="popup-summary-item">
+                        <span class="popup-summary-label">Total Items Checked:</span>
+                        <span class="popup-summary-value">${result.totalProcessed || 0}</span>
+                    </div>
+                    <div class="popup-summary-item">
+                        <span class="popup-summary-label">Items With Asterisk Found:</span>
+                        <span class="popup-summary-value">${getAsteriskCount(result.categorizedResults)}</span>
+                    </div>
+                </div>
+                <div class="completion-features">
+                    <div class="feature-item">
+                        <div class="feature-icon">📋</div>
+                        <span>Results displayed in AceNet section</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <span>Export to Excel available</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🏪</div>
+                        <span>Missing inventory that should be stocked</span>
+                    </div>
+                </div>
+            </div>
+            <div class="popup-actions">
+                <button id="closePlanogramCompleteBtn" class="popup-btn secondary">Close</button>
+                <button id="exportPlanogramResultsBtn" class="popup-btn primary">Export to Excel</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add event handlers
+    document.getElementById('closePlanogramCompleteBtn').addEventListener('click', () => {
+        modal.remove();
+    });
+    
+    document.getElementById('exportPlanogramResultsBtn').addEventListener('click', async () => {
+        try {
+            // Pass 'planogram' as the check type for planogram exports
+            const exportResult = await window.api.exportAceNetResults(result, 'planogram');
+            
+            if (exportResult.success) {
+                const openFile = await showConfirm(`Excel file created successfully!\nLocation: ${exportResult.filePath}\n\nWould you like to open the file now?`, 'Open Excel File');
+                
+                if (openFile) {
+                    await window.api.openFile(exportResult.filePath);
+                }
+            } else {
+                await showAlert('Error creating Excel file: ' + exportResult.error, 'error');
+            }
+        } catch (error) {
+            console.error('Excel export error:', error);
+            await showAlert('Error creating Excel file: ' + error.message, 'error');
+        }
+        
+        modal.remove();
+    });
+}
+
+// Helper function to count asterisk items
+function getAsteriskCount(categorizedResults) {
+    const asteriskCategory = categorizedResults.find(cat => cat.key === 'hasAsterisk');
+    return asteriskCategory ? asteriskCategory.parts.length : 0;
 }
 
 // Progress tracking popup (similar to Python script)
@@ -1400,8 +1610,8 @@ function showCompletionPopup(result, totalProcessed) {
     
     popup.querySelector('#openExcelBtn').addEventListener('click', async () => {
         try {
-            // Export results to Excel
-            const exportResult = await window.api.exportAceNetResults(result);
+            // Export results to Excel - pass 'acenet' for standard AceNet checks
+            const exportResult = await window.api.exportAceNetResults(result, 'acenet');
             
             if (exportResult.success) {
                 // Show success message and ask if user wants to open the file
@@ -2021,5 +2231,128 @@ function showConfirm(message, title = 'Confirm Action') {
         document.addEventListener('keydown', handleEscape);
     });
 }
+
+// Run Check On Planogram button
+runCheckOnPlanogramBtn.addEventListener('click', async () => {
+    const currentUsernameInput = document.getElementById('username');
+    const currentPasswordInput = document.getElementById('password');
+    const currentStoreInput = document.getElementById('storeNumber');
+    
+    if (!currentUsernameInput.value || !currentPasswordInput.value || !currentStoreInput.value) {
+        await showAlert('Please fill in all AceNet credentials', 'warning');
+        return;
+    }
+    
+    // Extract part numbers from current order display table
+    // This covers both uploaded files (which populate the table) and suggested order results
+    const partNumbers = getCurrentOrderPartNumbers();
+    
+    if (partNumbers.length > 0) {
+        console.log(`Using ${partNumbers.length} part numbers from current order display for Planogram check`);
+    } else {
+        await showAlert('No part numbers available. Please run Suggested Order first or upload a part number file.', 'warning');
+        return;
+    }
+    
+    // Create progress tracking popup - no robot animation for AceNet
+    const progressPopup = createProgressPopup(partNumbers.length);
+    runCheckOnPlanogramBtn.disabled = true;
+    
+    // Set up progress listener for direct AceNet processing
+    window.electronAPI.onAcenetProgress((data) => {
+        console.log(`On Planogram Progress: ${data.current}/${data.total} - ${data.message}`);
+        // Update progress popup
+        progressPopup.updateProgress(data.current, data.total, data.message);
+    });
+    
+    // Also set up the legacy processing-update listener for file-based processing
+    window.api.onProcessingUpdate((data) => {
+        if (data.type === 'log') {
+            console.log('On Planogram Processing:', data.message);
+        } else if (data.type === 'error') {
+            console.error('On Planogram Error:', data.message);
+        } else if (data.type === 'progress') {
+            console.log(`On Planogram Progress: ${data.current}/${data.total} - ${data.message}`);
+            // Update progress popup
+            progressPopup.updateProgress(data.current, data.total, data.message);
+        }
+    });
+    
+    try {
+        // Run AceNet check with On Planogram filtering
+        const result = await window.api.processAceNetDirect({
+            partNumbers: partNumbers,
+            username: currentUsernameInput.value,
+            password: currentPasswordInput.value,
+            store: currentStoreInput.value,
+            checkType: 'planogram' // New parameter to indicate this is a planogram check
+        });
+        
+        // Close progress popup
+        progressPopup.close();
+        
+        if (result.success) {
+            // Store results globally for export functionality
+            globalAceNetResults = result;
+            lastCheckType = 'planogram'; // Track that this was a planogram check
+            
+            // Display results with planogram-specific filtering
+            displayOnPlanogramResults(result.categorizedResults);
+            
+            // Show AceNet results section
+            const acenetResultsSection = document.getElementById('acenetResultsSection');
+            const acenetResultsPanel = document.getElementById('acenetResultsPanel');
+            
+            acenetResultsSection.style.display = 'block';
+            acenetResultsPanel.classList.add('active');
+            
+            // Layout is managed automatically through CSS classes
+            
+            // Auto-expand the results
+            const acenetToggle = document.getElementById('acenetResultsToggle');
+            const acenetContent = document.getElementById('acenetCollapsibleContent');
+            if (acenetToggle && acenetContent) {
+                acenetToggle.classList.remove('collapsed');
+                acenetContent.classList.remove('collapsed');
+            }
+            
+            // Show completion popup with export options
+            showOnPlanogramCompletionPopup(result);
+            
+        } else {
+            // Close progress popup
+            progressPopup.close();
+            
+            // Check if error is due to user cancellation
+            const errorMessage = result.error || 'Unknown error';
+            if (errorMessage.toLowerCase().includes('cancelled by user')) {
+                showCancellationPopup();
+            } else {
+                await showAlert('On Planogram check failed: ' + errorMessage, 'error');
+            }
+        }
+    } catch (error) {
+        // Close progress popup
+        if (progressPopup) {
+            progressPopup.close();
+        }
+        
+        console.error('On Planogram Error:', error);
+        const errorMessage = error.message || error.toString();
+        
+        // Check if error is due to user cancellation
+        if (errorMessage.toLowerCase().includes('cancelled by user')) {
+            showCancellationPopup();
+        } else {
+            await showAlert('Error running On Planogram check: ' + errorMessage, 'error');
+        }
+    } finally {
+        runCheckOnPlanogramBtn.disabled = false;
+        window.api.removeAllListeners('processing-update');
+        window.electronAPI.removeAcenetProgressListener();
+    }
+});
+
+// Helper functions
 
 

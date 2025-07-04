@@ -194,9 +194,10 @@ class AceNetScraper {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('No Discovery Check');
         
-        // Initialize headers in columns A, C, E, G, I, K, M (blank columns B, D, F, H, J, L)
+        // Initialize headers in columns A, C, D, E, G, I, K, M (blank columns B, F, H, J, L)
         worksheet.getCell('A1').value = "No Discovery";
         worksheet.getCell('C1').value = "No Asterisk(*)";
+        worksheet.getCell('D1').value = "Has Asterisk";
         worksheet.getCell('E1').value = "Cancelled";
         worksheet.getCell('G1').value = "On Order";
         worksheet.getCell('I1').value = "No Location";
@@ -204,7 +205,7 @@ class AceNetScraper {
         worksheet.getCell('M1').value = "Not in RSC";
         
         // Set header formatting and column widths
-        const headerColumns = ['A', 'C', 'E', 'G', 'I', 'K', 'M'];
+        const headerColumns = ['A', 'C', 'D', 'E', 'G', 'I', 'K', 'M'];
         headerColumns.forEach(col => {
             const cell = worksheet.getCell(`${col}1`);
             cell.font = { bold: true };
@@ -213,7 +214,7 @@ class AceNetScraper {
         });
         
         // Set minimal width for blank columns
-        const blankColumns = ['B', 'D', 'F', 'H', 'J', 'L'];
+        const blankColumns = ['B', 'F', 'H', 'J', 'L'];
         blankColumns.forEach(col => {
             worksheet.getColumn(col).width = 2;
         });
@@ -226,6 +227,7 @@ class AceNetScraper {
         const columnMap = {
             "No Discovery": 'A',
             "No Asterisk(*)": 'C',
+            "Has Asterisk": 'D',
             "Cancelled": 'E',
             "On Order": 'G',
             "No Location": 'I',
@@ -339,6 +341,7 @@ class AceNetScraper {
             const columnMap = {
                 "No Discovery": 'A',
                 "No Asterisk(*)": 'C',
+                "Has Asterisk": 'D',
                 "Cancelled": 'E',
                 "On Order": 'G',
                 "No Location": 'I',
@@ -882,120 +885,142 @@ class AceNetScraper {
                 return returnResults ? categories : undefined;
             }
             
-            // Step 2: Check No Discovery element (with retry logic like Python)
-            console.log("Step 2: Checking No Discovery element...");
-            let elementFound = false;
-            let discoveryText = "";
-            const maxAttempts = isFirstSearch ? 3 : 2;
-            
-            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            // Different logic for planogram vs standard check
+            if (this.checkType === 'planogram') {
+                // PLANOGRAM CHECK: Only check for Has Asterisk (skip No Discovery, On Order, No Location)
+                console.log("PLANOGRAM CHECK: Only checking for asterisk in discovery...");
                 try {
-                    const discoveryResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]', 1, 3000);
-                    discoveryText = discoveryResult.text ? discoveryResult.text.trim() : "";
-                    elementFound = discoveryResult.found;
-                    console.log(`No Discovery element found with text: '${discoveryText}' (attempt ${attempt + 1})`);
-                    if (elementFound) break;
-                } catch (error) {
-                    console.log(`No Discovery element not found (attempt ${attempt + 1}): ${error.message}`);
-                    if (attempt < maxAttempts - 1) {
-                        console.log("Retrying after 3-second delay...");
-                        await new Promise(resolve => setTimeout(resolve, 3000));
+                    const linkResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]/a');
+                    console.log(`Has Asterisk element found: ${linkResult.found}, text: '${linkResult.text}'`);
+                    
+                    if (linkResult.found && linkResult.text && linkResult.text.includes('*')) {
+                        console.log("Outputting PARTNUMBER to Has Asterisk (planogram item).");
+                        categories.push({ category: 'Has Asterisk', details: linkResult.text });
+                        // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                        if (!returnResults && outputFile) {
+                            await this.appendToExcel(outputFile, "Has Asterisk", partNumber);
+                        }
                     }
-                    continue;
+                } catch (error) {
+                    console.log("Has Asterisk element error, skipping.");
                 }
-            }
-            
-            // Only add to "No Discovery" if element is not found OR text is empty (like Python)
-            if ((!elementFound || !discoveryText.trim()) && !isCancelled) {
-                console.log("Outputting PARTNUMBER to No Discovery due to element absence or empty text.");
-                categories.push({ category: 'No Discovery', details: elementFound ? 'Empty text' : 'Element not found' });
-                // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
-                if (!returnResults && outputFile) {
-                    await this.appendToExcel(outputFile, "No Discovery", partNumber);
-                }
-            }
-            
-            // Step 3: Check for non-blank text with no asterisk
-            console.log("Step 3: Checking for non-blank text with no asterisk...");
-            try {
-                const linkResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]/a');
-                console.log(`No Asterisk element found: ${linkResult.found}, text: '${linkResult.text}'`);
+            } else {
+                // STANDARD CHECK: Do all the normal checks
+                // Step 2: Check No Discovery element (with retry logic like Python)
+                console.log("Step 2: Checking No Discovery element...");
+                let elementFound = false;
+                let discoveryText = "";
+                const maxAttempts = isFirstSearch ? 3 : 2;
                 
-                if (linkResult.found && linkResult.text && !linkResult.text.includes('*')) {
-                    console.log("Outputting PARTNUMBER to No Asterisk(*).");
-                    categories.push({ category: 'No Asterisk(*)', details: linkResult.text });
+                for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                    try {
+                        const discoveryResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]', 1, 3000);
+                        discoveryText = discoveryResult.text ? discoveryResult.text.trim() : "";
+                        elementFound = discoveryResult.found;
+                        console.log(`No Discovery element found with text: '${discoveryText}' (attempt ${attempt + 1})`);
+                        if (elementFound) break;
+                    } catch (error) {
+                        console.log(`No Discovery element not found (attempt ${attempt + 1}): ${error.message}`);
+                        if (attempt < maxAttempts - 1) {
+                            console.log("Retrying after 3-second delay...");
+                            await new Promise(resolve => setTimeout(resolve, 3000));
+                        }
+                        continue;
+                    }
+                }
+                
+                // Only add to "No Discovery" if element is not found OR text is empty (like Python)
+                if ((!elementFound || !discoveryText.trim()) && !isCancelled) {
+                    console.log("Outputting PARTNUMBER to No Discovery due to element absence or empty text.");
+                    categories.push({ category: 'No Discovery', details: elementFound ? 'Empty text' : 'Element not found' });
                     // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
                     if (!returnResults && outputFile) {
-                        await this.appendToExcel(outputFile, "No Asterisk(*)", partNumber);
+                        await this.appendToExcel(outputFile, "No Discovery", partNumber);
                     }
                 }
-            } catch (error) {
-                console.log("No Asterisk element error, skipping.");
-            }
-            
-            // Step 4: Check On Order (with wait like Python script)
-            console.log("Step 4: Checking On Order...");
-            try {
-                // Wait for element like Python script does with WebDriverWait
-                await frame.waitForSelector('#spnQOO', { timeout: 10000 });
-                const orderSpan = await frame.$('#spnQOO');
-                if (orderSpan) {
-                    const orderText = await frame.evaluate(el => el.textContent.trim(), orderSpan);
-                    console.log(`On Order text: '${orderText}'`);
+                
+                // Step 3: Standard check for non-blank text with no asterisk
+                console.log("Step 3: Checking for non-blank text with no asterisk...");
+                try {
+                    const linkResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[1]/div[20]/div[2]/a');
+                    console.log(`No Asterisk element found: ${linkResult.found}, text: '${linkResult.text}'`);
                     
-                    try {
-                        const orderValue = parseFloat(orderText);
-                        if (!isNaN(orderValue) && orderValue > 0) {
-                            console.log("Outputting PARTNUMBER to On Order due to value > 0.");
-                            categories.push({ category: 'On Order', details: `${orderValue} on order` });
+                    if (linkResult.found && linkResult.text && !linkResult.text.includes('*')) {
+                        console.log("Outputting PARTNUMBER to No Asterisk(*).");
+                        categories.push({ category: 'No Asterisk(*)', details: linkResult.text });
+                        // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                        if (!returnResults && outputFile) {
+                            await this.appendToExcel(outputFile, "No Asterisk(*)", partNumber);
+                        }
+                    }
+                } catch (error) {
+                    console.log("No Asterisk element error, skipping.");
+                }
+                
+                // Step 4: Check On Order (with wait like Python script)
+                console.log("Step 4: Checking On Order...");
+                try {
+                    // Wait for element like Python script does with WebDriverWait
+                    await frame.waitForSelector('#spnQOO', { timeout: 10000 });
+                    const orderSpan = await frame.$('#spnQOO');
+                    if (orderSpan) {
+                        const orderText = await frame.evaluate(el => el.textContent.trim(), orderSpan);
+                        console.log(`On Order text: '${orderText}'`);
+                        
+                        try {
+                            const orderValue = parseFloat(orderText);
+                            if (!isNaN(orderValue) && orderValue > 0) {
+                                console.log("Outputting PARTNUMBER to On Order due to value > 0.");
+                                categories.push({ category: 'On Order', details: `${orderValue} on order` });
+                                // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                                if (!returnResults && outputFile) {
+                                    await this.appendToExcel(outputFile, "On Order", partNumber);
+                                }
+                            } else {
+                                console.log("Order value <= 0, skipping.");
+                            }
+                        } catch (error) {
+                            console.log("Order text is not a number, skipping.");
+                        }
+                    }
+                } catch (error) {
+                    console.log("On Order element not found, skipping.");
+                }
+                
+                // Step 5: Check No Location
+                console.log("Step 5: Checking No Location...");
+                try {
+                    const locationResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[3]/div[17]/div[2]');
+                    const locationText = locationResult.text ? locationResult.text.trim() : "";
+                    console.log(`No Location text: '${locationText}' (raw: ${JSON.stringify(locationText)})`);
+                    
+                    if (!locationText) {
+                        if (!locationResult.found) {
+                            console.log("Outputting PARTNUMBER to No Location: element not found.");
+                            categories.push({ category: 'No Location', details: 'Location element not found' });
                             // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
                             if (!returnResults && outputFile) {
-                                await this.appendToExcel(outputFile, "On Order", partNumber);
+                                await this.appendToExcel(outputFile, "No Location", partNumber);
                             }
                         } else {
-                            console.log("Order value <= 0, skipping.");
-                        }
-                    } catch (error) {
-                        console.log("Order text is not a number, skipping.");
-                    }
-                }
-            } catch (error) {
-                console.log("On Order element not found, skipping.");
-            }
-            
-            // Step 5: Check No Location
-            console.log("Step 5: Checking No Location...");
-            try {
-                const locationResult = await this.findElementByXPath(frame, '/html/body/form/div[4]/div[1]/div[11]/div[1]/div[3]/div[17]/div[2]');
-                const locationText = locationResult.text ? locationResult.text.trim() : "";
-                console.log(`No Location text: '${locationText}' (raw: ${JSON.stringify(locationText)})`);
-                
-                if (!locationText) {
-                    if (!locationResult.found) {
-                        console.log("Outputting PARTNUMBER to No Location: element not found.");
-                        categories.push({ category: 'No Location', details: 'Location element not found' });
-                        // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
-                        if (!returnResults && outputFile) {
-                            await this.appendToExcel(outputFile, "No Location", partNumber);
+                            console.log("Outputting PARTNUMBER to No Location: element text is empty.");
+                            categories.push({ category: 'No Location', details: 'Empty location text' });
+                            // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                            if (!returnResults && outputFile) {
+                                await this.appendToExcel(outputFile, "No Location", partNumber);
+                            }
                         }
                     } else {
-                        console.log("Outputting PARTNUMBER to No Location: element text is empty.");
-                        categories.push({ category: 'No Location', details: 'Empty location text' });
-                        // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
-                        if (!returnResults && outputFile) {
-                            await this.appendToExcel(outputFile, "No Location", partNumber);
-                        }
+                        console.log(`Skipping No Location: element contains text '${locationText}'.`);
                     }
-                } else {
-                    console.log(`Skipping No Location: element contains text '${locationText}'.`);
-                }
-            } catch (error) {
-                console.log(`No Location element not found: ${error.message}`);
-                console.log("Outputting PARTNUMBER to No Location: element not found.");
-                categories.push({ category: 'No Location', details: 'Location element not found' });
-                // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
-                if (!returnResults && outputFile) {
-                    await this.appendToExcel(outputFile, "No Location", partNumber);
+                } catch (error) {
+                    console.log(`No Location element not found: ${error.message}`);
+                    console.log("Outputting PARTNUMBER to No Location: element not found.");
+                    categories.push({ category: 'No Location', details: 'Location element not found' });
+                    // Phase 1 optimization: batch writing, no immediate Excel write unless legacy mode
+                    if (!returnResults && outputFile) {
+                        await this.appendToExcel(outputFile, "No Location", partNumber);
+                    }
                 }
             }
             
@@ -1385,16 +1410,17 @@ class AceNetScraper {
     }
 
     // Method to categorize results for both Excel and UI display
-    categorizeResults(results) {
+    categorizeResults(results, checkType) {
         // Define categories in the desired display order
         const categories = [
-            { name: 'Cancelled', key: 'cancelled', parts: [], color: '#ff1744' },
-            { name: 'No Discovery', key: 'noDiscovery', parts: [], color: '#ff6b6b' },
-            { name: 'No Asterisk(*)', key: 'noAsterisk', parts: [], color: '#ffa500' },
-            { name: 'On Order', key: 'onOrder', parts: [], color: '#4caf50' },
-            { name: 'No Location', key: 'noLocation', parts: [], color: '#9c27b0' },
-            { name: 'Not in AceNet', key: 'notInAceNet', parts: [], color: '#2196f3' },
-            { name: 'Not in RSC', key: 'notInRSC', parts: [], color: '#f44336' }
+            { key: 'notInRSC', name: 'Not in RSC', parts: [] },
+            { key: 'cancelled', name: 'Cancelled', parts: [] },
+            { key: 'noDiscovery', name: 'No Discovery', parts: [] },
+            { key: 'noAsterisk', name: 'No Asterisk(*)', parts: [] },
+            { key: 'hasAsterisk', name: 'Has Asterisk (*)', parts: [] },
+            { key: 'onOrder', name: 'On Order', parts: [] },
+            { key: 'noLocation', name: 'No Location', parts: [] },
+            { key: 'notInAceNet', name: 'Not in AceNet', parts: [] }
         ];
         
         // Sort results into categories based on priority
@@ -1418,6 +1444,8 @@ class AceNetScraper {
                 categories.find(c => c.key === 'noDiscovery').parts.push(partNumber);
             } else if (result.category === 'No Asterisk(*)') {
                 categories.find(c => c.key === 'noAsterisk').parts.push(partNumber);
+            } else if (result.category === 'Has Asterisk') {
+                categories.find(c => c.key === 'hasAsterisk').parts.push(partNumber);
             } else if (result.category === 'On Order') {
                 categories.find(c => c.key === 'onOrder').parts.push(partNumber);
             } else if (result.category === 'No Location') {
@@ -1430,8 +1458,24 @@ class AceNetScraper {
             }
         });
         
+        // Filter categories based on check type
+        let filteredCategories;
+        if (checkType === 'planogram') {
+            // For planogram check, only show Has Asterisk items (and critical items)
+            filteredCategories = categories.filter(category => 
+                category.key === 'hasAsterisk' || 
+                category.key === 'cancelled' || 
+                category.key === 'notInAceNet'
+            );
+        } else {
+            // For standard check, show all categories except Has Asterisk
+            filteredCategories = categories.filter(category => 
+                category.key !== 'hasAsterisk'
+            );
+        }
+        
         // Filter out empty categories - only return categories with parts
-        return categories.filter(category => category.parts && category.parts.length > 0);
+        return filteredCategories.filter(category => category.parts && category.parts.length > 0);
     }
 }
 
@@ -1464,14 +1508,17 @@ async function runAceNetCheck(config) {
 }
 
 // Main function to run AceNet check with direct part numbers (no file)
-async function runAceNetCheckDirect(partNumbers, username, password, store, progressCallback) {
-    console.error(`Starting direct AceNet check for ${partNumbers.length} part numbers (Double-check enabled)`);
+async function runAceNetCheckDirect(partNumbers, username, password, store, progressCallback, checkType = 'standard') {
+    console.error(`Starting direct AceNet check for ${partNumbers.length} part numbers (Double-check enabled) - Check type: ${checkType}`);
     console.error(`Store: ${store}`);
     
     const scraper = new AceNetScraper();
     
     // Double-check is always enabled
     scraper.config.enableDoubleCheck = true;
+    
+    // Set the check type for the scraper
+    scraper.checkType = checkType;
     
     try {
         if (!partNumbers || partNumbers.length === 0) {
@@ -1536,7 +1583,7 @@ async function runAceNetCheckDirect(partNumbers, username, password, store, prog
         }
         
         // Return categorized results for UI display only
-        const categorizedResults = scraper.categorizeResults(results);
+        const categorizedResults = scraper.categorizeResults(results, checkType);
         
         return {
             success: true,

@@ -45,7 +45,7 @@ contextBridge.exposeInMainWorld('api', {
   
   saveToPO: (orderData) => ipcRenderer.invoke('save-to-po', orderData),
   
-    exportAceNetResults: (resultsData) => ipcRenderer.invoke('export-acenet-results', resultsData),
+    exportAceNetResults: (resultsData, checkType) => ipcRenderer.invoke('export-acenet-results', resultsData, checkType),
   
   processPartNumberFile: (filePath) => ipcRenderer.invoke('process-part-number-file', filePath),
   
