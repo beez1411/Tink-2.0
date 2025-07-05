@@ -1580,7 +1580,7 @@ function showCompletionPopup(result, totalProcessed) {
         summaryText += 'Processing completed.\n';
     }
     
-    summaryText += '\nResults are displayed in the panel on the right.\nThe browser will remain open for troubleshooting.';
+    summaryText += '\n✅ Final verification completed - "Not in AceNet" items were double-checked.\nResults are displayed in the panel on the right.\nThe browser will remain open for troubleshooting.';
     
     popup.innerHTML = `
         <div class="completion-popup-content">
@@ -1987,6 +1987,9 @@ if (partNumberFileInput) {
                     // Enable the Check AceNet button  
                     runCheckAceNetBtn.disabled = false;
                     
+                    // Enable the Check On Planogram button
+                    runCheckOnPlanogramBtn.disabled = false;
+                    
                                 // CRITICAL: Handle input field locking specific to file uploads
             setTimeout(async () => {
                 // Check if fields became locked after file processing
@@ -2123,6 +2126,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const checkAceNetBtn = document.getElementById('runCheckAceNetBtn');
             if (checkAceNetBtn && !checkAceNetBtn.disabled) {
                 checkAceNetBtn.click();
+            }
+        });
+    }
+    
+    // Run On Planogram from upload button
+    const runOnPlanogramFromUploadBtn = document.getElementById('runOnPlanogramFromUploadBtn');
+    if (runOnPlanogramFromUploadBtn) {
+        runOnPlanogramFromUploadBtn.addEventListener('click', () => {
+            hideFileUploadModal();
+            // Trigger the Check On Planogram button
+            const checkOnPlanogramBtn = document.getElementById('runCheckOnPlanogramBtn');
+            if (checkOnPlanogramBtn && !checkOnPlanogramBtn.disabled) {
+                checkOnPlanogramBtn.click();
             }
         });
     }

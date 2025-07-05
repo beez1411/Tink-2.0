@@ -3116,4 +3116,20 @@ a {
     cursor: not-allowed;
 }
 
+.btn-planogram {
+    background: #2196F3;
+    color: #fff;
+    border: none;
+}
+
+.btn-planogram:hover:not(:disabled) {
+    background: #1976D2;
+}
+
+.btn-planogram:disabled {
+    background: #6c757d;
+    color: #fff;
+    cursor: not-allowed;
+}
+
 

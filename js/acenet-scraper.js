@@ -26,6 +26,13 @@ class AceNetScraper {
         this.maxRestarts = 50;
         this.restartCount = 0;
         
+        // Store login credentials for automatic re-login
+        this.loginCredentials = {
+            username: null,
+            password: null,
+            store: null
+        };
+        
         // Results buffer for batch Excel writing (Phase 1 optimization)
         this.resultsBuffer = [];
         
@@ -37,7 +44,10 @@ class AceNetScraper {
             popupWaitTime: 2000,            // Standard popup wait time (ms)
             firstSearchWaitTime: 5000,      // Wait time for first search (ms) - reduced from 10000
             networkTimeoutRetry: true,      // Retry on network timeouts
-            processingDelay: 150            // Further reduced delay between part numbers (Phase 1.2 optimization)
+            processingDelay: 150,           // Further reduced delay between part numbers (Phase 1.2 optimization)
+            maxReloginAttempts: 3,          // Maximum number of re-login attempts
+            enableFinalDoubleCheck: true,   // Enable final double-check of "Not in AceNet" items
+            finalDoubleCheckDelay: 2000     // Extra delay for final double-check (ms)
         };
     }
 
@@ -395,6 +405,13 @@ class AceNetScraper {
     async loginAndSelectStore(username, password, store) {
         console.log(`Logging in to AceNet with store ${store}`);
         
+        // Store credentials for automatic re-login
+        this.loginCredentials = {
+            username: username,
+            password: password,
+            store: store
+        };
+        
         // Navigate to AceNet login page
         await this.page.goto('https://acenet.aceservices.com/', { waitUntil: 'networkidle2' });
         
@@ -452,6 +469,60 @@ class AceNetScraper {
             
         } catch (error) {
             throw new Error(`Login failed: ${error.message}`);
+        }
+    }
+
+    // Check if the current session has expired by looking for login elements
+    async isSessionExpired() {
+        try {
+            // Check if we're on the login page
+            const currentUrl = await this.page.url();
+            if (currentUrl.includes('login') || currentUrl === 'https://acenet.aceservices.com/') {
+                // Check if login form is present
+                const loginForm = await this.page.$('#userNameInput');
+                return loginForm !== null;
+            }
+            
+            // Check if search box is available (main indicator of active session)
+            const searchBox = await this.page.$('#tbxSearchBox');
+            return searchBox === null;
+            
+        } catch (error) {
+            console.log(`Error checking session status: ${error.message}`);
+            return true; // Assume expired if we can't check
+        }
+    }
+
+    // Automatically re-login when session expires
+    async attemptRelogin() {
+        if (!this.loginCredentials.username || !this.loginCredentials.password || !this.loginCredentials.store) {
+            throw new Error('Cannot re-login: No stored credentials available');
+        }
+        
+        console.log('🔄 SESSION EXPIRED - Attempting automatic re-login...');
+        
+        try {
+            // Close any popup windows first
+            const pages = await this.browser.pages();
+            for (const page of pages) {
+                if (page !== this.page) {
+                    await page.close();
+                }
+            }
+            
+            // Re-login using stored credentials
+            await this.loginAndSelectStore(
+                this.loginCredentials.username,
+                this.loginCredentials.password,
+                this.loginCredentials.store
+            );
+            
+            console.log('✅ Successfully re-logged in to AceNet');
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Re-login failed:', error.message);
+            throw new Error(`Re-login failed: ${error.message}`);
         }
     }
 
@@ -1041,6 +1112,43 @@ class AceNetScraper {
         } catch (error) {
             console.log(`Error processing PARTNUMBER '${partNumber}': ${error.message}`);
             
+            // Check if this is a session expiration error
+            const isSessionTimeout = error.message.includes('Waiting for selector') && 
+                                   error.message.includes('#tbxSearchBox') && 
+                                   error.message.includes('failed');
+            
+            if (isSessionTimeout) {
+                console.log('🔍 Detected potential session expiration. Checking session status...');
+                
+                // Check if session has actually expired
+                const sessionExpired = await this.isSessionExpired();
+                
+                if (sessionExpired) {
+                    console.log('🔄 Session expired confirmed. Attempting automatic re-login...');
+                    
+                    for (let reloginAttempt = 1; reloginAttempt <= this.config.maxReloginAttempts; reloginAttempt++) {
+                        try {
+                            await this.attemptRelogin();
+                            
+                            // Retry the part number processing after successful re-login
+                            console.log(`🔄 Re-login successful. Retrying part number '${partNumber}'...`);
+                            return await this.checkPartNumber(partNumber, options);
+                            
+                        } catch (reloginError) {
+                            console.error(`❌ Re-login attempt ${reloginAttempt}/${this.config.maxReloginAttempts} failed: ${reloginError.message}`);
+                            
+                            if (reloginAttempt === this.config.maxReloginAttempts) {
+                                console.error('❌ All re-login attempts failed. Continuing with error handling...');
+                                break;
+                            }
+                            
+                            // Wait before next re-login attempt
+                            await new Promise(resolve => setTimeout(resolve, 3000));
+                        }
+                    }
+                }
+            }
+            
             // Close any popup windows
             const pages = await this.browser.pages();
             for (const page of pages) {
@@ -1103,7 +1211,23 @@ class AceNetScraper {
             
             // Navigate back to main page to ensure clean state
             await this.page.goto('https://acenet.aceservices.com/', { waitUntil: 'networkidle2' });
-            await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
+            
+            // Wait for search box with session expiration handling
+            try {
+                await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
+            } catch (searchBoxError) {
+                console.log('🔍 DOUBLE CHECK: Search box not found. Checking for session expiration...');
+                
+                const sessionExpired = await this.isSessionExpired();
+                if (sessionExpired) {
+                    console.log('🔄 DOUBLE CHECK: Session expired. Attempting re-login...');
+                    await this.attemptRelogin();
+                    // Search box should be available now after re-login
+                    await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
+                } else {
+                    throw searchBoxError;
+                }
+            }
             
             // Perform the search again with more patience
             console.log(`DOUBLE CHECK: Performing search for '${partNumber}'`);
@@ -1122,7 +1246,24 @@ class AceNetScraper {
             if (mainUrl.includes('/search/product?q=')) {
                 console.log(`DOUBLE CHECK: Confirmed - '${partNumber}' truly not found (search redirect)`);
                 await this.page.goto('https://acenet.aceservices.com/', { waitUntil: 'networkidle2' });
-                await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
+                
+                // Wait for search box with session expiration handling
+                try {
+                    await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
+                } catch (searchBoxError) {
+                    console.log('🔍 DOUBLE CHECK: Search box not found after redirect. Checking for session expiration...');
+                    
+                    const sessionExpired = await this.isSessionExpired();
+                    if (sessionExpired) {
+                        console.log('🔄 DOUBLE CHECK: Session expired. Attempting re-login...');
+                        await this.attemptRelogin();
+                        // Search box should be available now after re-login
+                        await this.page.waitForSelector('#tbxSearchBox', { timeout: 20000 });
+                    } else {
+                        throw searchBoxError;
+                    }
+                }
+                
                 return { category: 'Not in AceNet', details: 'Confirmed: Search redirect', verified: true };
             }
             
@@ -1582,7 +1723,91 @@ async function runAceNetCheckDirect(partNumbers, username, password, store, prog
             await new Promise(resolve => setTimeout(resolve, scraper.config.processingDelay));
         }
         
-        // Return categorized results for UI display only
+        // Final Double-Check Phase: Re-verify all "Not in AceNet" items (if enabled)
+        if (scraper.config.enableFinalDoubleCheck) {
+            console.error('\n🔄 FINAL DOUBLE-CHECK: Starting verification of "Not in AceNet" items...');
+            
+            // Find all items categorized as "Not in AceNet"
+            const notInAceNetItems = results.filter(result => result.category === 'Not in AceNet');
+            
+            if (notInAceNetItems.length > 0) {
+            console.error(`Found ${notInAceNetItems.length} items to double-check...`);
+            
+            let doubleCheckSuccesses = 0;
+            
+            for (let i = 0; i < notInAceNetItems.length; i++) {
+                const item = notInAceNetItems[i];
+                const partNumber = item.partNumber;
+                
+                // Report progress for double-check phase
+                if (progressCallback) {
+                    progressCallback({
+                        current: partNumbers.length + i + 1,
+                        total: partNumbers.length + notInAceNetItems.length,
+                        message: `Double-checking ${partNumber}`
+                    });
+                }
+                
+                console.error(`DOUBLE-CHECK:${i + 1}/${notInAceNetItems.length}:Re-verifying ${partNumber}`);
+                
+                                 try {
+                     // Give AceNet extra time to respond during double-check
+                     await new Promise(resolve => setTimeout(resolve, scraper.config.finalDoubleCheckDelay));
+                    
+                    // Re-process this part number with more patience
+                    const doubleCheckResults = await scraper.checkPartNumber(partNumber, { 
+                        isFirstSearch: false, 
+                        returnResults: true 
+                    });
+                    
+                    // Check if we found the part this time
+                    const foundValidCategory = doubleCheckResults.some(result => 
+                        result.category !== 'Not in AceNet'
+                    );
+                    
+                    if (foundValidCategory) {
+                        console.error(`✅ DOUBLE-CHECK SUCCESS: Found ${partNumber} in AceNet!`);
+                        doubleCheckSuccesses++;
+                        
+                        // Remove the old "Not in AceNet" entry
+                        const indexToRemove = results.findIndex(r => 
+                            r.partNumber === partNumber && r.category === 'Not in AceNet'
+                        );
+                        if (indexToRemove !== -1) {
+                            results.splice(indexToRemove, 1);
+                        }
+                        
+                        // Add the new correct categories
+                        doubleCheckResults.forEach(categoryResult => {
+                            results.push({
+                                partNumber: partNumber,
+                                category: categoryResult.category,
+                                details: categoryResult.details + ' (Found on double-check)'
+                            });
+                        });
+                    } else {
+                        console.error(`❌ DOUBLE-CHECK: ${partNumber} still not found in AceNet`);
+                    }
+                    
+                } catch (doubleCheckError) {
+                    console.error(`❌ DOUBLE-CHECK ERROR for ${partNumber}: ${doubleCheckError.message}`);
+                    // Keep the original "Not in AceNet" classification
+                }
+                
+                // Brief delay between double-check attempts
+                await new Promise(resolve => setTimeout(resolve, scraper.config.processingDelay));
+            }
+            
+                         console.error(`🎯 DOUBLE-CHECK COMPLETE: ${doubleCheckSuccesses}/${notInAceNetItems.length} items found on re-verification`);
+             
+            } else {
+                console.error('No "Not in AceNet" items found - skipping double-check phase');
+            }
+        } else {
+            console.error('Final double-check disabled - skipping verification phase');
+        }
+         
+         // Return categorized results for UI display only
         const categorizedResults = scraper.categorizeResults(results, checkType);
         
         return {
