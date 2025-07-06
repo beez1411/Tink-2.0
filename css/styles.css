@@ -3132,4 +3132,45 @@ a {
     cursor: not-allowed;
 }
 
+.btn-stock-out {
+    background: #e94f37;
+    color: #fff;
+    border: none;
+}
+
+.btn-stock-out:hover:not(:disabled) {
+    background: #d73b25;
+}
+
+.btn-stock-out:disabled {
+    background: #f0a397;
+    color: #fff;
+    cursor: not-allowed;
+}
+
+.confidence-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-right: 4px;
+}
+
+.confidence-high {
+    background: #28a745;
+    color: white;
+}
+
+.confidence-medium {
+    background: #ffc107;
+    color: #212529;
+}
+
+.confidence-low {
+    background: #dc3545;
+    color: white;
+}
+
 

@@ -492,6 +492,158 @@ async function runWrapperDirectly(config, progressCallback) {
       throw new Error('No output generated');
     }
     
+  } else if (scriptType === 'stock_out_prediction') {
+    progressCallback({
+      type: 'log',
+      message: 'Analyzing sales patterns for stock-out prediction...'
+    });
+    
+    const pythonScript = path.join(__dirname, 'Stable - Stock Out Prediction.py');
+    const outputFile = config.output_file;
+    
+    // Create config file for Python script
+    const configData = {
+      input_file: config.input_file,
+      onOrderData: options.onOrderData || {},
+      output_file: outputFile
+    };
+    
+    const configFile = path.join(__dirname, 'config.json');
+    fs.writeFileSync(configFile, JSON.stringify(configData, null, 2));
+    
+    // Use the virtual environment Python interpreter
+    const pythonExecutable = path.join(__dirname, 'tink_env', 'bin', 'python');
+    
+    // Run the Python script
+    const stockOutResult = await new Promise((resolve, reject) => {
+      const args = [pythonScript];
+      const child = spawn(pythonExecutable, args, {
+        cwd: __dirname,
+        env: { ...process.env }
+      });
+      
+      let output = '';
+      let errorOutput = '';
+      
+      child.stdout.on('data', (data) => {
+        output += data.toString();
+        progressCallback({
+          type: 'log',
+          message: data.toString().trim()
+        });
+      });
+      
+      child.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+        console.error('Python stderr:', data.toString());
+      });
+      
+      child.on('close', (code) => {
+        // Clean up config file
+        try {
+          if (fs.existsSync(configFile)) {
+            fs.unlinkSync(configFile);
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up config file:', cleanupError);
+        }
+        
+        if (code === 0) {
+          resolve({ output, errorOutput });
+        } else {
+          reject(new Error(`Python script failed with code ${code}: ${errorOutput}`));
+        }
+      });
+      
+      child.on('error', (error) => {
+        // Clean up config file on error
+        try {
+          if (fs.existsSync(configFile)) {
+            fs.unlinkSync(configFile);
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up config file:', cleanupError);
+        }
+        reject(new Error(`Failed to start Python script: ${error.message}`));
+      });
+    });
+    
+    // Look for the generated Excel file and parse the results
+    const outputPattern = /Stock Out Predictions -- (\d{4}-\d{2}-\d{2})\.xlsx/;
+    const outputMatch = stockOutResult.output.match(outputPattern);
+    
+    let predictions = [];
+    let stats = {};
+    
+    if (outputMatch) {
+      const excelFile = path.join(__dirname, `Stock Out Predictions -- ${outputMatch[1]}.xlsx`);
+      if (fs.existsSync(excelFile)) {
+        // Parse the Excel file to extract prediction results
+        try {
+          const ExcelJS = require('exceljs');
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.readFile(excelFile);
+          
+          const worksheet = workbook.getWorksheet('Stock Out Predictions');
+          if (worksheet) {
+            const headers = [];
+            worksheet.getRow(1).eachCell((cell, colNumber) => {
+              headers[colNumber] = cell.value;
+            });
+            
+            worksheet.eachRow((row, rowNumber) => {
+              if (rowNumber > 1) { // Skip header row
+                const prediction = {};
+                row.eachCell((cell, colNumber) => {
+                  if (headers[colNumber]) {
+                    prediction[headers[colNumber]] = cell.value;
+                  }
+                });
+                if (prediction['Part number']) {
+                  predictions.push(prediction);
+                }
+              }
+            });
+          }
+          
+          // Parse summary sheet if available
+          const summaryWorksheet = workbook.getWorksheet('Summary');
+          if (summaryWorksheet) {
+            summaryWorksheet.eachRow((row, rowNumber) => {
+              if (rowNumber > 1 && row.getCell(1).value && row.getCell(2).value) {
+                const metric = row.getCell(1).value.toString();
+                const value = row.getCell(2).value;
+                
+                if (metric.includes('Total Items Analyzed')) {
+                  stats.total_items_analyzed = value;
+                } else if (metric.includes('Items with Stock Out Risk')) {
+                  stats.items_with_stockout_risk = value;
+                } else if (metric.includes('High Confidence Predictions')) {
+                  stats.high_confidence_predictions = value;
+                }
+              }
+            });
+          }
+        } catch (parseError) {
+          console.error('Error parsing Excel file:', parseError);
+        }
+      }
+    }
+    
+    progressCallback({
+      type: 'log',
+      message: `Found ${predictions.length} items with potential stock-out risk`
+    });
+    
+    result = {
+      success: true,
+      output: `Stock-out analysis complete. Found ${predictions.length} potential stock-out items.`,
+      output_file: outputFile,
+      predictions: predictions,
+      stats: stats,
+      processed_items: predictions.length
+    };
+    
   } else if (scriptType === 'check_acenet_direct') {
     throw new Error('Direct AceNet processing not supported in this context');
   } else if (scriptType.includes('check_acenet')) {
