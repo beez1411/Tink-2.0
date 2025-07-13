@@ -84,6 +84,12 @@ class AdvancedInventoryAnalyzer {
         
         // Current week tracking (can be set dynamically)
         this.currentWeek = this.getCurrentWeekOfYear();
+
+        // In the class definition, add new configurable properties
+        // Around line ~60, after other constants
+        this.ZERO_STOCK_VELOCITY_THRESHOLD = 0.1; // Configurable via config
+        this.ENABLE_ZERO_STOCK_HANDLING = true; // Default true, configurable
+        this.ZERO_STOCK_MIN_VELOCITY = 0.01; // New configurable min velocity for zero-stock
     }
 
     log(message, data = null) {
@@ -527,9 +533,18 @@ class AdvancedInventoryAnalyzer {
     }
 
     // Get sales velocity like Python script (8 weeks default)
-    getSalesVelocity(salesSeries, weeks = 8) {
-        const recentSales = salesSeries.slice(-weeks);
-        return recentSales.length > 0 ? ss.mean(recentSales) : 0;
+    getSalesVelocity(salesSeries, weeks = 8, longLookback = false) {
+        let lookbackSales;
+        if (longLookback) {
+            lookbackSales = salesSeries.slice(-26);
+            if (lookbackSales.length < 26) return 0;
+            const recent = lookbackSales.slice(-8).reduce((a, b) => a + b, 0) / 8;
+            const earlier = lookbackSales.slice(0, 18).reduce((a, b) => a + b, 0) / 18;
+            return (recent * 0.7) + (earlier * 0.3); // 70/30 weighting
+        } else {
+            lookbackSales = salesSeries.slice(-weeks);
+            return lookbackSales.length > 0 ? ss.mean(lookbackSales) : 0;
+        }
     }
 
     // Calculate demand standard deviation like Python script
@@ -623,13 +638,14 @@ class AdvancedInventoryAnalyzer {
             const labelMap = this.assignClusterLabels(clustering.centers);
             
             // Generate comprehensive order analysis
-            const results = this.generateOrderRecommendations(
+            const results = await this.generateOrderRecommendations(
                 validItems, 
                 salesData, 
                 clustering.labels, 
                 labelMap, 
                 daysThreshold, 
-                serviceLevel
+                serviceLevel,
+                config.paladinFile ?? null // Pass it here
             );
             
             // Skip file saving - only return data for UI display
@@ -773,7 +789,7 @@ class AdvancedInventoryAnalyzer {
     }
 
     // Two-phase ordering logic like Python script
-    generateOrderRecommendations(items, salesData, clusterLabels, labelMap, daysThreshold, serviceLevel) {
+    async generateOrderRecommendations(items, salesData, clusterLabels, labelMap, daysThreshold, serviceLevel, paladinFile) {
         const orderItems = [];
         const debug = {
             totalItems: items.length,
@@ -807,7 +823,12 @@ class AdvancedInventoryAnalyzer {
                 volatile: 0,
                 seasonal: 0,
                 trending: 0
-            }
+            },
+            zeroStockOrders: 0,
+            slowMoverZeroStock: 0,
+            seasonalZeroStockAdjustments: 0,
+            paladinMissed: 0,
+            paladinMissedExamples: []
         };
 
         // Calculate week columns found
@@ -1206,6 +1227,17 @@ class AdvancedInventoryAnalyzer {
             })));
         }
         
+        // At end of generateOrderRecommendations, after sorting, add Paladin comparison
+        if (paladinFile) {
+            // Simple parse (assume TSV, load and compare partNumbers)
+            const paladinData = await this.loadData(paladinFile); // Reuse loadData
+            const paladinParts = new Set(paladinData.map(row => row['Part number']));
+            const tinkParts = new Set(orderItems.map(item => item.partNumber));
+            const missed = [...paladinParts].filter(p => !tinkParts.has(p));
+            debug.paladinMissed = missed.length;
+            debug.paladinMissedExamples = missed.slice(0, 10); // First 10 for sample
+        }
+        
         return { orderItems, debug };
     }
 
@@ -1585,14 +1617,14 @@ class AdvancedInventoryAnalyzer {
             });
             
             if (approachingPeak) {
-                seasonalAdjustment = this.SEASONAL_PEAK_MULTIPLIER;
-                adjustmentReason = "Pre-seasonal peak stocking";
+                seasonalAdjustment = 1.2;
+                adjustmentReason = "Pre-seasonal peak stocking (+20%)";
             } else if (approachingLow) {
                 seasonalAdjustment = this.SEASONAL_LOW_MULTIPLIER;
                 adjustmentReason = "Seasonal low adjustment";
             }
         }
-
+        
         // ENHANCED: Trend adjustments with decline detection
         let trendAdjustment = 1.0;
         if (seasonalMetrics.demandCategory === 'declining') {
@@ -1613,16 +1645,22 @@ class AdvancedInventoryAnalyzer {
             trendAdjustment = 0.8;
             adjustmentReason += " + downward trend";
         }
-
-        // Final order quantity
+        
+        // Final order quantity with floor for declining/slow movers
         const finalOrderQty = baseOrderQty * seasonalAdjustment * trendAdjustment;
+        let orderQuantity = Math.max(0, Math.round(finalOrderQty));
+        
+        // Recommendation 2 & 3: Floor for declining/slow movers if stock low
+        if ((seasonalMetrics.demandCategory === 'declining' || effectiveMeanSales < 0.5) && currentStock < 2) {
+            orderQuantity = Math.max(1, orderQuantity);
+            adjustmentReason += ' (min 1 due to low stock declining/slow mover)';
+        }
         
         return {
-            orderQuantity: Math.max(0, Math.round(finalOrderQty)),
+            orderQuantity,
             adjustmentReason,
             seasonalAdjustment,
             trendAdjustment,
-            // ENHANCED: Additional debugging info
             effectiveMeanSales,
             baseOrderQty,
             declineMultiplier: seasonalMetrics.recommendedMultiplier
@@ -1720,16 +1758,18 @@ class AdvancedInventoryAnalyzer {
         }
         
         // Detect sharp recent decline
-        const isDecliningSharply = previousAvg > 0 && recentAvg < previousAvg * 0.7; // 30% decline
+        const isDecliningSharply = previousAvg > 0 && recentAvg < previousAvg * 0.5; // <0.5 for strong
         
         // Calculate trend change multiplier
         let trendChangeMultiplier = 1.0;
         if (isDecliningSharply && isDeclinedFromHistorical) {
-            trendChangeMultiplier = 0.5; // Strong reduction for sustained decline
+            trendChangeMultiplier = 0.7; // Adjusted for strong sustained
         } else if (isDecliningSharply) {
-            trendChangeMultiplier = 0.7; // Moderate reduction for recent decline
+            trendChangeMultiplier = 0.7; // Strong recent
         } else if (isDeclinedFromHistorical) {
-            trendChangeMultiplier = 0.8; // Light reduction for historical decline
+            trendChangeMultiplier = 0.85; // Moderate historical
+        } else if (recentAvg > previousAvg * 1.2) { // Trending up
+            trendChangeMultiplier = 1.15; // 15% uplift
         }
         
         // Calculate recent performance ratio for additional context
@@ -1739,10 +1779,7 @@ class AdvancedInventoryAnalyzer {
             isDecliningSharply,
             isDeclinedFromHistorical,
             trendChangeMultiplier,
-            recentPerformanceRatio,
-            recentAvg,
-            previousAvg,
-            historicalAvg
+            recentPerformanceRatio
         };
     }
 

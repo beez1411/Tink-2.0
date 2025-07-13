@@ -90,6 +90,9 @@
         <button id="runCheckOnPlanogramBtn" class="btn btn-primary" disabled>
             Check On Planogram
         </button>
+        <button id="runStockOutPredictionBtn" class="btn btn-stock-out" disabled>
+            Detect Stock-Outs
+        </button>
         
         <!-- Bottom buttons section - separated from main form -->
         <div class="sidebar-bottom-section">
@@ -199,6 +202,34 @@
                     <div class="processing-step" id="step5">
                         <span class="step-icon">✅</span>
                         <span class="step-text">Finalizing suggestions...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock-Out Prediction State -->
+            <div id="stockOutSearchingState" class="modal-state" style="display: none;">
+                <div class="robot-searching-icon">🤖🔍</div>
+                <h2 class="modal-title">Searching for outs...</h2>
+                <div class="processing-steps">
+                    <div class="processing-step" id="search-step1">
+                        <span class="step-icon">📊</span>
+                        <span class="step-text">Loading sales history data...</span>
+                    </div>
+                    <div class="processing-step" id="search-step2">
+                        <span class="step-icon">🔍</span>
+                        <span class="step-text">Analyzing velocity patterns...</span>
+                    </div>
+                    <div class="processing-step" id="search-step3">
+                        <span class="step-icon">📉</span>
+                        <span class="step-text">Detecting suspicious drops...</span>
+                    </div>
+                    <div class="processing-step" id="search-step4">
+                        <span class="step-icon">🎯</span>
+                        <span class="step-text">Calculating confidence scores...</span>
+                    </div>
+                    <div class="processing-step" id="search-step5">
+                        <span class="step-icon">⚠️</span>
+                        <span class="step-text">Identifying potential outs...</span>
                     </div>
                 </div>
             </div>

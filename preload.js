@@ -15,7 +15,9 @@ contextBridge.exposeInMainWorld('api', {
   installDependencies: () => ipcRenderer.invoke('install-dependencies'),
   
   onProcessingUpdate: (callback) => {
-    ipcRenderer.on('processing-update', (event, data) => callback(data));
+    ipcRenderer.on('processing-update', (event, data) => {
+      callback(data);
+    });
   },
   
   onInstallUpdate: (callback) => {
@@ -52,8 +54,11 @@ contextBridge.exposeInMainWorld('api', {
   // DevTools toggle for input field accessibility
   toggleDevTools: () => ipcRenderer.invoke('toggle-devtools'),
 
-  removeAllListeners: (channel) => {
-    ipcRenderer.removeAllListeners(channel);
+  removeAllListeners: () => {
+    ipcRenderer.removeAllListeners('processing-update');
+    ipcRenderer.removeAllListeners('acenet-progress');
+    ipcRenderer.removeAllListeners('acenet-complete');
+    ipcRenderer.removeAllListeners('acenet-error');
   }
 });
 
@@ -69,4 +74,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeAcenetProgressListener: () => {
     ipcRenderer.removeAllListeners('acenet-progress');
   }
+});
+
+// Add export functionality to the existing api object
+contextBridge.exposeInMainWorld('exportAPI', {
+    exportStockOutPredictions: (data) => ipcRenderer.invoke('export-stock-out-predictions', data)
 });

@@ -10,6 +10,7 @@ const fileSize = document.getElementById('fileSize');
 const runSuggestedOrderBtn = document.getElementById('runSuggestedOrderBtn');
 const runCheckAceNetBtn = document.getElementById('runCheckAceNetBtn');
 const runCheckOnPlanogramBtn = document.getElementById('runCheckOnPlanogramBtn');
+const runStockOutPredictionBtn = document.getElementById('runStockOutPredictionBtn');
 const daysThreshold = document.getElementById('daysThreshold');
 const acenetOptions = document.getElementById('acenetOptions');
 const usernameInput = document.getElementById('username');
@@ -33,6 +34,9 @@ let onOrderData = {};
 // Global storage for AceNet results (for Excel export)
 let globalAceNetResults = null;
 let lastCheckType = 'acenet'; // Track the type of the last check performed
+
+// Global storage for stock-out prediction results (for Excel export)
+let globalStockOutResults = null;
 
 // Remember Me functionality
 function loadRememberedCredentials() {
@@ -404,9 +408,38 @@ function showProcessingModal() {
         // Reset modal state to processing
         const processingState = document.getElementById('processingState');
         const completionState = document.getElementById('completionState');
-        if (processingState && completionState) {
+        const stockOutSearchingState = document.getElementById('stockOutSearchingState');
+        
+        if (processingState) {
             processingState.style.display = 'block';
+        }
+        if (completionState) {
             completionState.style.display = 'none';
+        }
+        if (stockOutSearchingState) {
+            stockOutSearchingState.style.display = 'none';
+        }
+    }
+}
+
+function showStockOutProcessingModal() {
+    const robotAnimationContainer = document.getElementById('robotAnimationContainer');
+    if (robotAnimationContainer) {
+        robotAnimationContainer.style.display = 'flex';
+        
+        // Reset modal state to stock-out searching
+        const processingState = document.getElementById('processingState');
+        const completionState = document.getElementById('completionState');
+        const stockOutSearchingState = document.getElementById('stockOutSearchingState');
+        
+        if (processingState) {
+            processingState.style.display = 'none';
+        }
+        if (completionState) {
+            completionState.style.display = 'none';
+        }
+        if (stockOutSearchingState) {
+            stockOutSearchingState.style.display = 'block';
         }
     }
 }
@@ -431,6 +464,7 @@ fileInput.addEventListener('change', async (e) => {
             runSuggestedOrderBtn.disabled = false;
             runCheckAceNetBtn.disabled = false; // Enable AceNet button when file is selected
             runCheckOnPlanogramBtn.disabled = false; // Enable Planogram button when file is selected
+            runStockOutPredictionBtn.disabled = false; // Enable Stock-Out Prediction button when file is selected
         }
     }
 });
@@ -446,6 +480,7 @@ document.querySelector('.file-input-label').addEventListener('click', async (e) 
             runSuggestedOrderBtn.disabled = false;
             runCheckAceNetBtn.disabled = false; // Enable AceNet button when file is selected
             runCheckOnPlanogramBtn.disabled = false; // Enable Planogram button when file is selected
+            runStockOutPredictionBtn.disabled = false; // Enable Stock-Out Prediction button when file is selected
         }
 });
 
@@ -718,6 +753,204 @@ runCheckAceNetBtn.addEventListener('click', async () => {
         window.electronAPI.removeAcenetProgressListener();
     }
 });
+
+// Run Stock-Out Prediction button
+runStockOutPredictionBtn.addEventListener('click', async () => {
+    try {
+        if (!selectedFile) {
+            await showAlert('Please select an inventory file first', 'warning');
+            return;
+        }
+
+        showStockOutProcessingModal();
+        
+        console.log('Starting stock-out prediction analysis...');
+        console.log('On order data being passed:', onOrderData);
+        
+        const result = await window.api.processFile({
+            filePath: selectedFile.path,
+            scriptType: 'stock_out_prediction',
+            onOrderData: onOrderData
+        });
+        
+        if (result.success) {
+            console.log('Stock-out prediction result:', result);
+            
+            // CLEAR ANY EXISTING DATA - Override previous results
+            orderTableBody.innerHTML = '';
+            suggestedOrderResults = {
+                orderData: [],
+                partNumbers: [],
+                hasResults: false
+            };
+            
+            console.log('Cleared existing order data - switching to stock-out prediction mode');
+            
+            // Store results in memory for UI display (use all predictions for part numbers)
+            suggestedOrderResults.orderData = result.predictions || [];
+            suggestedOrderResults.partNumbers = result.predictions ? 
+                result.predictions.map(item => item['Part number'] || '').filter(pn => pn) : [];
+            suggestedOrderResults.hasResults = true;
+            suggestedOrderResults.source = 'stock_out_prediction';
+            suggestedOrderResults.totalCount = result.predictions ? result.predictions.length : 0;
+            suggestedOrderResults.displayedCount = Math.min(200, result.predictions ? result.predictions.length : 0);
+            
+            // Store results globally for Excel export
+            globalStockOutResults = {
+                predictions: result.predictions || [],
+                stats: result.stats || {}
+            };
+            
+            console.log(`Stored ${suggestedOrderResults.partNumbers.length} part numbers from stock-out predictions`);
+            
+            // Check if we have prediction data to display
+            if (result.predictions && result.predictions.length > 0) {
+                console.log(`Found ${result.predictions.length} potential stock-out items - limiting display to top 200 for performance`);
+                
+                // Limit display to top 200 items to prevent UI freeze
+                const maxDisplayItems = 200;
+                const displayPredictions = result.predictions.slice(0, maxDisplayItems);
+                
+                console.log(`Displaying top ${displayPredictions.length} of ${result.predictions.length} predictions`);
+                
+                // Show message about limited display
+                if (result.predictions.length > maxDisplayItems) {
+                    await showAlert(
+                        `Found ${result.predictions.length} potential stock-out items across ${result.stats?.supplierCount || 'multiple'} suppliers.\n\n` +
+                        `Displaying top ${maxDisplayItems} highest priority items for performance.\n\n` +
+                        `All ${result.predictions.length} items will be included in Excel export.`, 
+                        'info', 
+                        'Stock-Out Analysis Results'
+                    );
+                }
+                
+                // Show order display section
+                orderDisplaySection.style.display = 'block';
+        
+                // Make sure the suggested order panel is visible
+                const suggestedOrderPanel = document.getElementById('suggestedOrderPanel');
+                if (suggestedOrderPanel) {
+                    suggestedOrderPanel.style.display = 'flex';
+                    suggestedOrderPanel.classList.add('active');
+                }
+                
+                // Transform stock-out predictions to order format (limited set)
+                const transformedData = displayPredictions.map(item => ({
+                    partNumber: item['Part number'] || '',
+                    sku: item['Part number'] || '',
+                    description: item['Description 1'] || 'No Description',
+                    currentStock: item['Current Stock'] || 0,
+                    suggestedQty: item['Suggested Qty'] || 0,
+                    cost: item['Unit Cost'] || 0,
+                    minOrderQty: item['Min Order Qty'] || 1,
+                    baselineVelocity: item['Baseline Velocity'] || 0,
+                    recentVelocity: item['Recent Velocity'] || 0,
+                    dropPercentage: item['Drop %'] || 0,
+                    confidence: item['Confidence'] || 0,
+                    priorityScore: item['Priority Score'] || 0
+                }));
+                
+                // Populate order table with the transformed data
+                populateStockOutTable(transformedData);
+                
+                // Calculate and display total
+                updateOrderTotal();
+                
+                // Show summary popup with export option (include display count info)
+                const resultWithDisplayInfo = {
+                    ...result,
+                    displayedCount: displayPredictions.length,
+                    totalCount: result.predictions.length
+                };
+                await showStockOutCompletionPopup(resultWithDisplayInfo);
+            } else {
+                await showAlert('No potential stock-out risks detected based on sales patterns.', 'info');
+            }
+            
+            // Hide processing modal
+            hideProcessingModal();
+            
+        } else {
+            throw new Error(result.message || 'Unknown error occurred during stock-out analysis');
+        }
+        
+    } catch (error) {
+        console.error('Stock-Out Prediction Error:', error);
+        await showAlert('Error processing stock-out prediction: ' + (error.message || error.toString()), 'error');
+        hideProcessingModal();
+    }
+});
+
+// Function to populate table with stock-out prediction data
+function populateStockOutTable(stockOutData) {
+    orderTableBody.innerHTML = '';
+    
+    stockOutData.forEach((item, index) => {
+        // Calculate cost and total
+        const cost = item.cost || 0;
+        const suggestedQty = item.suggestedQty || 0;
+        const total = cost * suggestedQty;
+        
+        // Get on order quantity for this SKU
+        const sku = item.partNumber || item.sku || '';
+        const onOrderQty = getOnOrderQuantity(sku);
+        
+        // Get minimum order quantity for this item
+        const minOrderQty = item.minOrderQty || 1;
+        
+        // Create confidence badge
+        const confidence = item.confidence || 0;
+        const confidenceClass = confidence >= 70 ? 'high' : confidence >= 50 ? 'medium' : 'low';
+        const confidenceBadge = `<span class="confidence-badge confidence-${confidenceClass}" title="Confidence: ${confidence}%">${confidence}%</span>`;
+        
+        // Create velocity info
+        const velocityInfo = `
+            <div title="Baseline: ${item.baselineVelocity?.toFixed(2) || 0}/week, Recent: ${item.recentVelocity?.toFixed(2) || 0}/week">
+                Drop: ${item.dropPercentage?.toFixed(1) || 0}%
+            </div>
+        `;
+        
+        // Build row with stock-out specific information
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td title="${sku}">${sku}</td>
+            <td title="${item.description || 'No Description'}">
+                ${item.description || 'No Description'}
+                <br><small style="color: #e94f37; font-size: 10px;">${confidenceBadge} ${velocityInfo}</small>
+            </td>
+            <td>${item.currentStock != null ? item.currentStock : ''}</td>
+            <td>${onOrderQty}</td>
+            <td class="quantity-cell">
+                <div class="quantity-controls">
+                    <button class="qty-btn minus-btn" onclick="adjustQuantity(${index}, -${minOrderQty})" title="Decrease by ${minOrderQty}">-</button>
+                    <input type="number" value="${suggestedQty}" min="0" class="qty-input" data-index="${index}" data-cost="${cost}" data-min-order-qty="${minOrderQty}" onchange="updateRowTotal(${index})" title="Min Order Qty: ${minOrderQty}">
+                    <button class="qty-btn plus-btn" onclick="adjustQuantity(${index}, ${minOrderQty})" title="Increase by ${minOrderQty}">+</button>
+                </div>
+            </td>
+            <td class="cost-cell">
+                <div>$${cost.toFixed(2)}</div>
+                <small style="color: #6c757d; font-size: 10px;">MOQ: ${minOrderQty}</small>
+            </td>
+            <td class="total-cell" id="total-${index}">$${total.toFixed(2)}</td>
+            <td><button class="btn btn-danger btn-sm btn-icon" onclick="removeOrderItem(${index})" title="Delete item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3,6 5,6 21,6"></polyline>
+                    <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+            </td>
+        `;
+        orderTableBody.appendChild(row);
+    });
+    
+    // Add event listeners to quantity inputs
+    document.querySelectorAll('.qty-input').forEach(input => {
+        input.addEventListener('change', updateOrderTotal);
+    });
+    updateOrderTotal();
+}
 
 // Function to get current part numbers from the order display table
 function getCurrentOrderPartNumbers() {
@@ -2370,5 +2603,116 @@ runCheckOnPlanogramBtn.addEventListener('click', async () => {
 });
 
 // Helper functions
+
+// Function to show stock-out completion popup with export option
+function showStockOutCompletionPopup(result) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'popup-overlay';
+        
+        const popup = document.createElement('div');
+        popup.className = 'popup-content alert';
+        
+        const stats = result.stats || {};
+        
+        popup.innerHTML = `
+            <div class="popup-header">
+                <div class="popup-icon success">🎯</div>
+                <h3 class="popup-title">Stock-Out Analysis Complete!</h3>
+            </div>
+            <div class="popup-body">
+                <div class="popup-summary">
+                    <div class="popup-summary-item">
+                        <span class="popup-summary-label">Items with Stock-Out Risk:</span>
+                        <span class="popup-summary-value">${result.predictions.length}</span>
+                    </div>
+                    <div class="popup-summary-item">
+                        <span class="popup-summary-label">High Confidence Predictions:</span>
+                        <span class="popup-summary-value">${stats.high_confidence || 0}</span>
+                    </div>
+                    <div class="popup-summary-item">
+                        <span class="popup-summary-label">Medium Confidence Predictions:</span>
+                        <span class="popup-summary-value">${stats.medium_confidence || 0}</span>
+                    </div>
+                    <div class="popup-summary-item">
+                        <span class="popup-summary-label">Low Confidence Predictions:</span>
+                        <span class="popup-summary-value">${stats.low_confidence || 0}</span>
+                    </div>
+                    <div class="popup-summary-item">
+                        <span class="popup-summary-label">Average Confidence:</span>
+                        <span class="popup-summary-value">${stats.average_confidence ? stats.average_confidence.toFixed(1) + '%' : '0%'}</span>
+                    </div>
+                </div>
+                <p class="popup-message">
+                    Results are displayed in the table below. You can review and adjust quantities, 
+                    then export to Excel if needed.
+                </p>
+            </div>
+            <div class="popup-actions">
+                <button class="popup-btn secondary" id="closeStockOutPopup">Close</button>
+                <button class="popup-btn success" id="exportStockOutBtn">Export to Excel</button>
+            </div>
+        `;
+        
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        
+        // Handle close button
+        const closeBtn = popup.querySelector('#closeStockOutPopup');
+        closeBtn.addEventListener('click', () => {
+            document.body.removeChild(overlay);
+            resolve();
+        });
+        
+        // Handle export button
+        const exportBtn = popup.querySelector('#exportStockOutBtn');
+        exportBtn.addEventListener('click', async () => {
+            try {
+                exportBtn.disabled = true;
+                exportBtn.textContent = 'Exporting...';
+                
+                if (globalStockOutResults) {
+                    const exportResult = await window.exportAPI.exportStockOutPredictions(globalStockOutResults);
+                    
+                    if (exportResult.success) {
+                        await showAlert(`Excel file exported successfully!\n\nSaved to: ${exportResult.filename}`, 'success');
+                    } else {
+                        await showAlert(`Export failed: ${exportResult.error}`, 'error');
+                    }
+                } else {
+                    await showAlert('No stock-out results to export', 'warning');
+                }
+                
+                exportBtn.disabled = false;
+                exportBtn.textContent = 'Export to Excel';
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                await showAlert(`Export failed: ${error.message}`, 'error');
+                exportBtn.disabled = false;
+                exportBtn.textContent = 'Export to Excel';
+            }
+        });
+        
+        // Handle escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                document.body.removeChild(overlay);
+                document.removeEventListener('keydown', handleEscape);
+                resolve();
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        
+        // Handle overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+                document.removeEventListener('keydown', handleEscape);
+                resolve();
+            }
+        });
+    });
+}
 
 

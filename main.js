@@ -55,7 +55,11 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      // Fix cache issues by disabling certain features
+      webSecurity: false,
+      enableRemoteModule: false,
+      allowRunningInsecureContent: true
     },
     icon: path.join(__dirname, 'assets', 'icon.ico')
   });
@@ -170,6 +174,12 @@ function createMenu() {
 }
 
 app.whenReady().then(() => {
+  // Fix cache issues by setting cache path and disabling hardware acceleration
+  app.setPath('userData', path.join(os.homedir(), '.tink2-cache'));
+  app.commandLine.appendSwitch('--disable-gpu');
+  app.commandLine.appendSwitch('--disable-gpu-sandbox');
+  app.commandLine.appendSwitch('--disable-software-rasterizer');
+  
   createWindow();
   createMenu();
 
@@ -430,7 +440,11 @@ ipcMain.handle('process-file', async (event, options) => {
       partnumberFile: result.partnumber_file || null,
       orderData: result.orderData || [],
       processed_items: result.processed_items || 0,
-      debug: result.debug || {}
+      debug: result.debug || {},
+      // Include stock-out prediction results
+      predictions: result.predictions || [],
+      stats: result.stats || {},
+      canExportToExcel: result.canExportToExcel || false
     };
 
   } catch (error) {
@@ -491,6 +505,100 @@ async function runWrapperDirectly(config, progressCallback) {
     } else {
       throw new Error('No output generated');
     }
+    
+  } else if (scriptType === 'stock_out_prediction') {
+    progressCallback({
+      type: 'log',
+      message: 'Analyzing sales patterns for stock-out prediction (JavaScript version)...'
+    });
+    
+    const { StockOutAnalyzer } = require('./js/stock-out-analyzer');
+    const outputFile = config.output_file;
+    
+    // Create config file for JavaScript analyzer
+    const configData = {
+      input_file: config.input_file,
+      onOrderData: config.onOrderData || {},
+      output_file: outputFile
+    };
+    
+    const configFile = path.join(__dirname, 'config.json');
+    fs.writeFileSync(configFile, JSON.stringify(configData, null, 2));
+    
+    try {
+      // Use the JavaScript analyzer directly
+      const analyzer = new StockOutAnalyzer(configFile);
+      
+      // Override console.log to capture progress messages
+      const originalLog = console.log;
+      console.log = (message) => {
+        originalLog(message);
+        if (typeof message === 'string' && 
+            (message.includes('Processing chunk') || message.includes('Loading') || message.includes('Found'))) {
+          progressCallback({
+            type: 'log',
+            message: message
+          });
+        }
+      };
+      
+      const results = await analyzer.runAnalysis();
+      
+      // Restore original console.log
+      console.log = originalLog;
+      
+      // Clean up config file
+      try {
+        if (fs.existsSync(configFile)) {
+          fs.unlinkSync(configFile);
+        }
+      } catch (cleanupError) {
+        console.error('Error cleaning up config file:', cleanupError);
+      }
+      
+      if (results.success) {
+        const predictions = results.predictions || [];
+        const stats = results.summary || {};
+        
+        // Transform predictions to match expected format
+        const transformedPredictions = predictions.map(pred => ({
+          'Part number': pred.partNumber,
+          'Description 1': pred.description,
+          'Current Stock': pred.currentStock,
+          'Baseline Velocity': pred.baselineVelocity,
+          'Recent Velocity': pred.recentVelocity,
+          'Drop %': pred.dropPercentage,
+          'Confidence': pred.confidence,
+          'Priority Score': pred.priorityScore,
+          'Suggested Qty': pred.suggestedQty,
+          'Unit Cost': pred.unitCost,
+          'Min Order Qty': pred.minOrderQty,
+          'Supplier': pred.supplier
+        }));
+        
+        progressCallback({
+          type: 'log',
+          message: `Analysis complete: Found ${transformedPredictions.length} items with potential stock-out risk across ${stats.supplierCount || 'multiple'} suppliers`
+        });
+        
+        result = {
+          success: true,
+          output: `Stock-out analysis complete. Found ${transformedPredictions.length} potential stock-out items.`,
+          predictions: transformedPredictions,
+          stats: stats,
+          processed_items: transformedPredictions.length,
+          // Add a flag to indicate we can export to Excel later
+          canExportToExcel: true
+        };
+      } else {
+        throw new Error(results.error || 'Analysis failed');
+      }
+      
+    } catch (analysisError) {
+      console.error('Error running stock-out analysis:', analysisError);
+      throw new Error(`Failed to run analysis: ${analysisError.message}`);
+    }
+
     
   } else if (scriptType === 'check_acenet_direct') {
     throw new Error('Direct AceNet processing not supported in this context');
@@ -1192,5 +1300,112 @@ ipcMain.handle('process-part-number-file', async (event, filePath) => {
       success: false,
       error: error.message
     };
+  }
+});
+
+// New function to export stock-out predictions to Excel
+async function exportStockOutPredictionsToExcel(predictions, stats) {
+  try {
+    const ExcelJS = require('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    
+    // Create predictions worksheet
+    const worksheet = workbook.addWorksheet('Stock Out Predictions');
+    
+    // Define headers
+    const headers = [
+      'Part number', 'Description 1', 'Current Stock', 'Baseline Velocity', 'Recent Velocity',
+      'Drop %', 'Confidence', 'Priority Score', 'Suggested Qty', 'Unit Cost', 'Min Order Qty', 'Supplier'
+    ];
+    
+    // Add headers
+    worksheet.addRow(headers);
+    
+    // Style headers
+    const headerRow = worksheet.getRow(1);
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
+      cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    });
+    
+    // Add data rows
+    predictions.forEach(prediction => {
+      const row = [
+        prediction['Part number'],
+        prediction['Description 1'],
+        prediction['Current Stock'],
+        prediction['Baseline Velocity'],
+        prediction['Recent Velocity'],
+        prediction['Drop %'],
+        prediction['Confidence'],
+        prediction['Priority Score'],
+        prediction['Suggested Qty'],
+        prediction['Unit Cost'],
+        prediction['Min Order Qty'],
+        prediction['Supplier']
+      ];
+      worksheet.addRow(row);
+    });
+    
+    // Auto-fit columns
+    worksheet.columns.forEach((column) => {
+      column.width = 15;
+    });
+    
+    // Create summary worksheet
+    const summaryWorksheet = workbook.addWorksheet('Summary');
+    summaryWorksheet.addRow(['Metric', 'Value']);
+    
+    // Style summary headers
+    const summaryHeaderRow = summaryWorksheet.getRow(1);
+    summaryHeaderRow.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
+    });
+    
+    // Add summary data
+    const summaryData = [
+      ['Total Items with Stock Out Risk', predictions.length],
+      ['High Confidence Predictions (≥70%)', stats.high_confidence || 0],
+      ['Medium Confidence Predictions (50-69%)', stats.medium_confidence || 0],
+      ['Low Confidence Predictions (30-49%)', stats.low_confidence || 0],
+      ['Average Confidence Score', stats.average_confidence ? `${stats.average_confidence.toFixed(1)}%` : '0%'],
+      ['Total Suggested Order Value', stats.total_suggested_value ? `$${stats.total_suggested_value.toFixed(2)}` : '$0.00']
+    ];
+    
+    summaryData.forEach(row => summaryWorksheet.addRow(row));
+    
+    // Auto-fit summary columns
+    summaryWorksheet.columns.forEach((column) => {
+      column.width = 30;
+    });
+    
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().split('T')[0];
+    const desktopPath = path.join(require('os').homedir(), 'Desktop');
+    const filename = path.join(desktopPath, `Stock Out Predictions -- ${timestamp}.xlsx`);
+    
+    // Write file
+    await workbook.xlsx.writeFile(filename);
+    
+    console.log(`Excel file saved to: ${filename}`);
+    return filename;
+    
+  } catch (error) {
+    console.error('Error exporting to Excel:', error);
+    throw error;
+  }
+}
+
+// Add new IPC handler for Excel export
+ipcMain.handle('export-stock-out-predictions', async (event, data) => {
+  try {
+    const { predictions, stats } = data;
+    const filename = await exportStockOutPredictionsToExcel(predictions, stats);
+    return { success: true, filename };
+  } catch (error) {
+    console.error('Error exporting stock-out predictions:', error);
+    return { success: false, error: error.message };
   }
 }); 
