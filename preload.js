@@ -59,10 +59,75 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.removeAllListeners('acenet-progress');
     ipcRenderer.removeAllListeners('acenet-complete');
     ipcRenderer.removeAllListeners('acenet-error');
+  },
+
+  // Phantom inventory window opener removed - now integrated into main UI
+  
+  // Manual phantom initialization
+  forceInitializePhantom: () => ipcRenderer.invoke('phantom-force-initialize'),
+  
+  // Generic invoke function for IPC calls
+  invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+  
+  // API Configuration functions
+  getApiConfigSummary: () => ipcRenderer.invoke('get-api-config-summary'),
+  getApiConfig: () => ipcRenderer.invoke('get-api-config'),
+  updateApiConfig: (configData) => ipcRenderer.invoke('update-api-config', configData),
+  testApiConnection: () => ipcRenderer.invoke('test-api-connection'),
+  resetApiConfig: () => ipcRenderer.invoke('reset-api-config'),
+  getApiInventoryData: (options) => ipcRenderer.invoke('get-api-inventory-data', options),
+  refreshApiInventory: () => ipcRenderer.invoke('refresh-api-inventory'),
+  setApiEnabled: (enabled) => ipcRenderer.invoke('set-api-enabled', enabled),
+  validateApiConfig: (config) => ipcRenderer.invoke('validate-api-config', config),
+  
+  // API inventory progress listener
+  onApiInventoryProgress: (callback) => {
+    ipcRenderer.on('api-inventory-progress', (event, data) => callback(data));
+  },
+  
+  removeApiInventoryProgressListener: () => {
+    ipcRenderer.removeAllListeners('api-inventory-progress');
+  },
+  
+  // Menu action listeners
+  onOpenApiConfiguration: (callback) => {
+    ipcRenderer.on('open-api-configuration', callback);
+  },
+  
+  onToggleApiMode: (callback) => {
+    ipcRenderer.on('toggle-api-mode', callback);
+  },
+  
+  onRefreshApiData: (callback) => {
+    ipcRenderer.on('refresh-api-data', callback);
+  },
+  
+  onTestApiConnection: (callback) => {
+    ipcRenderer.on('test-api-connection', callback);
+  },
+  
+  onFixInputFields: (callback) => {
+    ipcRenderer.on('fix-input-fields', callback);
+  },
+  
+  // Phantom inventory tools listeners
+  onPhantomShowStats: (callback) => {
+    ipcRenderer.on('phantom-show-stats', callback);
+  },
+  
+  onPhantomSyncNetwork: (callback) => {
+    ipcRenderer.on('phantom-sync-network', callback);
+  },
+  
+  onPhantomExportReports: (callback) => {
+    ipcRenderer.on('phantom-export-reports', callback);
   }
 });
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  // Generic invoke method for IPC calls
+  invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+  
   runPython: (script, params) => ipcRenderer.invoke('run-python', { script, params }),
   saveTempFile: (file) => ipcRenderer.invoke('save-temp-file', file),
   acenetPause: () => ipcRenderer.invoke('acenet-pause'),

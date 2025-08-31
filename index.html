@@ -8,6 +8,7 @@
         content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/phantom-styles.css">
     <script src="renderer.js" defer></script>
     <link rel="icon" type="image/x-icon" href="assets/icon.ico">
 </head>
@@ -28,151 +29,507 @@
         </div>
     </div>
 
-    <div class="sidebar">
-        <div class="file-input-wrapper">
-            <input type="file" id="fileInput" accept=".txt" />
-            <label for="fileInput" class="file-input-label">
-                Import Inventory
-            </label>
-        </div>
-        <div id="fileInfo" class="file-info" style="display: none;">
-            <strong>Selected file:</strong> <span id="fileName"></span><br>
-            <strong>Size:</strong> <span id="fileSize"></span>
-        </div>
-        <div class="input-group">
-            <label for="daysThreshold">Inventory Stock Day:</label>
-            <input type="number" id="daysThreshold" value="14" min="1" max="365" />
-        </div>
-        <div class="input-group">
-            <label class="checkbox-label">
-                <input type="checkbox" id="deleteOnOrder" />
-                <span class="checkmark"></span>
-                Delete On Order
-            </label>
-        </div>
-        <button id="runSuggestedOrderBtn" class="btn btn-primary" disabled>
-            Run Suggested Order
-        </button>
-        <div id="acenetOptions">
-            <div class="input-group">
-                <label for="username">AceNet Username:</label>
-                <input type="text" id="username" placeholder="Enter username" autocomplete="off" tabindex="1" style="pointer-events: auto !important; user-select: text !important;" />
+    <!-- Main Application Container -->
+    <div class="app-container">
+        <!-- Top Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <!-- No logo here -->
             </div>
-            <div class="input-group">
-                <label for="password">AceNet Password:</label>
-                <input type="password" id="password" autocomplete="off" placeholder="Enter password" aria-describedby="password-requirements" tabindex="2" style="pointer-events: auto !important; user-select: text !important;" />
-                <small id="password-requirements" class="input-help">Password must be secure</small>
-            </div>
-            <div class="input-group">
-                <label for="storeNumber">Store Number:</label>
-                <div class="select-wrapper">
-                    <select id="storeNumber">
-                        <option value="" selected disabled>Select a store</option>
-                        <option value="16719">16719</option>
-                        <option value="17521">17521</option>
-                        <option value="18179">18179</option>
-                        <option value="18181">18181</option>
-                    </select>
-                </div>
-            </div>
-            <div class="input-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="rememberMe" />
-                    <span class="checkmark"></span>
-                    Remember Me
-                </label>
+            
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-button" id="orderTab" data-tab="order">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="stroke-width: 2;">
+                        <circle cx="9" cy="21" r="1" fill="#4CAF50" stroke="#4CAF50"/>
+                        <circle cx="20" cy="21" r="1" fill="#4CAF50" stroke="#4CAF50"/>
+                        <path d="m1 1 4 4 12.68 2L19 8H7L5.5 3H3" stroke="#FF9800" stroke-width="2" fill="none"/>
+                        <path d="M7 8v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8" stroke="#2196F3" stroke-width="2" fill="none"/>
+                    </svg>
+                    <span>Order</span>
+                </button>
+                <button class="tab-button" id="outsTab" data-tab="outs">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="stroke-width: 2;">
+                        <circle cx="11" cy="11" r="8" stroke="#2196F3" fill="#E3F2FD" stroke-width="2"/>
+                        <path d="m21 21-4.35-4.35" stroke="#FF9800" stroke-width="3" stroke-linecap="round"/>
+                        <circle cx="11" cy="11" r="3" fill="#FFC107" stroke="#FF9800" stroke-width="1"/>
+                    </svg>
+                    <span>Outs</span>
+                </button>
+                <button class="tab-button" id="reportsTab" data-tab="reports">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="stroke-width: 2;">
+                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="#9C27B0" fill="#F3E5F5" stroke-width="2"/>
+                        <path d="M9 8h6M9 12h6M9 16h3" stroke="#673AB7" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="18" cy="6" r="2" fill="#FF4081" stroke="#E91E63" stroke-width="1"/>
+                    </svg>
+                    <span>Reports</span>
+                </button>
             </div>
 
+            <div class="toolbar-right">
+                <!-- Settings button removed - API functionality moved to Tools menu -->
+            </div>
         </div>
-        <button id="runCheckAceNetBtn" class="btn btn-primary" disabled>
-            Check AceNet
-        </button>
-        <button id="runCheckOnPlanogramBtn" class="btn btn-primary" disabled>
-            Check On Planogram
-        </button>
-        <button id="runStockOutPredictionBtn" class="btn btn-stock-out" disabled>
-            Detect Stock-Outs
-        </button>
-        
-        <!-- Bottom buttons section - separated from main form -->
-        <div class="sidebar-bottom-section">
-            <button id="fixInputFieldsBtn" class="btn btn-warning">
-                Fix Input Fields
-            </button>
-            <button id="uploadPartNumberBtn" class="btn btn-primary">
-                Upload Part Number File
-            </button>
-        </div>
-        <input type="file" id="acenetPartFile" accept=".xlsx,.xls,.txt" style="display: none;" />
-    </div>
-    <div class="main-content">
-        <div class="dual-output-container">
-            <!-- Suggested Order Panel -->
-            <div class="output-panel" id="suggestedOrderPanel">
+
+        <!-- Main Content Area -->
+        <div class="main-workspace">
+            <!-- Welcome Screen (Default View) -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-content">
+                    <div class="tink-logo-large">
+                        <img src="assets/icon.ico" alt="Tink" class="logo-large-centered">
+                        <p class="welcome-subtitle">Advanced Inventory Management & Analytics</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Tab Content -->
+            <div class="tab-content" id="orderContent" style="display: none;">
+                <!-- Order Sidebar -->
+                <div class="sidebar">
+                    <div class="sidebar-section">
+                        <h4>Import Inventory</h4>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="fileInput" accept=".txt" />
+                            <label for="fileInput" class="file-input-label">
+                                Import Inventory
+                            </label>
+                        </div>
+                        <div id="fileInfo" class="file-info" style="display: none;">
+                            <strong>Selected file:</strong> <span id="fileName"></span><br>
+                            <strong>Size:</strong> <span id="fileSize"></span>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>Order Settings</h4>
+                        <div class="input-group">
+                            <label for="daysThreshold">Inventory Stock Day:</label>
+                            <input type="number" id="daysThreshold" value="14" min="1" max="365" />
+                        </div>
+                        <div class="input-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="deleteOnOrder" />
+                                <span class="checkmark"></span>
+                                Delete On Order
+                            </label>
+                        </div>
+                        <button id="runSuggestedOrderBtn" class="btn btn-success" disabled>
+                            Run Suggested Order
+                        </button>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>AceNet Check</h4>
+                        <div id="acenetOptions">
+                            <div class="input-group">
+                                <label for="username">AceNet Username:</label>
+                                <input type="text" id="username" placeholder="Enter username" autocomplete="off" tabindex="1" />
+                            </div>
+                            <div class="input-group">
+                                <label for="password">AceNet Password:</label>
+                                <input type="password" id="password" autocomplete="off" placeholder="Enter password" tabindex="2" />
+                            </div>
+                            <div class="input-group">
+                                <label for="storeNumber">Store Number:</label>
+                                <div class="select-wrapper">
+                                    <select id="storeNumber">
+                                        <option value="" selected disabled>Select a store</option>
+                                        <option value="16719">16719</option>
+                                        <option value="17521">17521</option>
+                                        <option value="18179">18179</option>
+                                        <option value="18181">18181</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="rememberMe" />
+                                    <span class="checkmark"></span>
+                                    Remember Me
+                                </label>
+                            </div>
+                        </div>
+                        <button id="runCheckAceNetBtn" class="btn btn-warning" disabled>
+                            Check AceNet
+                        </button>
+                        <button id="runCheckOnPlanogramBtn" class="btn btn-purple" disabled>
+                            Check On Planogram
+                        </button>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h4>Part Numbers</h4>
+                        <button id="uploadPartNumberBtn" class="btn btn-teal">
+                            Upload Part Number File
+                        </button>
+                        <input type="file" id="acenetPartFile" accept=".xlsx,.xls,.txt" style="display: none;" />
+                    </div>
+                </div>
+
+                <!-- Order Main Content -->
+                <div class="main-content">
+                    <div class="dual-output-container">
+                        <!-- Suggested Order Panel -->
+                        <div class="output-panel" id="suggestedOrderPanel">
                             <div id="orderDisplaySection" class="order-display-section" style="display: none;">
-                <h2 class="section-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    Suggested Order
-                </h2>
-            <div class="order-controls">
-                <button id="addItemBtn" class="btn btn-secondary">Add Item</button>
-                <button id="saveOnOrderBtn" class="btn btn-success">Save On Order</button>
-                <button id="saveToPOBtn" class="btn btn-primary">Save to PO</button>
-            </div>
-            <div class="order-summary">
-                <div class="order-total">
-                    <strong>Order Total: <span id="orderTotalAmount">$0.00</span></strong>
+                                <h2 class="section-title">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                    Suggested Order
+                                </h2>
+                                <div class="order-controls">
+                                    <button id="addItemBtn" class="btn btn-secondary">Add Item</button>
+                                    <button id="saveOnOrderBtn" class="btn btn-success">Save On Order</button>
+                                    <button id="saveToPOBtn" class="btn btn-primary">Save to PO</button>
+                                    <button id="clearOrderBtn" class="btn btn-warning" onclick="clearOrderData()">
+                                        <span class="btn-icon">🗑️</span> Clear Order
+                                    </button>
+                                </div>
+                                <div class="order-summary">
+                                    <div class="order-total">
+                                        <strong>Order Total: <span id="orderTotalAmount">$0.00</span></strong>
+                                    </div>
+                                </div>
+                                <div class="order-table-container">
+                                    <table id="orderTable" class="order-table">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>SKU</th>
+                                                <th>Description</th>
+                                                <th>SOH</th>
+                                                <th>On Order</th>
+                                                <th style="text-align: center;">Suggested Qty</th>
+                                                <th>COST/MOQ</th>
+                                                <th>Total</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="orderTableBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- AceNet Results Panel -->
+                        <div class="output-panel" id="acenetResultsPanel">
+                            <div id="acenetResultsSection" class="acenet-results-section" style="display: none;">
+                                <h2 class="section-title collapsible" id="acenetResultsToggle">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    AceNet Check Results
+                                    <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </h2>
+                                <div class="collapsible-content" id="acenetCollapsibleContent">
+                                    <div class="acenet-results-header">
+                                        <button id="printAcenetResultsBtn" class="btn btn-secondary">Print Results</button>
+                                        <button id="openExcelAcenetResultsBtn" class="btn btn-primary">Open in Excel</button>
+                                    </div>
+                                    <div id="acenetResultsContent" class="results-content">
+                                        <!-- Results will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="order-table-container">
-                <table id="orderTable" class="order-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>SKU</th>
-                            <th>Description</th>
-                            <th>SOH</th>
-                            <th>On Order</th>
-                            <th style="text-align: center;">Suggested Qty</th>
-                            <th>Cost/MOQ</th>
-                            <th>Total</th>
-                            <th>Delete</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orderTableBody">
-                    </tbody>
-                </table>
             </div>
 
-            </div>
-        </div>
-        
-        <!-- AceNet Results Panel -->
-        <div class="output-panel" id="acenetResultsPanel">
-            <div id="acenetResultsSection" class="acenet-results-section" style="display: none;">
-                <h2 class="section-title collapsible" id="acenetResultsToggle">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    AceNet Check Results
-                    <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </h2>
-                <div class="collapsible-content" id="acenetCollapsibleContent">
-                    <div class="acenet-results-header">
-                        <button id="printAcenetResultsBtn" class="btn btn-secondary">Print Results</button>
-                        <button id="openExcelAcenetResultsBtn" class="btn btn-primary">Open in Excel</button>
+            <!-- Outs Tab Content -->
+            <div class="tab-content" id="outsContent" style="display: none;">
+                <!-- Full Width Phantom Inventory Content -->
+                <div class="phantom-main-content">
+                    <div class="phantom-content">
+                        <!-- Phantom Results Container - now shown by default -->
+                        <div class="phantom-results" id="phantomResults">
+                            <!-- Unified interface will be inserted here -->
+                        </div>
+                        
+                        <!-- Hidden file input for inventory import -->
+                        <input type="file" id="phantomFileInput" accept=".txt" style="display: none;" />
+                        
+                        <!-- Legacy elements for compatibility -->
+                        <div style="display: none;">
+                            <select id="storeSelect">
+                                <option value="16719">16719 - Fairview</option>
+                                <option value="17521">17521 - Eagle</option>
+                                <option value="18179">18179 - Broadway</option>
+                                <option value="18181">18181 - State</option>
+                            </select>
+                            <button id="runPhantomInventoryBtn"></button>
+                            <button id="verifySelectedBtn"></button>
+                            <button id="exportPhantomResultsBtn"></button>
+                            <input type="checkbox" id="selectAllPhantoms" />
+                        </div>
                     </div>
-                    <div id="acenetResultsContent" class="results-content">
-                        <!-- Results will be populated here -->
+                </div>
+            </div>
+
+            <!-- Reports Tab Content -->
+            <div class="tab-content" id="reportsContent" style="display: none;">
+                <div class="reports-main-content">
+                    <!-- What did Tink Learn Section -->
+                    <div class="learning-insights-section">
+                        <h2 class="section-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="stroke-width: 2;">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#4CAF50" fill="#E8F5E8"/>
+                                <circle cx="12" cy="12" r="3" fill="#FFC107" stroke="#FF9800" stroke-width="1"/>
+                            </svg>
+                            What did Tink Learn?
+                        </h2>
+                        <p class="section-subtitle">See how your data is helping Tink's algorithm improve and become smarter over time</p>
+                        
+                        <div class="learning-grid">
+                            <!-- Seasonal Intelligence Card -->
+                            <div class="learning-card">
+                                <div class="learning-card-header">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <circle cx="12" cy="12" r="4" stroke="#FF9800" fill="#FFF3E0"/>
+                                        <path d="m12 2 3 6 6-3-3 6 3 6-6-3-3 6-3-6-6 3 3-6-3-6 6 3z" stroke="#FF6F00" stroke-width="1.5"/>
+                                    </svg>
+                                    <h3>Seasonal Intelligence</h3>
+                                </div>
+                                <div class="learning-content" id="seasonalLearning">
+                                    <div class="learning-stat">
+                                        <span class="stat-number" id="seasonalItemsCount">-</span>
+                                        <span class="stat-label">seasonal items detected</span>
+                                    </div>
+                                    <div class="learning-stat">
+                                        <span class="stat-number" id="highVolatilityCount">-</span>
+                                        <span class="stat-label">high-volatility items identified</span>
+                                    </div>
+                                    <div class="learning-progress">
+                                        <div class="progress-item">
+                                            <span>Pre-peak adjustments</span>
+                                            <span class="progress-value" id="prePeakAdjustments">-</span>
+                                        </div>
+                                        <div class="progress-item">
+                                            <span>Enhanced safety stock</span>
+                                            <span class="progress-value" id="safetyStockApplications">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Trend Analysis Card -->
+                            <div class="learning-card">
+                                <div class="learning-card-header">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M3 3v18h18" stroke="#2196F3" stroke-width="2"/>
+                                        <path d="m7 12 4-4 4 4 4-4" stroke="#4CAF50" stroke-width="2" fill="none"/>
+                                        <circle cx="7" cy="12" r="1.5" fill="#FF4081"/>
+                                        <circle cx="11" cy="8" r="1.5" fill="#FF4081"/>
+                                        <circle cx="15" cy="12" r="1.5" fill="#FF4081"/>
+                                        <circle cx="19" cy="8" r="1.5" fill="#FF4081"/>
+                                    </svg>
+                                    <h3>Trend Recognition</h3>
+                                </div>
+                                <div class="learning-content" id="trendLearning">
+                                    <div class="trend-categories">
+                                        <div class="trend-item trending-up">
+                                            <span class="trend-icon">↗️</span>
+                                            <span class="trend-count" id="trendingUpCount">-</span>
+                                            <span class="trend-label">trending up</span>
+                                        </div>
+                                        <div class="trend-item trending-down">
+                                            <span class="trend-icon">↘️</span>
+                                            <span class="trend-count" id="trendingDownCount">-</span>
+                                            <span class="trend-label">trending down</span>
+                                        </div>
+                                        <div class="trend-item declining">
+                                            <span class="trend-icon">📉</span>
+                                            <span class="trend-count" id="decliningCount">-</span>
+                                            <span class="trend-label">declining items</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Data Quality Card -->
+                            <div class="learning-card">
+                                <div class="learning-card-header">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#4CAF50" fill="#E8F5E8"/>
+                                        <rect x="9" y="9" width="6" height="6" rx="1" stroke="#2196F3" fill="#E3F2FD"/>
+                                    </svg>
+                                    <h3>Data Quality Insights</h3>
+                                </div>
+                                <div class="learning-content" id="dataQualityLearning">
+                                    <div class="quality-metrics">
+                                        <div class="quality-item">
+                                            <span class="quality-icon">⚠️</span>
+                                            <span class="quality-count" id="dataIssuesCount">-</span>
+                                            <span class="quality-label">data quality issues found</span>
+                                        </div>
+                                        <div class="quality-item">
+                                            <span class="quality-icon">🔧</span>
+                                            <span class="quality-count" id="correctionsApplied">-</span>
+                                            <span class="quality-label">automatic corrections applied</span>
+                                        </div>
+                                    </div>
+                                    <div class="quality-improvements" id="qualityImprovements">
+                                        <!-- Dynamic quality improvement messages -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Manager Feedback Card -->
+                            <div class="learning-card">
+                                <div class="learning-card-header">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="#FF9800" fill="#FFF3E0"/>
+                                    </svg>
+                                    <h3>Manager Feedback</h3>
+                                </div>
+                                <div class="learning-content" id="managerFeedbackLearning">
+                                    <div class="feedback-metrics">
+                                        <div class="feedback-item">
+                                            <span class="feedback-icon">💬</span>
+                                            <span class="feedback-count" id="totalFeedbackCount">0</span>
+                                            <span class="feedback-label">feedback submissions</span>
+                                        </div>
+                                        <div class="feedback-item">
+                                            <span class="feedback-icon">📈</span>
+                                            <span class="feedback-count" id="improvementCount">0</span>
+                                            <span class="feedback-label">recommendations improved</span>
+                                        </div>
+                                    </div>
+                                    <div class="feedback-breakdown" id="feedbackBreakdown">
+                                        <div class="feedback-type">
+                                            <span class="feedback-type-icon">❌</span>
+                                            <span class="feedback-type-count" id="notNeededCount">0</span>
+                                            <span class="feedback-type-label">not needed</span>
+                                        </div>
+                                        <div class="feedback-type">
+                                            <span class="feedback-type-icon">📉</span>
+                                            <span class="feedback-type-count" id="tooMuchCount">0</span>
+                                            <span class="feedback-type-label">too much</span>
+                                        </div>
+                                        <div class="feedback-type">
+                                            <span class="feedback-type-icon">📈</span>
+                                            <span class="feedback-type-count" id="notEnoughCount">0</span>
+                                            <span class="feedback-type-label">not enough</span>
+                                        </div>
+                                    </div>
+                                    <div class="feedback-insights" id="feedbackInsights">
+                                        <!-- Dynamic feedback insights -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Forecast Accuracy Card -->
+                            <div class="learning-card">
+                                <div class="learning-card-header">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z" stroke="#9C27B0" fill="#F3E5F5"/>
+                                        <path d="M9 12l2 2 4-4" stroke="#673AB7" stroke-width="2"/>
+                                    </svg>
+                                    <h3>Forecast Accuracy</h3>
+                                </div>
+                                <div class="learning-content" id="forecastAccuracyLearning">
+                                    <div class="accuracy-overview">
+                                        <div class="accuracy-stat">
+                                            <span class="accuracy-percentage" id="overallAccuracy">-</span>
+                                            <span class="accuracy-label">overall accuracy</span>
+                                        </div>
+                                        <div class="accuracy-improvements">
+                                            <div class="improvement-item">
+                                                <span class="improvement-icon">📈</span>
+                                                <span class="improvement-count" id="trendAdjustmentsCount">-</span>
+                                                <span class="improvement-label">trend adjustments made</span>
+                                            </div>
+                                            <div class="improvement-item">
+                                                <span class="improvement-icon">🛡️</span>
+                                                <span class="improvement-count" id="overstockPreventions">-</span>
+                                                <span class="improvement-label">overstock preventions</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Machine Learning Evolution Card -->
+                            <div class="learning-card full-width">
+                                <div class="learning-card-header">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="#FF4081" fill="#FCE4EC"/>
+                                        <circle cx="12" cy="12" r="3" fill="#E91E63"/>
+                                        <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24" stroke="#FF4081" stroke-width="1"/>
+                                    </svg>
+                                    <h3>Algorithm Evolution</h3>
+                                </div>
+                                <div class="learning-content" id="algorithmEvolution">
+                                    <div class="evolution-timeline">
+                                        <div class="evolution-item">
+                                            <div class="evolution-icon">🧠</div>
+                                            <div class="evolution-details">
+                                                <h4>Smart Learning</h4>
+                                                <p>Tink continuously learns from your inventory patterns, sales data, and seasonal trends to improve future recommendations.</p>
+                                            </div>
+                                        </div>
+                                        <div class="evolution-item">
+                                            <div class="evolution-icon">📊</div>
+                                            <div class="evolution-details">
+                                                <h4>Pattern Recognition</h4>
+                                                <p>Advanced algorithms identify complex patterns in your data that might not be obvious, helping predict future needs more accurately.</p>
+                                            </div>
+                                        </div>
+                                        <div class="evolution-item">
+                                            <div class="evolution-icon">⚡</div>
+                                            <div class="evolution-details">
+                                                <h4>Real-time Adaptation</h4>
+                                                <p>Every order you process teaches Tink something new, making the next analysis even more precise and tailored to your business.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="learning-impact" id="learningImpact">
+                                        <h4>Recent Learning Highlights:</h4>
+                                        <div class="highlight-list" id="learningHighlights">
+                                            <!-- Dynamic learning highlights will be populated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Last Analysis Summary -->
+                        <div class="last-analysis-summary">
+                            <h3>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" stroke="#607D8B" fill="#ECEFF1"/>
+                                    <polyline points="12,6 12,12 16,14" stroke="#37474F" stroke-width="2"/>
+                                </svg>
+                                Last Analysis Summary
+                            </h3>
+                            <div class="analysis-summary-grid" id="lastAnalysisSummary">
+                                <div class="summary-item">
+                                    <span class="summary-label">Analysis Date:</span>
+                                    <span class="summary-value" id="lastAnalysisDate">-</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Items Processed:</span>
+                                    <span class="summary-value" id="itemsProcessed">-</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Orders Generated:</span>
+                                    <span class="summary-value" id="ordersGenerated">-</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Total Recommendations:</span>
+                                    <span class="summary-value" id="totalRecommendations">-</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
     </div>
 
     <!-- Robot Animation Container -->
@@ -234,6 +591,34 @@
                 </div>
             </div>
 
+            <!-- Phantom Inventory Detection State -->
+            <div id="phantomInventorySearchingState" class="modal-state" style="display: none;">
+                <div class="robot-searching-icon">👻🔍</div>
+                <h2 class="modal-title">Analyzing Phantom Inventory...</h2>
+                <p class="modal-subtitle">Identifying items with positive stock that may not physically exist</p>
+                <div class="processing-steps">
+                    <div class="processing-step" id="phantom-step1">
+                        <span class="step-icon">📊</span>
+                        <span class="step-text">Loading inventory data...</span>
+                    </div>
+                    <div class="processing-step" id="phantom-step2">
+                        <span class="step-icon">🔍</span>
+                        <span class="step-text">Filtering items with positive stock...</span>
+                    </div>
+                    <div class="processing-step" id="phantom-step3">
+                        <span class="step-icon">📈</span>
+                        <span class="step-text">Calculating sales velocity...</span>
+                    </div>
+                    <div class="processing-step" id="phantom-step4">
+                        <span class="step-icon">🎯</span>
+                        <span class="step-text">Analyzing order patterns...</span>
+                    </div>
+                    <div class="processing-step" id="phantom-step5">
+                        <span class="step-icon">👻</span>
+                        <span class="step-text">Identifying phantom candidates...</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -300,5 +685,309 @@
             </div>
         </div>
     </div>
+
+    <!-- API Configuration Modal -->
+    <div id="apiConfigModal" class="modal" style="display: none;">
+        <div class="modal-content api-config-modal">
+            <div class="modal-header">
+                <h2>API Configuration</h2>
+                <button class="modal-close" id="closeApiConfigModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="apiConfigForm">
+                    <div class="config-section">
+                        <h3>Paladin POS API Settings</h3>
+                        
+                        <div class="input-group">
+                            <label for="apiBaseUrl">API Base URL:</label>
+                            <input type="url" id="apiBaseUrl" placeholder="https://your-paladin-server.com" required />
+                            <small class="input-help">The base URL of your Paladin POS server</small>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="apiStoreId">Store ID:</label>
+                            <input type="text" id="apiStoreId" placeholder="Your store identifier" />
+                            <small class="input-help">Your unique store identifier in Paladin</small>
+                        </div>
+                        
+                        <div class="auth-method-tabs">
+                            <div class="tab-buttons">
+                                <button type="button" class="tab-button active" data-tab="credentials">Username/Password</button>
+                                <button type="button" class="tab-button" data-tab="apikey">API Key</button>
+                            </div>
+                            
+                            <div class="tab-content active" id="credentials-tab">
+                                <div class="input-group">
+                                    <label for="apiUsername">Username:</label>
+                                    <input type="text" id="apiUsername" placeholder="Your Paladin username" />
+                                </div>
+                                <div class="input-group">
+                                    <label for="apiPassword">Password:</label>
+                                    <input type="password" id="apiPassword" placeholder="Your Paladin password" />
+                                </div>
+                            </div>
+                            
+                            <div class="tab-content" id="apikey-tab">
+                                <div class="input-group">
+                                    <label for="apiKey">API Key:</label>
+                                    <input type="password" id="apiKey" placeholder="Your API key" />
+                                    <small class="input-help">API key from your Paladin administrator</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <h3>Advanced Settings</h3>
+                        
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="apiTimeout">Timeout (seconds):</label>
+                                <input type="number" id="apiTimeout" min="5" max="300" value="30" />
+                            </div>
+                            <div class="input-group">
+                                <label for="apiPageSize">Page Size:</label>
+                                <input type="number" id="apiPageSize" min="10" max="1000" value="100" />
+                            </div>
+                        </div>
+                        
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="apiMaxRetries">Max Retries:</label>
+                                <input type="number" id="apiMaxRetries" min="0" max="10" value="3" />
+                            </div>
+                            <div class="input-group">
+                                <label for="apiRetryDelay">Retry Delay (ms):</label>
+                                <input type="number" id="apiRetryDelay" min="100" max="10000" value="1000" />
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="apiIncludeZeroStock" />
+                                <span class="checkmark"></span>
+                                Include Zero Stock Items
+                            </label>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="apiDefaultSupplier">Default Supplier Filter:</label>
+                            <input type="text" id="apiDefaultSupplier" placeholder="e.g., 10" />
+                            <small class="input-help">Filter by specific supplier (leave blank for all)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <h3>General Settings</h3>
+                        
+                        <div class="input-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="preferApiOverFiles" />
+                                <span class="checkmark"></span>
+                                Prefer API Over File Upload
+                            </label>
+                            <small class="input-help">When enabled, API data will be used by default</small>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="autoRefreshInterval">Auto-refresh Interval (minutes):</label>
+                            <input type="number" id="autoRefreshInterval" min="1" max="60" value="5" />
+                            <small class="input-help">How often to refresh data when in API mode</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-indicator">
+                        <span class="status-dot status-unknown"></span>
+                        <span class="status-text">Not Tested</span>
+                    </span>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" id="testConnectionBtn" class="btn btn-secondary">Test Connection</button>
+                    <button type="button" id="resetConfigBtn" class="btn btn-warning">Reset to Defaults</button>
+                    <button type="button" id="cancelConfigBtn" class="btn btn-secondary">Cancel</button>
+                    <button type="button" id="saveConfigBtn" class="btn btn-primary">Save Configuration</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Queue Modal -->
+    <div id="verificationQueueModal" class="verification-queue-modal" style="display: none;">
+        <div class="verification-queue-content">
+            <div class="verification-queue-header">
+                <h3>Verification Queue Management</h3>
+                <button class="btn btn-secondary" onclick="closeVerificationQueueModal()">Close</button>
+            </div>
+            <div class="verification-queue-body">
+                <div class="verification-tabs">
+                    <button class="verification-tab active" data-tab="pending">Pending</button>
+                    <button class="verification-tab" data-tab="active">Active</button>
+                    <button class="verification-tab" data-tab="completed">Completed</button>
+                </div>
+                
+                <div id="pendingVerifications" class="verification-tab-content">
+                    <table class="verification-table">
+                        <thead>
+                            <tr>
+                                <th>Priority</th>
+                                <th>Part Number</th>
+                                <th>Description</th>
+                                <th>Current Stock</th>
+                                <th>Risk Score</th>
+                                <th>Location</th>
+                                <th>Est. Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingVerificationsList">
+                            <!-- Pending verifications will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="activeVerifications" class="verification-tab-content" style="display: none;">
+                    <table class="verification-table">
+                        <thead>
+                            <tr>
+                                <th>Part Number</th>
+                                <th>Description</th>
+                                <th>Current Stock</th>
+                                <th>Assigned To</th>
+                                <th>Started</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activeVerificationsList">
+                            <!-- Active verifications will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="completedVerifications" class="verification-tab-content" style="display: none;">
+                    <table class="verification-table">
+                        <thead>
+                            <tr>
+                                <th>Part Number</th>
+                                <th>Description</th>
+                                <th>System Stock</th>
+                                <th>Physical Count</th>
+                                <th>Discrepancy</th>
+                                <th>Verified By</th>
+                                <th>Completed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="completedVerificationsList">
+                            <!-- Completed verifications will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="verification-actions">
+                    <button class="btn btn-primary" onclick="startSelectedVerifications()">Start Selected</button>
+                    <button class="btn btn-success" onclick="generateVerificationSheets()">Generate Verification Sheets</button>
+                    <button class="btn btn-warning" onclick="exportVerificationData()">Export Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ML Data Modal -->
+    <div id="mlDataModal" class="verification-queue-modal" style="display: none;">
+        <div class="verification-queue-content">
+            <div class="verification-queue-header">
+                <h3>Machine Learning Data & Statistics</h3>
+                <button class="btn btn-secondary" onclick="closeMlDataModal()">Close</button>
+            </div>
+            <div class="verification-queue-body">
+                <div class="verification-tabs">
+                    <button class="verification-tab active" data-tab="overview">Overview</button>
+                    <button class="verification-tab" data-tab="categories">Categories</button>
+                    <button class="verification-tab" data-tab="network">Network</button>
+                </div>
+                
+                <div id="mlOverview" class="verification-tab-content">
+                    <div class="ml-overview-content">
+                        <h4>Learning Progress</h4>
+                        <div id="mlOverviewStats">
+                            <!-- ML overview stats will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="mlCategories" class="verification-tab-content" style="display: none;">
+                    <div class="ml-categories-content">
+                        <h4>Category Accuracy</h4>
+                        <div id="mlCategoryStats">
+                            <!-- Category stats will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="mlNetwork" class="verification-tab-content" style="display: none;">
+                    <div class="ml-network-content">
+                        <h4>Network Learning</h4>
+                        <div id="mlNetworkStats">
+                            <!-- Network stats will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal" style="display: none;">
+        <div class="modal-content feedback-modal-content">
+            <div class="modal-header">
+                <h3>Provide Feedback on Recommendation</h3>
+                <span class="close" onclick="closeFeedbackModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="feedback-item-info">
+                    <h4 id="feedbackItemTitle">Item Information</h4>
+                    <p><strong>SKU:</strong> <span id="feedbackSku"></span></p>
+                    <p><strong>Description:</strong> <span id="feedbackDescription"></span></p>
+                    <p><strong>Tink's Recommendation:</strong> <span id="feedbackTinkQty"></span> units</p>
+                </div>
+                
+                <div class="feedback-section">
+                    <h4>What's your feedback on this recommendation?</h4>
+                    <div class="feedback-buttons">
+                        <button class="btn btn-danger feedback-btn" onclick="selectFeedbackType('not-needed')">
+                            <span class="btn-icon">❌</span> Not Needed
+                        </button>
+                        <button class="btn btn-warning feedback-btn" onclick="selectFeedbackType('too-much')">
+                            <span class="btn-icon">📉</span> Too Much
+                        </button>
+                        <button class="btn btn-success feedback-btn" onclick="selectFeedbackType('not-enough')">
+                            <span class="btn-icon">📈</span> Not Enough
+                        </button>
+                    </div>
+                </div>
+
+                <div id="quantitySection" class="quantity-section" style="display: none;">
+                    <h4>What quantity do you think is appropriate?</h4>
+                    <div class="quantity-input-group">
+                        <label for="feedbackQuantity">Recommended Quantity:</label>
+                        <input type="number" id="feedbackQuantity" min="0" placeholder="Enter your recommended quantity">
+                    </div>
+                </div>
+
+                <div class="feedback-comment-section">
+                    <h4>Additional Comments</h4>
+                    <textarea id="feedbackComment" placeholder="Please explain your reasoning (e.g., seasonal considerations, supplier issues, market changes, etc.)" rows="4"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeFeedbackModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitFeedback()">Submit Feedback</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
 </body>
 </html>

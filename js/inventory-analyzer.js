@@ -92,6 +92,38 @@ class AdvancedInventoryAnalyzer {
         this.ZERO_STOCK_MIN_VELOCITY = 0.01; // New configurable min velocity for zero-stock
     }
 
+    // TSB intermittent-demand forecast (weekly). Alpha_p for occurrence, Alpha_d for demand size when occurrence=1.
+    // Returns weekly expected demand = p_t * d_t using exponential smoothing.
+    tsbForecastWeekly(sales, alphaP = 0.2, alphaD = 0.2) {
+        if (!Array.isArray(sales) || sales.length === 0) return 0;
+        // Use last up to 104 weeks, most recent first expected by our sales series orientation (WEEK_1 is most recent)
+        // Our series arrays are oldest->newest in feature engineering, but here we pass raw sales from extractSalesData which maps by sorted week columns.
+        // Those are ascending (oldest to newest), so iterate forward.
+        let p = 0;   // occurrence probability
+        let d = 0;   // demand size when occur
+        let initialized = false;
+        for (let i = 0; i < sales.length; i++) {
+            const y = Number(sales[i]) || 0;
+            const occ = y > 0 ? 1 : 0;
+            if (!initialized) {
+                p = occ;           // initialize with first observation
+                d = y > 0 ? y : 0; // initialize size with first demand if any
+                initialized = true;
+            } else {
+                // occurrence smoothing
+                p = p + alphaP * (occ - p);
+                // size smoothing only when there is demand
+                if (occ === 1) {
+                    d = d + alphaD * (y - d);
+                }
+            }
+        }
+        // Expected weekly demand
+        const forecast = p * d;
+        // Guardrails: small positive min to allow micro-shortages to register when truly intermittent
+        return Math.max(0, forecast);
+    }
+
     log(message, data = null) {
         const timestamp = new Date().toISOString();
         const logMessage = `[${timestamp}] ${message}`;
@@ -101,24 +133,37 @@ class AdvancedInventoryAnalyzer {
         }
     }
 
-    async loadData(inputFile) {
+    async loadData(inputFile, apiData = null) {
         try {
-            const fileContent = await fs.readFile(inputFile, 'utf-8');
-            const parsed = Papa.parse(fileContent, {
-                delimiter: '\t',
-                header: true,
-                skipEmptyLines: true,
-                dynamicTyping: false // Keep as strings initially for better control
-            });
-            
-            this.data = parsed.data;
-            this.log(`Loaded ${parsed.data.length} rows from ${inputFile}`);
-            
-            if (parsed.data.length > 0) {
-                this.log('Column structure:', Object.keys(parsed.data[0]));
+            if (apiData) {
+                // Process API data directly
+                this.data = apiData;
+                this.log(`Loaded ${apiData.length} rows from API data`);
+                
+                if (apiData.length > 0) {
+                    this.log('Column structure:', Object.keys(apiData[0]));
+                }
+                
+                return apiData;
+            } else {
+                // Process file data
+                const fileContent = await fs.readFile(inputFile, 'utf-8');
+                const parsed = Papa.parse(fileContent, {
+                    delimiter: '\t',
+                    header: true,
+                    skipEmptyLines: true,
+                    dynamicTyping: false // Keep as strings initially for better control
+                });
+                
+                this.data = parsed.data;
+                this.log(`Loaded ${parsed.data.length} rows from ${inputFile}`);
+                
+                if (parsed.data.length > 0) {
+                    this.log('Column structure:', Object.keys(parsed.data[0]));
+                }
+                
+                return parsed.data;
             }
-            
-            return parsed.data;
         } catch (error) {
             throw new Error(`Failed to load data: ${error.message}`);
         }
@@ -597,6 +642,7 @@ class AdvancedInventoryAnalyzer {
         
         const {
             inputFile,
+            apiData = null,
             supplierNumber = 10,
             daysThreshold = 14,
             serviceLevel = 0.95,
@@ -611,7 +657,7 @@ class AdvancedInventoryAnalyzer {
         try {
             // Load and prepare data
             this.log('Loading inventory data...');
-            const data = await this.loadData(inputFile);
+            const data = await this.loadData(inputFile, apiData);
             
             this.log('Filtering data by supplier...');
             const filtered = this.filterData(data, supplierNumber);
@@ -910,7 +956,36 @@ class AdvancedInventoryAnalyzer {
             
             // Get sales velocity and forecast like Python script
             const velocity = this.getSalesVelocity(sales, 8); // 8 weeks like Python
-            const forecastedNeed = velocity * (daysThreshold / 7);
+            const forecastWeeks = daysThreshold / 7;
+
+            // Intermittent-demand enhancement: Use TSB forecast for erratic/zero-heavy SKUs
+            let forecastedNeed;
+            const zeroFraction = sales.length > 0 ? sales.filter(x => x === 0).length / sales.length : 0;
+            if (clusterLabel === 'erratic' || zeroFraction >= 0.5) {
+                // Base TSB weekly forecast
+                let tsbWeekly = this.tsbForecastWeekly(sales, 0.2, 0.2);
+
+                // Seasonal uplift for intermittent items (pre-peak boost, pre-low reduction)
+                let intermittentAdjustment = 1.0;
+                if (seasonalMetrics.isSeasonal) {
+                    const approachingPeak = seasonalMetrics.seasonalPeaks.some(peakWeek => {
+                        const weekDiff = (peakWeek - this.currentWeek + 52) % 52;
+                        return weekDiff > 0 && weekDiff <= this.PRE_SEASON_WEEKS;
+                    });
+                    const approachingLow = seasonalMetrics.seasonalLows.some(lowWeek => {
+                        const weekDiff = (lowWeek - this.currentWeek + 52) % 52;
+                        return weekDiff > 0 && weekDiff <= this.POST_SEASON_WEEKS;
+                    });
+                    if (approachingPeak) intermittentAdjustment = 1.2; // modest uplift pre-peak
+                    else if (approachingLow) intermittentAdjustment = this.SEASONAL_LOW_MULTIPLIER;
+                }
+
+                tsbWeekly = tsbWeekly * intermittentAdjustment;
+                forecastedNeed = tsbWeekly * forecastWeeks;
+            } else {
+                forecastedNeed = velocity * forecastWeeks;
+            }
+
             const forecast = this.forecastDemand(sales, clusterLabel, daysThreshold, row);
             if (forecast > 0) debug.itemsWithForecast++;
             
@@ -930,8 +1005,13 @@ class AdvancedInventoryAnalyzer {
             let orderReason = '';
             
             // PYTHON SCRIPT LOGIC: Dynamic order logic
-            // 1. Overstock prevention check
-            if (currentStock > this.OVERSTOCK_MULTIPLIER * forecastedNeed) {
+            // 1. Overstock prevention check (relaxed dynamically by velocity)
+            let overstockMultiplier = this.OVERSTOCK_MULTIPLIER;
+            if (velocity < 0.5) overstockMultiplier = 3.0;
+            else if (velocity < 1.0) overstockMultiplier = 2.5;
+            else overstockMultiplier = this.OVERSTOCK_MULTIPLIER;
+
+            if (currentStock > overstockMultiplier * forecastedNeed) {
                 orderQty = 0;
                 this.stockEventLog.push({
                     partNumber,
@@ -955,7 +1035,14 @@ class AdvancedInventoryAnalyzer {
                     });
                     debug.slowMoverHandling++;
                 } else {
-                    orderQty = 0;
+                    // Micro-shortage floor for MOQ=1: if small positive shortage, allow 1 unit
+                    const microShortage = (forecastedNeed + safetyStock - currentStock);
+                    if (minOrderQty === 1 && microShortage > 0.05) {
+                        orderQty = 1;
+                        orderReason = 'Micro-shortage floor (slow mover, MOQ=1)';
+                    } else {
+                        orderQty = 0;
+                    }
                 }
                 
             // 3. Normal velocity items with ENHANCED seasonal intelligence

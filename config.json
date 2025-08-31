@@ -1,0 +1,15 @@
+{
+  "version": "2.0.14",
+  "phantom_inventory": {
+    "enabled": true,
+    "ml_learning_enabled": true,
+    "network_sync_enabled": true,
+    "verification_workflow_enabled": true
+  },
+
+  "system": {
+    "debug_mode": false,
+    "auto_sync_interval": 24,
+    "max_verification_queue": 100
+  }
+} 

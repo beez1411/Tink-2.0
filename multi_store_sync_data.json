@@ -1,0 +1,21 @@
+{
+  "stores": [
+    [
+      "17521",
+      {
+        "id": "17521",
+        "name": "Eagle",
+        "location": "Eagle",
+        "registeredAt": "2025-08-31T20:25:08.504Z",
+        "lastSync": null,
+        "verificationCount": 0,
+        "accuracy": 0,
+        "categories": [],
+        "isActive": true,
+        "syncKey": "4ef4a44acbf6fba76f419551b328f6cc"
+      }
+    ]
+  ],
+  "lastUpdated": "2025-08-31T20:25:08.505Z",
+  "version": "1.0"
+}

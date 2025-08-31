@@ -1,0 +1,1899 @@
+{
+  "verificationResults": [
+    [
+      "30230",
+      {
+        "partNumber": "30230",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 110,
+        "category": "slow-mover-phantom",
+        "unitCost": 133.11,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $133.11, 12 months stagnant",
+          "Electrical part: Orders in 250s, only 1 showing"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "41754",
+      {
+        "partNumber": "41754",
+        "systemStock": 50,
+        "actualCount": 50,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.222,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 11.2/week, now 0.0/week)",
+          "Fast mover (11.2/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "43109",
+      {
+        "partNumber": "43109",
+        "systemStock": 10,
+        "actualCount": 10,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.79,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 2.1/week, now 0.0/week)",
+          "Fast mover (2.1/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "43966",
+      {
+        "partNumber": "43966",
+        "systemStock": 23,
+        "actualCount": 23,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.29,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 2.5/week, now 0.0/week)",
+          "Fast mover (2.5/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "82760",
+      {
+        "partNumber": "82760",
+        "systemStock": 26,
+        "actualCount": 26,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 1.04,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 3.2/week, now 0.0/week)",
+          "Fast mover (3.2/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1000655",
+      {
+        "partNumber": "1000655",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 181.41,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $181.41, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1000942",
+      {
+        "partNumber": "1000942",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 244.22,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $244.22, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1026289",
+      {
+        "partNumber": "1026289",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 232.17,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $232.17, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1026490",
+      {
+        "partNumber": "1026490",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 207.51,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $207.51, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1030034",
+      {
+        "partNumber": "1030034",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 173.93,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $173.93, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1037825",
+      {
+        "partNumber": "1037825",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 218.43,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $218.43, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1374453",
+      {
+        "partNumber": "1374453",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 147.22,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $147.22, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1399765",
+      {
+        "partNumber": "1399765",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 126.88,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $126.88, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1529965",
+      {
+        "partNumber": "1529965",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 112.53,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $112.53, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1608033",
+      {
+        "partNumber": "1608033",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 422.71,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $422.71, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1623388",
+      {
+        "partNumber": "1623388",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 150.26,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $150.26, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1697986",
+      {
+        "partNumber": "1697986",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 281.09,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $281.09, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2001193",
+      {
+        "partNumber": "2001193",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 169.93,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $169.93, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2002079",
+      {
+        "partNumber": "2002079",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 176.77,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $176.77, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2006108",
+      {
+        "partNumber": "2006108",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 131.12,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $131.12, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2009987",
+      {
+        "partNumber": "2009987",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 252.41,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $252.41, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2014525",
+      {
+        "partNumber": "2014525",
+        "systemStock": 1,
+        "actualCount": 2,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 284.18,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $284.18, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T20:30:29.224Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2014526",
+      {
+        "partNumber": "2014526",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 176.77,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $176.77, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2017520",
+      {
+        "partNumber": "2017520",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 338.33,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $338.33, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2022167",
+      {
+        "partNumber": "2022167",
+        "systemStock": 2,
+        "actualCount": 2,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 102.5,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $102.50, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2023067",
+      {
+        "partNumber": "2023067",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 266.2,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $266.20, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2023462",
+      {
+        "partNumber": "2023462",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 109.26,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $109.26, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2026530",
+      {
+        "partNumber": "2026530",
+        "systemStock": 1,
+        "actualCount": 2,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 119.2,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $119.20, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T20:30:29.224Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2033682",
+      {
+        "partNumber": "2033682",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 148.55,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $148.55, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2038138",
+      {
+        "partNumber": "2038138",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 122.43,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $122.43, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2103414",
+      {
+        "partNumber": "2103414",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 198.39,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $198.39, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2306868",
+      {
+        "partNumber": "2306868",
+        "systemStock": 1,
+        "actualCount": 3,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 177.29,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $177.29, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T20:30:29.224Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2400265",
+      {
+        "partNumber": "2400265",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 106.81,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $106.81, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2403343",
+      {
+        "partNumber": "2403343",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 230.72,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $230.72, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2408789",
+      {
+        "partNumber": "2408789",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 128.12,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $128.12, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2493385",
+      {
+        "partNumber": "2493385",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 100.7,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $100.70, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2526200",
+      {
+        "partNumber": "2526200",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 381.44,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $381.44, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2808962",
+      {
+        "partNumber": "2808962",
+        "systemStock": 3,
+        "actualCount": 3,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 104.554,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $104.55, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2829273",
+      {
+        "partNumber": "2829273",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 107.2,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $107.20, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2834414",
+      {
+        "partNumber": "2834414",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 128.66,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $128.66, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4023453",
+      {
+        "partNumber": "4023453",
+        "systemStock": 10,
+        "actualCount": 10,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.48,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 2.2/week, now 0.0/week)",
+          "Fast mover (2.2/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4027470",
+      {
+        "partNumber": "4027470",
+        "systemStock": 211,
+        "actualCount": 211,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.152,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 2.0/week, now 0.0/week)",
+          "Fast mover (2.0/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4267977",
+      {
+        "partNumber": "4267977",
+        "systemStock": 5,
+        "actualCount": 5,
+        "wasPhantom": false,
+        "originalRiskScore": 165,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.151,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 3.9/week, now 0.0/week)",
+          "Fast mover (3.9/week) completely stopped selling",
+          "Order quantity anomaly: Orders in 100s, only 5 showing"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "5606306",
+      {
+        "partNumber": "5606306",
+        "systemStock": 25,
+        "actualCount": 25,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.42,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 3.2/week, now 0.0/week)",
+          "Fast mover (3.2/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "5606314",
+      {
+        "partNumber": "5606314",
+        "systemStock": 53,
+        "actualCount": 53,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.51,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 5.5/week, now 0.0/week)",
+          "Fast mover (5.5/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7035306",
+      {
+        "partNumber": "7035306",
+        "systemStock": 11,
+        "actualCount": 11,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.64,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 2.1/week, now 0.0/week)",
+          "Fast mover (2.1/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7107311",
+      {
+        "partNumber": "7107311",
+        "systemStock": 21,
+        "actualCount": 21,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.77,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 2.4/week, now 0.0/week)",
+          "Fast mover (2.4/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7782931",
+      {
+        "partNumber": "7782931",
+        "systemStock": 9,
+        "actualCount": 9,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 2.29,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 3.0/week, now 0.0/week)",
+          "Fast mover (3.0/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "8275075",
+      {
+        "partNumber": "8275075",
+        "systemStock": 39,
+        "actualCount": 39,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.561,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 3.8/week, now 0.0/week)",
+          "Fast mover (3.8/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "9028473",
+      {
+        "partNumber": "9028473",
+        "systemStock": 5,
+        "actualCount": 5,
+        "wasPhantom": false,
+        "originalRiskScore": 130,
+        "category": "fast-mover-phantom",
+        "unitCost": 1.59,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 2.2/week, now 0.0/week)",
+          "Fast mover (2.2/week) completely stopped selling"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-31T17:52:54.171Z",
+        "notes": ""
+      }
+    ],
+    [
+      "11153",
+      {
+        "partNumber": "11153",
+        "systemStock": 8,
+        "actualCount": 8,
+        "wasPhantom": false,
+        "originalRiskScore": 70,
+        "category": "fast-mover-phantom",
+        "unitCost": 1.21,
+        "riskFactors": [
+          "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1006707",
+      {
+        "partNumber": "1006707",
+        "systemStock": 15,
+        "actualCount": 15,
+        "wasPhantom": false,
+        "originalRiskScore": 70,
+        "category": "fast-mover-phantom",
+        "unitCost": 0.72,
+        "riskFactors": [
+          "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1010016",
+      {
+        "partNumber": "1010016",
+        "systemStock": 5,
+        "actualCount": 5,
+        "wasPhantom": false,
+        "originalRiskScore": 70,
+        "category": "fast-mover-phantom",
+        "unitCost": 3.92,
+        "riskFactors": [
+          "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1015403",
+      {
+        "partNumber": "1015403",
+        "systemStock": 9,
+        "actualCount": 9,
+        "wasPhantom": false,
+        "originalRiskScore": 70,
+        "category": "fast-mover-phantom",
+        "unitCost": 9.36,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 1.4/week, now 0.0/week)"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "1200831",
+      {
+        "partNumber": "1200831",
+        "systemStock": 3,
+        "actualCount": 3,
+        "wasPhantom": false,
+        "originalRiskScore": 70,
+        "category": "fast-mover-phantom",
+        "unitCost": 40.14,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2862829",
+      {
+        "partNumber": "2862829",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 165.67,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $165.67, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "2896603",
+      {
+        "partNumber": "2896603",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 124.22,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $124.22, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4000908",
+      {
+        "partNumber": "4000908",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 166.22,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $166.22, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4001639",
+      {
+        "partNumber": "4001639",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 151.06,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $151.06, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4003575",
+      {
+        "partNumber": "4003575",
+        "systemStock": 2,
+        "actualCount": 2,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 239.98,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $239.98, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4005309",
+      {
+        "partNumber": "4005309",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 291.2,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $291.20, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4010381",
+      {
+        "partNumber": "4010381",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 245.85,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $245.85, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4026200",
+      {
+        "partNumber": "4026200",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 105.43,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $105.43, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4028119",
+      {
+        "partNumber": "4028119",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 107.26,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $107.26, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4035333",
+      {
+        "partNumber": "4035333",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 121.68,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $121.68, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4035374",
+      {
+        "partNumber": "4035374",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 145.8,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $145.80, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4318085",
+      {
+        "partNumber": "4318085",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 102.8,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $102.80, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4891941",
+      {
+        "partNumber": "4891941",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 154.32,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $154.32, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4891966",
+      {
+        "partNumber": "4891966",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 122.89,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $122.89, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "4893541",
+      {
+        "partNumber": "4893541",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 161.92,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $161.92, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "5029048",
+      {
+        "partNumber": "5029048",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 127.91,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $127.91, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "5427240",
+      {
+        "partNumber": "5427240",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 108.41,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $108.41, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "6137970",
+      {
+        "partNumber": "6137970",
+        "systemStock": 2,
+        "actualCount": 2,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 107.24,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $107.24, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "6412845",
+      {
+        "partNumber": "6412845",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 111.39,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $111.39, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7002865",
+      {
+        "partNumber": "7002865",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 154.54,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $154.54, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7010768",
+      {
+        "partNumber": "7010768",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 70,
+        "category": "fast-mover-phantom",
+        "unitCost": 104.13,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 1.3/week, now 0.0/week)"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7013944",
+      {
+        "partNumber": "7013944",
+        "systemStock": 3,
+        "actualCount": 3,
+        "wasPhantom": false,
+        "originalRiskScore": 70,
+        "category": "fast-mover-phantom",
+        "unitCost": 177.41,
+        "riskFactors": [
+          "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7015571",
+      {
+        "partNumber": "7015571",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 159.47,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $159.47, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7019343",
+      {
+        "partNumber": "7019343",
+        "systemStock": 2,
+        "actualCount": 2,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 115.35,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $115.35, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7024162",
+      {
+        "partNumber": "7024162",
+        "systemStock": 2,
+        "actualCount": 2,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 457.53,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $457.53, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7025842",
+      {
+        "partNumber": "7025842",
+        "systemStock": 5,
+        "actualCount": 5,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 1801.108,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $1801.11, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7025981",
+      {
+        "partNumber": "7025981",
+        "systemStock": 3,
+        "actualCount": 3,
+        "wasPhantom": false,
+        "originalRiskScore": 70,
+        "category": "fast-mover-phantom",
+        "unitCost": 260.49,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 1.5/week, now 0.0/week)"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7029290",
+      {
+        "partNumber": "7029290",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 408.24,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $408.24, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7029681",
+      {
+        "partNumber": "7029681",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 163.05,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $163.05, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7037845",
+      {
+        "partNumber": "7037845",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 216.48,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $216.48, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7321896",
+      {
+        "partNumber": "7321896",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 155.19,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $155.19, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7373954",
+      {
+        "partNumber": "7373954",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 135.18,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $135.18, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7620735",
+      {
+        "partNumber": "7620735",
+        "systemStock": 2,
+        "actualCount": 2,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 125.42,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $125.42, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "7809312",
+      {
+        "partNumber": "7809312",
+        "systemStock": 4,
+        "actualCount": 4,
+        "wasPhantom": false,
+        "originalRiskScore": 70,
+        "category": "fast-mover-phantom",
+        "unitCost": 242.16,
+        "riskFactors": [
+          "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "8075593",
+      {
+        "partNumber": "8075593",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 163.27,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $163.27, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "8082911",
+      {
+        "partNumber": "8082911",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 129.04,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $129.04, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "8085414",
+      {
+        "partNumber": "8085414",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 132.18,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $132.18, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "8091914",
+      {
+        "partNumber": "8091914",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 133.98,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $133.98, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "8096817",
+      {
+        "partNumber": "8096817",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 127.3,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $127.30, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "8110564",
+      {
+        "partNumber": "8110564",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 121.55,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $121.55, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "8214777",
+      {
+        "partNumber": "8214777",
+        "systemStock": 2,
+        "actualCount": 2,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 126.03,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $126.03, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "8292872",
+      {
+        "partNumber": "8292872",
+        "systemStock": 2,
+        "actualCount": 2,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 166.83,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $166.83, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "8406167",
+      {
+        "partNumber": "8406167",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 191.74,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $191.74, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "8437824",
+      {
+        "partNumber": "8437824",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 118.84,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $118.84, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ],
+    [
+      "9084142",
+      {
+        "partNumber": "9084142",
+        "systemStock": 1,
+        "actualCount": 1,
+        "wasPhantom": false,
+        "originalRiskScore": 75,
+        "category": "slow-mover-phantom",
+        "unitCost": 127.02,
+        "riskFactors": [
+          "Slow mover: No sales for 12 months",
+          "High-value slow mover: $127.02, 12 months stagnant"
+        ],
+        "verifiedBy": "Unknown",
+        "verificationDate": "2025-08-30T23:32:22.963Z",
+        "notes": ""
+      }
+    ]
+  ],
+  "categoryPatterns": [],
+  "lastUpdated": "2025-08-31T20:30:29.227Z"
+}

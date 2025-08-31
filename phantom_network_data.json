@@ -1,0 +1,15 @@
+{
+  "sourceStore": "17521",
+  "timestamp": "2025-08-30T23:30:26.235Z",
+  "totalVerifications": 0,
+  "networkAccuracy": 0,
+  "categoryPatterns": [],
+  "modelWeights": {
+    "velocityDrop": 0.8,
+    "stockAmount": 0.3,
+    "unitCost": 0.5,
+    "riskScore": 0.9
+  },
+  "verificationPatterns": [],
+  "commonRiskFactors": []
+}

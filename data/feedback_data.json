@@ -1,0 +1,58 @@
+[
+  {
+    "index": 386,
+    "sku": "8207433",
+    "description": "HICKORY BBQ PELLETS 20LB",
+    "tinkRecommendation": 42,
+    "timestamp": "2025-08-31T18:16:16.752Z",
+    "storeId": "unknown",
+    "feedbackType": "too-much",
+    "managerRecommendation": "20",
+    "comments": "I want to only keep 20 max",
+    "submittedAt": "2025-08-31T18:16:41.235Z",
+    "id": 1756664201237.2466,
+    "savedAt": "2025-08-31T18:16:41.237Z"
+  },
+  {
+    "index": 0,
+    "sku": "10009",
+    "description": "REMOVER RUST EXTEND 8 OZ",
+    "tinkRecommendation": 6,
+    "timestamp": "2025-08-31T18:42:37.219Z",
+    "storeId": "unknown",
+    "feedbackType": "too-much",
+    "managerRecommendation": "4",
+    "comments": "dont need",
+    "submittedAt": "2025-08-31T18:43:05.077Z",
+    "id": 1756665785081.436,
+    "savedAt": "2025-08-31T18:43:05.081Z"
+  },
+  {
+    "index": 16,
+    "sku": "1015610",
+    "description": "MOUNTING PUTTY HS 2OZ",
+    "tinkRecommendation": 8,
+    "timestamp": "2025-08-31T18:43:22.488Z",
+    "storeId": "unknown",
+    "feedbackType": "not-needed",
+    "managerRecommendation": null,
+    "comments": "",
+    "submittedAt": "2025-08-31T18:43:27.421Z",
+    "id": 1756665807423.5532,
+    "savedAt": "2025-08-31T18:43:27.423Z"
+  },
+  {
+    "index": 386,
+    "sku": "8207433",
+    "description": "HICKORY BBQ PELLETS 20LB",
+    "tinkRecommendation": 42,
+    "timestamp": "2025-08-31T18:57:34.061Z",
+    "storeId": "unknown",
+    "feedbackType": "too-much",
+    "managerRecommendation": "6",
+    "comments": "I want to typically keep 20 total on hand",
+    "submittedAt": "2025-08-31T18:57:55.114Z",
+    "id": 1756666675118.0784,
+    "savedAt": "2025-08-31T18:57:55.118Z"
+  }
+]
