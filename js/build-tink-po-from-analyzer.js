@@ -37,7 +37,18 @@ async function main() {
         lines.push([part, supp, qty, cost].join('\t'));
     }
 
-    const outFile = path.resolve('Tink PO NEW.txt');
+    // Use user's desktop or documents directory instead of app directory
+    const os = require('os');
+    const desktopPath = path.join(os.homedir(), 'Desktop');
+    const documentsPath = path.join(os.homedir(), 'Documents');
+    
+    // Try desktop first, then documents
+    let outputDir = desktopPath;
+    if (!fs.existsSync(desktopPath)) {
+        outputDir = documentsPath;
+    }
+    
+    const outFile = path.join(outputDir, 'Tink PO NEW.txt');
     await fs.writeFile(outFile, lines.join('\n'));
     console.log(`Wrote ${items.length} lines to ${outFile}`);
 }

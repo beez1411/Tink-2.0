@@ -97,6 +97,32 @@ Tink 2.0/
 - `npm run dist` - Create installer
 - `npm run release` - Build and publish
 
+## Multi-Location ML Sync Configuration
+
+Tink can sync ML learning across stores via an HTTP sync server.
+
+Configure one of these ways (priority top to bottom):
+
+1) Environment variables (recommended for packaged installs)
+
+```
+TINK_SYNC_URL=http://YOUR_DROPLET_IP:3000
+TINK_SYNC_API_KEY=your-api-key
+```
+
+2) User config file at `%USERPROFILE%/.tink2/network-sync.json` (Windows) or `~/.tink2/network-sync.json`:
+
+```
+{
+  "enabled": true,
+  "networkSync": "http",
+  "apiBaseUrl": "http://YOUR_DROPLET_IP:3000",
+  "apiKey": "your-api-key"
+}
+```
+
+If URL or API key are missing, the app falls back to local-only sync.
+
 ## 🔧 Configuration
 
 ### AceNet Setup

@@ -28,6 +28,15 @@ class APIConfigManager {
                 lastTested: null,
                 lastTestResult: null
             },
+            networkSync: {
+                enabled: false,
+                apiBaseUrl: 'http://178.128.185.6:3000',
+                apiKey: 'tink-ml-sync-a8b3fd7db46dd67d434aa5a74821fd64',
+                storeId: '',
+                networkSync: 'http',
+                lastTested: null,
+                lastTestResult: null
+            },
             general: {
                 preferApiOverFiles: false,
                 autoRefreshInterval: 300000, // 5 minutes
@@ -125,6 +134,14 @@ class APIConfigManager {
      */
     updateGeneralConfig(updates) {
         this.config.general = { ...this.config.general, ...updates };
+        return this.saveConfig();
+    }
+
+    /**
+     * Update network sync configuration
+     */
+    updateNetworkSyncConfig(updates) {
+        this.config.networkSync = { ...this.config.networkSync, ...updates };
         return this.saveConfig();
     }
 

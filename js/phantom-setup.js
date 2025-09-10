@@ -7,13 +7,49 @@ const { getStoreOptions, getStoreConfig, isValidStoreId } = require('./store-con
 const EnhancedPhantomDetector = require('./enhanced-phantom-detector');
 const fs = require('fs').promises;
 const path = require('path');
+const os = require('os');
 
 class PhantomSetup {
     constructor() {
-        this.setupFile = 'phantom_setup.json';
+        // Use user data directory instead of app directory to avoid permission issues
+        const userDataDir = this.getUserDataDirectory();
+        this.setupFile = path.join(userDataDir, 'phantom_setup.json');
         this.currentStore = null;
         this.phantomDetector = null;
         this.isInitialized = false;
+        
+        // Ensure user data directory exists
+        this.ensureUserDataDirectory();
+    }
+    
+    /**
+     * Get user data directory for storing configuration files
+     */
+    getUserDataDirectory() {
+        // Try to use Electron's userData path if available
+        try {
+            const { app } = require('electron');
+            if (app && app.getPath) {
+                return app.getPath('userData');
+            }
+        } catch (error) {
+            // Fallback if Electron app is not available
+        }
+        
+        // Fallback to user's home directory
+        return path.join(os.homedir(), '.tink2-data');
+    }
+    
+    /**
+     * Ensure user data directory exists
+     */
+    async ensureUserDataDirectory() {
+        try {
+            const userDataDir = path.dirname(this.setupFile);
+            await fs.mkdir(userDataDir, { recursive: true });
+        } catch (error) {
+            console.warn('Could not create user data directory:', error.message);
+        }
     }
 
     /**

@@ -8,16 +8,57 @@ const path = require('path');
 const crypto = require('crypto');
 
 class MultiStoreSyncManager {
-    constructor() {
+    constructor(config = {}) {
         this.stores = new Map();
         this.syncConfig = {
             syncInterval: 24 * 60 * 60 * 1000, // 24 hours
             maxSyncAttempts: 3,
             dataRetentionDays: 365,
-            minVerificationsForSync: 5
+            minVerificationsForSync: 5,
+            // NEW: Network sync options
+            networkSync: config.networkSync || 'local', // 'local', 'http', 'cloud'
+            apiBaseUrl: config.apiBaseUrl || 'https://your-tink-api.herokuapp.com',
+            apiKey: config.apiKey || 'your-api-key',
+            cloudProvider: config.cloudProvider || 'dropbox'
         };
-        this.syncDataFile = 'multi_store_sync_data.json';
-        this.lastSyncFile = 'last_sync_timestamp.json';
+        
+        // Use user data directory to avoid permission issues
+        const os = require('os');
+        const userDataDir = path.join(os.homedir(), '.tink2-data');
+        this.syncDataFile = path.join(userDataDir, 'multi_store_sync_data.json');
+        this.lastSyncFile = path.join(userDataDir, 'last_sync_timestamp.json');
+        
+        // Initialize network sync managers
+        this.httpSyncManager = null;
+        this.cloudSyncManager = null;
+        this.initializeNetworkSync(config);
+    }
+
+    /**
+     * Initialize network synchronization based on configuration
+     */
+    initializeNetworkSync(config) {
+        try {
+            if (this.syncConfig.networkSync === 'http') {
+                const HTTPSyncManager = require('./http-sync-manager');
+                this.httpSyncManager = new HTTPSyncManager({
+                    storeId: config.storeId,
+                    apiBaseUrl: this.syncConfig.apiBaseUrl,
+                    apiKey: this.syncConfig.apiKey
+                });
+            } else if (this.syncConfig.networkSync === 'cloud') {
+                const CloudSyncManager = require('./cloud-sync-manager');
+                this.cloudSyncManager = new CloudSyncManager({
+                    storeId: config.storeId,
+                    provider: this.syncConfig.cloudProvider
+                });
+            }
+            
+            console.log(`Network sync initialized: ${this.syncConfig.networkSync}`);
+        } catch (error) {
+            console.warn('Network sync initialization failed, falling back to local:', error.message);
+            this.syncConfig.networkSync = 'local';
+        }
     }
 
     /**
@@ -93,6 +134,10 @@ class MultiStoreSyncManager {
                 version: '1.0'
             };
 
+            // Ensure user data directory exists
+            const userDataDir = path.dirname(this.syncDataFile);
+            await fs.mkdir(userDataDir, { recursive: true });
+            
             await fs.writeFile(this.syncDataFile, JSON.stringify(data, null, 2));
         } catch (error) {
             console.error(`Error saving sync data: ${error.message}`);
@@ -104,49 +149,18 @@ class MultiStoreSyncManager {
      */
     async syncPhantomInventoryData(sourceStoreId, phantomML) {
         try {
-            console.log(`Starting sync for store ${sourceStoreId}`);
+            console.log(`Starting ${this.syncConfig.networkSync} sync for store ${sourceStoreId}`);
             
-            // Load existing sync data
-            await this.loadSyncData();
-            
-            // Get source store data
-            const sourceStore = this.stores.get(sourceStoreId);
-            if (!sourceStore) {
-                throw new Error(`Store ${sourceStoreId} not registered`);
+            // Choose sync method based on configuration
+            switch (this.syncConfig.networkSync) {
+                case 'http':
+                    return await this.syncViaHTTP(sourceStoreId, phantomML);
+                case 'cloud':
+                    return await this.syncViaCloud(sourceStoreId, phantomML);
+                case 'local':
+                default:
+                    return await this.syncViaLocalFiles(sourceStoreId, phantomML);
             }
-
-            // Create consolidated learning data
-            const consolidatedData = await this.createConsolidatedLearningData(sourceStoreId, phantomML);
-            
-            // Update source store info
-            sourceStore.lastSync = new Date().toISOString();
-            sourceStore.verificationCount = phantomML.verificationResults.size;
-            sourceStore.accuracy = phantomML.calculateOverallAccuracy();
-            
-            // Extract categories from verification data
-            // Ensure categories is a Set, convert if needed
-            if (!(sourceStore.categories instanceof Set)) {
-                sourceStore.categories = new Set(sourceStore.categories || []);
-            }
-            phantomML.categoryPatterns.forEach((pattern, category) => {
-                sourceStore.categories.add(category);
-            });
-
-            // Save consolidated data for other stores to use
-            await this.saveConsolidatedData(consolidatedData);
-            
-            // Apply learning from other stores
-            await this.applyMultiStoreLearning(sourceStoreId, phantomML);
-            
-            await this.saveSyncData();
-            
-            console.log(`Sync completed for store ${sourceStoreId}`);
-            return {
-                success: true,
-                syncedStores: this.stores.size - 1,
-                consolidatedVerifications: consolidatedData.totalVerifications,
-                improvedAccuracy: consolidatedData.networkAccuracy
-            };
             
         } catch (error) {
             console.error(`Sync error: ${error.message}`);
@@ -155,6 +169,99 @@ class MultiStoreSyncManager {
                 error: error.message
             };
         }
+    }
+
+    /**
+     * Sync via HTTP API
+     */
+    async syncViaHTTP(sourceStoreId, phantomML) {
+        if (!this.httpSyncManager) {
+            throw new Error('HTTP sync manager not initialized');
+        }
+
+        // Initialize if needed
+        if (!this.httpSyncManager.isInitialized) {
+            const initResult = await this.httpSyncManager.initialize();
+            if (!initResult.success) {
+                throw new Error(`HTTP sync initialization failed: ${initResult.error}`);
+            }
+        }
+
+        // Perform HTTP sync
+        const syncResult = await this.httpSyncManager.syncViaHTTP(phantomML);
+        
+        console.log(`HTTP sync completed for store ${sourceStoreId}`);
+        return syncResult;
+    }
+
+    /**
+     * Sync via cloud storage
+     */
+    async syncViaCloud(sourceStoreId, phantomML) {
+        if (!this.cloudSyncManager) {
+            throw new Error('Cloud sync manager not initialized');
+        }
+
+        // Initialize if needed
+        if (!this.cloudSyncManager.isInitialized) {
+            const initResult = await this.cloudSyncManager.initialize();
+            if (!initResult.success) {
+                throw new Error(`Cloud sync initialization failed: ${initResult.error}`);
+            }
+        }
+
+        // Perform cloud sync
+        const syncResult = await this.cloudSyncManager.syncToCloud(phantomML);
+        
+        console.log(`Cloud sync completed for store ${sourceStoreId}`);
+        return syncResult;
+    }
+
+    /**
+     * Sync via local files (original method)
+     */
+    async syncViaLocalFiles(sourceStoreId, phantomML) {
+        // Load existing sync data
+        await this.loadSyncData();
+        
+        // Get source store data
+        const sourceStore = this.stores.get(sourceStoreId);
+        if (!sourceStore) {
+            throw new Error(`Store ${sourceStoreId} not registered`);
+        }
+
+        // Create consolidated learning data
+        const consolidatedData = await this.createConsolidatedLearningData(sourceStoreId, phantomML);
+        
+        // Update source store info
+        sourceStore.lastSync = new Date().toISOString();
+        sourceStore.verificationCount = phantomML.verificationResults.size;
+        sourceStore.accuracy = phantomML.calculateOverallAccuracy();
+        
+        // Extract categories from verification data
+        if (!(sourceStore.categories instanceof Set)) {
+            sourceStore.categories = new Set(sourceStore.categories || []);
+        }
+        phantomML.categoryPatterns.forEach((pattern, category) => {
+            sourceStore.categories.add(category);
+        });
+
+        // Save consolidated data for other stores to use
+        await this.saveConsolidatedData(consolidatedData);
+        
+        // Apply learning from other stores
+        await this.applyMultiStoreLearning(sourceStoreId, phantomML);
+        
+        await this.saveSyncData();
+        
+        console.log(`Local file sync completed for store ${sourceStoreId}`);
+        return {
+            success: true,
+            syncedStores: this.stores.size - 1,
+            consolidatedVerifications: consolidatedData.totalVerifications,
+            improvedAccuracy: consolidatedData.networkAccuracy,
+            syncMethod: 'local-files'
+        };
     }
 
     /**
@@ -278,7 +385,12 @@ class MultiStoreSyncManager {
                 commonRiskFactors: Array.from(consolidatedData.commonRiskFactors.entries())
             };
 
-            await fs.writeFile('phantom_network_data.json', JSON.stringify(data, null, 2));
+            // Use user data directory to avoid permission issues
+            const userDataDir = path.dirname(this.syncDataFile);
+            await fs.mkdir(userDataDir, { recursive: true });
+            
+            const networkDataFile = path.join(userDataDir, 'phantom_network_data.json');
+            await fs.writeFile(networkDataFile, JSON.stringify(data, null, 2));
         } catch (error) {
             console.error(`Error saving consolidated data: ${error.message}`);
         }

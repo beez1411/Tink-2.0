@@ -1,6 +1,6 @@
 {
   "name": "tink-2.0",
-  "version": "2.0.15",
+  "version": "2.0.17",
   "description": "Tink 2.0 - JavaScript-powered desktop application for processing inventory data",
   "main": "main.js",
   "scripts": {
@@ -11,7 +11,8 @@
     "dist": "electron-builder --publish=never",
     "release": "electron-builder --publish=always",
     "install-browsers": "powershell -Command \"$env:PUPPETEER_CACHE_DIR = Join-Path (Get-Location) 'puppeteer-cache'; npx puppeteer browsers install chrome\"",
-    "postinstall": "electron-builder install-app-deps && npm run install-browsers"
+    "postinstall": "electron-builder install-app-deps && npm run install-browsers",
+    "postinstall-production": "node scripts/setup-production.js"
   },
   "keywords": [
     "inventory",
@@ -53,8 +54,10 @@
     ],
     "asarUnpack": [
       "node_modules/puppeteer/**/*",
-      "puppeteer-cache/**/*"
+      "puppeteer-cache/**/*",
+      "node_modules/@puppeteer/**/*"
     ],
+    "afterPack": "./scripts/after-pack.js",
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"

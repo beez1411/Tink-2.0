@@ -17,8 +17,12 @@ class PhantomInventoryML {
         this.categoryPatterns = new Map();
         this.multiStoreData = new Map();
         this.learningRate = 0.1;
-        this.dataFile = `phantom_ml_data_${storeId}.json`;
-        this.multiStoreFile = 'phantom_ml_multi_store.json';
+        
+        // Use user data directory to avoid permission issues
+        const os = require('os');
+        const userDataDir = path.join(os.homedir(), '.tink2-data');
+        this.dataFile = path.join(userDataDir, `phantom_ml_data_${storeId}.json`);
+        this.multiStoreFile = path.join(userDataDir, 'phantom_ml_multi_store.json');
         
         // Initialize model weights to prevent null reference errors
         this.modelWeights = {
@@ -519,6 +523,10 @@ class PhantomInventoryML {
      */
     async saveMLData() {
         try {
+            // Ensure user data directory exists
+            const userDataDir = path.dirname(this.dataFile);
+            await fs.mkdir(userDataDir, { recursive: true });
+            
             const data = {
                 verificationResults: Array.from(this.verificationResults.entries()),
                 categoryPatterns: Array.from(this.categoryPatterns.entries()),

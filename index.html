@@ -778,6 +778,46 @@
                     </div>
                     
                     <div class="config-section">
+                        <h3>Multi-Location Network Sync</h3>
+                        
+                        <div class="input-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="networkSyncEnabled" />
+                                <span class="checkmark"></span>
+                                Enable Network Synchronization
+                            </label>
+                            <small class="input-help">Share ML learning data across store locations</small>
+                        </div>
+                        
+                        <div class="network-sync-settings" id="networkSyncSettings" style="display: none;">
+                            <div class="input-group">
+                                <label for="networkSyncUrl">Sync Server URL:</label>
+                                <input type="url" id="networkSyncUrl" placeholder="http://178.128.185.6:3000" value="http://178.128.185.6:3000" />
+                                <small class="input-help">Your Digital Ocean sync server URL</small>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="networkSyncApiKey">Sync API Key:</label>
+                                <input type="password" id="networkSyncApiKey" placeholder="Your sync server API key" value="tink-ml-sync-a8b3fd7db46dd67d434aa5a74821fd64" />
+                                <small class="input-help">API key from your sync server configuration</small>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="networkStoreId">Store ID:</label>
+                                <input type="text" id="networkStoreId" placeholder="17521" />
+                                <small class="input-help">Unique identifier for this store (e.g., 17521, 18179, 18181)</small>
+                            </div>
+                            
+                            <div class="network-sync-status" id="networkSyncStatus">
+                                <span class="status-indicator">
+                                    <span class="status-dot status-unknown"></span>
+                                    <span class="status-text">Not Tested</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
                         <h3>General Settings</h3>
                         
                         <div class="input-group">
@@ -805,7 +845,8 @@
                     </span>
                 </div>
                 <div class="modal-buttons">
-                    <button type="button" id="testConnectionBtn" class="btn btn-secondary">Test Connection</button>
+                    <button type="button" id="testConnectionBtn" class="btn btn-secondary">Test Paladin API</button>
+                    <button type="button" id="testNetworkSyncBtn" class="btn btn-secondary">Test Network Sync</button>
                     <button type="button" id="resetConfigBtn" class="btn btn-warning">Reset to Defaults</button>
                     <button type="button" id="cancelConfigBtn" class="btn btn-secondary">Cancel</button>
                     <button type="button" id="saveConfigBtn" class="btn btn-primary">Save Configuration</button>

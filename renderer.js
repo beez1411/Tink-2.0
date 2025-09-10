@@ -7704,6 +7704,23 @@ function populateApiConfigForm(config) {
     document.getElementById('apiPassword').value = config.paladin.password || '';
     document.getElementById('apiKey').value = config.paladin.apiKey || '';
     
+    // Network Sync settings
+    const networkSyncEnabled = document.getElementById('networkSyncEnabled');
+    const networkSyncSettings = document.getElementById('networkSyncSettings');
+    
+    networkSyncEnabled.checked = config.networkSync?.enabled || false;
+    document.getElementById('networkSyncUrl').value = config.networkSync?.apiBaseUrl || 'http://178.128.185.6:3000';
+    document.getElementById('networkSyncApiKey').value = config.networkSync?.apiKey || 'tink-ml-sync-a8b3fd7db46dd67d434aa5a74821fd64';
+    document.getElementById('networkStoreId').value = config.networkSync?.storeId || '';
+    
+    // Show/hide network sync settings based on enabled state
+    networkSyncSettings.style.display = networkSyncEnabled.checked ? 'block' : 'none';
+    
+    // Add event listener for network sync toggle
+    networkSyncEnabled.addEventListener('change', function() {
+        networkSyncSettings.style.display = this.checked ? 'block' : 'none';
+    });
+    
     // Advanced settings
     document.getElementById('apiTimeout').value = config.paladin.timeout / 1000 || 30;
     document.getElementById('apiPageSize').value = config.paladin.pageSize || 100;
@@ -7733,10 +7750,12 @@ function setupApiConfigModalListeners() {
     
     // Form action handlers
     const testBtn = modal.querySelector('#testConnectionBtn');
+    const testNetworkSyncBtn = modal.querySelector('#testNetworkSyncBtn');
     const resetBtn = modal.querySelector('#resetConfigBtn');
     const saveBtn = modal.querySelector('#saveConfigBtn');
     
     testBtn.addEventListener('click', testApiConnectionFromModal);
+    testNetworkSyncBtn.addEventListener('click', testNetworkSyncFromModal);
     resetBtn.addEventListener('click', resetApiConfiguration);
     saveBtn.addEventListener('click', saveApiConfiguration);
     
@@ -7804,6 +7823,109 @@ async function testApiConnectionFromModal() {
     } finally {
         testBtn.disabled = false;
         testBtn.textContent = 'Test Connection';
+    }
+}
+
+// Test Network Sync connection from modal
+async function testNetworkSyncFromModal() {
+    const testBtn = document.getElementById('testNetworkSyncBtn');
+    const networkSyncStatus = document.getElementById('networkSyncStatus');
+    
+    testBtn.disabled = true;
+    testBtn.textContent = 'Testing...';
+    
+    updateNetworkSyncStatus({ success: null, message: 'Testing network sync...' });
+    
+    try {
+        // Get current form values
+        const syncUrl = document.getElementById('networkSyncUrl').value;
+        const syncApiKey = document.getElementById('networkSyncApiKey').value;
+        const storeId = document.getElementById('networkStoreId').value;
+        
+        if (!syncUrl || !syncApiKey) {
+            throw new Error('Please fill in Sync Server URL and API Key');
+        }
+        
+        // Test the connection using our test script logic
+        const response = await testNetworkSyncConnection(syncUrl, syncApiKey, storeId);
+        
+        if (response.success) {
+            updateNetworkSyncStatus({ 
+                success: true, 
+                message: `Connected successfully - ${response.stores} stores in network` 
+            });
+        } else {
+            updateNetworkSyncStatus({ success: false, message: response.error });
+        }
+    } catch (error) {
+        updateNetworkSyncStatus({ success: false, message: error.message });
+    } finally {
+        testBtn.disabled = false;
+        testBtn.textContent = 'Test Network Sync';
+    }
+}
+
+// Test network sync connection
+async function testNetworkSyncConnection(syncUrl, apiKey, storeId) {
+    return new Promise((resolve, reject) => {
+        const url = new URL(syncUrl + '/api/health');
+        const isHttps = url.protocol === 'https:';
+        
+        const options = {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+                'User-Agent': 'Tink-2.0-Config-Test'
+            }
+        };
+        
+        // Use fetch if available, otherwise fall back to node http
+        if (typeof fetch !== 'undefined') {
+            fetch(syncUrl + '/api/health', options)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'healthy') {
+                        resolve({ success: true, stores: data.stores || 0 });
+                    } else {
+                        reject(new Error('Server responded but status is not healthy'));
+                    }
+                })
+                .catch(error => {
+                    reject(new Error(`Connection failed: ${error.message}`));
+                });
+        } else {
+            // Fallback for Electron environment - use IPC to main process
+            window.api.testNetworkSync({ syncUrl, apiKey, storeId })
+                .then(response => {
+                    if (response.success) {
+                        resolve(response);
+                    } else {
+                        reject(new Error(response.error));
+                    }
+                })
+                .catch(error => {
+                    reject(new Error(`Test failed: ${error.message}`));
+                });
+        }
+    });
+}
+
+// Update network sync status display
+function updateNetworkSyncStatus(result) {
+    const statusElement = document.getElementById('networkSyncStatus');
+    const statusDot = statusElement.querySelector('.status-dot');
+    const statusText = statusElement.querySelector('.status-text');
+    
+    if (result.success === null) {
+        statusDot.className = 'status-dot status-testing';
+        statusText.textContent = result.message || 'Testing...';
+    } else if (result.success) {
+        statusDot.className = 'status-dot status-success';
+        statusText.textContent = result.message || 'Connected';
+    } else {
+        statusDot.className = 'status-dot status-error';
+        statusText.textContent = result.message || 'Connection failed';
     }
 }
 
@@ -7900,6 +8022,13 @@ function collectApiConfigFormData() {
             retryDelay: parseInt(document.getElementById('apiRetryDelay').value),
             includeZeroStock: document.getElementById('apiIncludeZeroStock').checked,
             defaultSupplierFilter: document.getElementById('apiDefaultSupplier').value || null
+        },
+        networkSync: {
+            enabled: document.getElementById('networkSyncEnabled').checked,
+            apiBaseUrl: document.getElementById('networkSyncUrl').value,
+            apiKey: document.getElementById('networkSyncApiKey').value,
+            storeId: document.getElementById('networkStoreId').value,
+            networkSync: 'http'
         },
         general: {
             preferApiOverFiles: document.getElementById('preferApiOverFiles').checked,

@@ -1,5 +1,5 @@
 {
-  "version": "2.0.14",
+  "version": "2.0.16",
   "phantom_inventory": {
     "enabled": true,
     "ml_learning_enabled": true,

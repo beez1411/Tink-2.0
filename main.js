@@ -18,12 +18,26 @@ let persistentInventoryData = {
   analysisResults: null
 };
 
-// Persistent data file path
-const PERSISTENT_DATA_FILE = 'persistent_inventory_data.json';
+// Persistent data file path - use user data directory to avoid permission issues
+const getUserDataDirectory = () => {
+  try {
+    // Use Electron's userData path
+    return app.getPath('userData');
+  } catch (error) {
+    // Fallback to user's home directory
+    return path.join(os.homedir(), '.tink2-data');
+  }
+};
+
+const PERSISTENT_DATA_FILE = path.join(getUserDataDirectory(), 'persistent_inventory_data.json');
 
 // Save persistent inventory data to file
 async function savePersistentInventoryData() {
   try {
+    // Ensure user data directory exists
+    const userDataDir = path.dirname(PERSISTENT_DATA_FILE);
+    await fs.promises.mkdir(userDataDir, { recursive: true });
+    
     const dataToSave = {
       ...persistentInventoryData,
       // Don't save the full data array to avoid huge files, just metadata
@@ -1634,6 +1648,9 @@ ipcMain.handle('export-stock-out-predictions', async (event, data) => {
 app.whenReady().then(async () => {
   console.log('Application ready, creating phantom setup instance...');
   
+  // Check for critical dependencies
+  await checkCriticalDependencies();
+  
   try {
     phantomSetup = new PhantomSetup();
     console.log('PhantomSetup instance created successfully');
@@ -1646,8 +1663,81 @@ app.whenReady().then(async () => {
   } catch (error) {
     console.error('Error creating phantom setup instance:', error);
     console.error('Stack trace:', error.stack);
+    
+    // Show user-friendly error dialog
+    if (mainWindow) {
+      dialog.showErrorBox('Initialization Error', 
+        `Failed to initialize application components: ${error.message}\n\n` +
+        'Please try restarting the application or contact support if the problem persists.'
+      );
+    }
   }
 });
+
+// Check for critical dependencies and show helpful error messages
+async function checkCriticalDependencies() {
+  const issues = [];
+  
+  try {
+    // Check if Puppeteer is available
+    require('puppeteer');
+  } catch (error) {
+    issues.push('Puppeteer web scraping library is missing');
+  }
+  
+  try {
+    // Check if ExcelJS is available
+    require('exceljs');
+  } catch (error) {
+    issues.push('ExcelJS library is missing');
+  }
+  
+  // Check if Puppeteer cache directory exists
+  const puppeteerCacheDir = path.join(__dirname, 'puppeteer-cache');
+  if (!fs.existsSync(puppeteerCacheDir)) {
+    issues.push('Puppeteer browser cache directory is missing');
+  }
+  
+  // Check if Chrome browser is installed
+  const chromeDir = path.join(puppeteerCacheDir, 'chrome');
+  if (!fs.existsSync(chromeDir) || fs.readdirSync(chromeDir).length === 0) {
+    issues.push('Chrome browser is not installed for web scraping');
+  }
+  
+  if (issues.length > 0) {
+    console.warn('Dependency issues detected:');
+    issues.forEach(issue => console.warn(`- ${issue}`));
+    
+    // Try to auto-fix some issues
+    try {
+      if (!fs.existsSync(puppeteerCacheDir)) {
+        fs.mkdirSync(puppeteerCacheDir, { recursive: true });
+        console.log('Created puppeteer-cache directory');
+      }
+      
+      // Try to install Chrome if missing
+      const chromeDir = path.join(puppeteerCacheDir, 'chrome');
+      if (!fs.existsSync(chromeDir) || fs.readdirSync(chromeDir).length === 0) {
+        console.log('Attempting to install Chrome browser...');
+        const { spawn } = require('child_process');
+        const installProcess = spawn('npx', ['puppeteer', 'browsers', 'install', 'chrome'], {
+          env: { ...process.env, PUPPETEER_CACHE_DIR: puppeteerCacheDir },
+          stdio: 'inherit'
+        });
+        
+        installProcess.on('close', (code) => {
+          if (code === 0) {
+            console.log('Chrome browser installed successfully');
+          } else {
+            console.warn('Failed to install Chrome browser automatically');
+          }
+        });
+      }
+    } catch (fixError) {
+      console.error('Error attempting to fix dependencies:', fixError.message);
+    }
+  }
+}
 
 // Run phantom setup wizard
 ipcMain.handle('phantom-setup-wizard', async () => {
@@ -2536,7 +2626,7 @@ ipcMain.handle('get-api-config', async (event) => {
 // Update API configuration
 ipcMain.handle('update-api-config', async (event, configData) => {
   try {
-    const { paladin, general } = configData;
+    const { paladin, general, networkSync } = configData;
     
     let success = true;
     
@@ -2546,6 +2636,10 @@ ipcMain.handle('update-api-config', async (event, configData) => {
     
     if (general && success) {
       success = apiConfigManager.updateGeneralConfig(general);
+    }
+    
+    if (networkSync && success) {
+      success = apiConfigManager.updateNetworkSyncConfig(networkSync);
     }
     
     if (success) {
@@ -2566,6 +2660,63 @@ ipcMain.handle('test-api-connection', async (event) => {
     return { success: true, data: result };
   } catch (error) {
     console.error('Error testing API connection:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Test Network Sync connection
+ipcMain.handle('test-network-sync', async (event, { syncUrl, apiKey, storeId }) => {
+  try {
+    const http = require('http');
+    const https = require('https');
+    
+    return new Promise((resolve, reject) => {
+      const url = new URL(syncUrl + '/api/health');
+      const httpModule = url.protocol === 'https:' ? https : http;
+      
+      const options = {
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname,
+        method: 'GET',
+        timeout: 10000,
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'User-Agent': 'Tink-2.0-Network-Test'
+        }
+      };
+      
+      const req = httpModule.request(options, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            const response = JSON.parse(data);
+            if (res.statusCode >= 200 && res.statusCode < 300 && response.status === 'healthy') {
+              resolve({ success: true, stores: response.stores || 0 });
+            } else {
+              resolve({ success: false, error: `Server error: ${response.error || 'Unknown error'}` });
+            }
+          } catch (parseError) {
+            resolve({ success: false, error: 'Invalid server response' });
+          }
+        });
+      });
+      
+      req.on('error', (error) => {
+        resolve({ success: false, error: `Connection failed: ${error.message}` });
+      });
+      
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ success: false, error: 'Connection timeout' });
+      });
+      
+      req.end();
+    });
+  } catch (error) {
+    console.error('Error testing network sync:', error);
     return { success: false, error: error.message };
   }
 });

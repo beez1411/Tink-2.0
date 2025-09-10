@@ -74,6 +74,7 @@ contextBridge.exposeInMainWorld('api', {
   getApiConfig: () => ipcRenderer.invoke('get-api-config'),
   updateApiConfig: (configData) => ipcRenderer.invoke('update-api-config', configData),
   testApiConnection: () => ipcRenderer.invoke('test-api-connection'),
+  testNetworkSync: (config) => ipcRenderer.invoke('test-network-sync', config),
   resetApiConfig: () => ipcRenderer.invoke('reset-api-config'),
   getApiInventoryData: (options) => ipcRenderer.invoke('get-api-inventory-data', options),
   refreshApiInventory: () => ipcRenderer.invoke('refresh-api-inventory'),

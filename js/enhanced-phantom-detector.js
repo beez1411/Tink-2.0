@@ -5,6 +5,7 @@
 
 const PhantomInventoryML = require('./phantom-inventory-ml');
 const MultiStoreSyncManager = require('./multi-store-sync');
+const NetworkConfigManager = require('./network-config-manager');
 const VerificationWorkflow = require('./verification-workflow');
 const fs = require('fs').promises;
 
@@ -16,8 +17,17 @@ class EnhancedPhantomDetector {
         // Initialize ML system
         this.phantomML = new PhantomInventoryML(storeId);
         
-        // Initialize multi-store sync
-        this.syncManager = new MultiStoreSyncManager();
+        // Load network sync configuration (HTTP/cloud/local)
+        const networkConfig = new NetworkConfigManager().getConfig();
+
+        // Initialize multi-store sync with config
+        this.syncManager = new MultiStoreSyncManager({
+            storeId: storeId,
+            networkSync: networkConfig.networkSync,
+            apiBaseUrl: networkConfig.apiBaseUrl,
+            apiKey: networkConfig.apiKey,
+            cloudProvider: networkConfig.cloudProvider
+        });
         
         // Initialize verification workflow
         this.verificationWorkflow = new VerificationWorkflow(storeId, this.phantomML);
