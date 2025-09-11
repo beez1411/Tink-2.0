@@ -1,0 +1,5334 @@
+{
+  "storeId": "16719",
+  "verificationQueue": [],
+  "activeVerifications": [],
+  "completedVerifications": [],
+  "verificationSheets": [
+    [
+      0,
+      {
+        "id": 0,
+        "name": "Verification Sheet 1",
+        "items": [
+          {
+            "partNumber": "2014525",
+            "description": "20V/60V HAMMERDRILL 1BAT",
+            "currentStock": 1,
+            "unitCost": 284.18,
+            "location": "1450",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $284.18, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.779Z"
+          },
+          {
+            "partNumber": "2026530",
+            "description": "V20 RP IMP WRENCH 1/2 TO",
+            "currentStock": 1,
+            "unitCost": 119.2,
+            "location": "1450",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $119.20, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.779Z"
+          },
+          {
+            "partNumber": "2306868",
+            "description": "M18 2PC KIT DRILL IMPACT",
+            "currentStock": 1,
+            "unitCost": 177.29,
+            "location": "-1",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $177.29, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.779Z"
+          },
+          {
+            "partNumber": "2400265",
+            "description": "DRILL-DRIVR 20V MAX BT",
+            "currentStock": 1,
+            "unitCost": 106.81,
+            "location": "1440",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $106.81, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.779Z"
+          },
+          {
+            "partNumber": "30230",
+            "description": "WIRE 12/2 UFWG 250",
+            "currentStock": 1,
+            "unitCost": 133.11,
+            "location": "870",
+            "supplier": "10",
+            "riskScore": 110,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $133.11, 12 months stagnant",
+              "Electrical part: Orders in 250s, only 1 showing"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.779Z"
+          },
+          {
+            "partNumber": "4023453",
+            "description": "ELBOW INSERT POLY 1/2MPT",
+            "currentStock": 10,
+            "unitCost": 0.48,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 2.2/week, now 0.0/week)",
+              "Fast mover (2.2/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.779Z"
+          },
+          {
+            "partNumber": "4027470",
+            "description": "VINYL TUBING 3/16X5/16\"",
+            "currentStock": 211,
+            "unitCost": 0.152,
+            "location": "210",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 2.0/week, now 0.0/week)",
+              "Fast mover (2.0/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.779Z"
+          },
+          {
+            "partNumber": "41754",
+            "description": "PIPE POLY BLK 3/4\"X100'",
+            "currentStock": 50,
+            "unitCost": 0.222,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 11.2/week, now 0.0/week)",
+              "Fast mover (11.2/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.779Z"
+          },
+          {
+            "partNumber": "4267977",
+            "description": "TUBE STRAP GALVZED 1/2\"",
+            "currentStock": 5,
+            "unitCost": 0.151,
+            "location": "1620",
+            "supplier": "10",
+            "riskScore": 165,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 3.9/week, now 0.0/week)",
+              "Fast mover (3.9/week) completely stopped selling",
+              "Order quantity anomaly: Orders in 100s, only 5 showing"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.779Z"
+          },
+          {
+            "partNumber": "43109",
+            "description": "COUPLE 2\" SXS SCH40",
+            "currentStock": 10,
+            "unitCost": 0.79,
+            "location": "2290",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 2.1/week, now 0.0/week)",
+              "Fast mover (2.1/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.779Z"
+          },
+          {
+            "partNumber": "43966",
+            "description": "NIPPLE SCH80PVC1/2\"X1.5\"",
+            "currentStock": 23,
+            "unitCost": 0.29,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 2.5/week, now 0.0/week)",
+              "Fast mover (2.5/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5606306",
+            "description": "GRADE WOOD STAKE 1X2X18\"",
+            "currentStock": 25,
+            "unitCost": 0.42,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 3.2/week, now 0.0/week)",
+              "Fast mover (3.2/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5606314",
+            "description": "WOOD GRADE STAKE 1X2X24\"",
+            "currentStock": 53,
+            "unitCost": 0.51,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 5.5/week, now 0.0/week)",
+              "Fast mover (5.5/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7035306",
+            "description": "COMPRESSION ELBOW 5/8\"",
+            "currentStock": 11,
+            "unitCost": 0.64,
+            "location": "2040",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 2.1/week, now 0.0/week)",
+              "Fast mover (2.1/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7107311",
+            "description": "IRRIGTN BUBBLR FULL CIRC",
+            "currentStock": 21,
+            "unitCost": 0.77,
+            "location": "2040",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 2.4/week, now 0.0/week)",
+              "Fast mover (2.4/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7782931",
+            "description": "TOMATO CAGE STL 4RNG 54",
+            "currentStock": 9,
+            "unitCost": 2.29,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 3.0/week, now 0.0/week)",
+              "Fast mover (3.0/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8275075",
+            "description": "NAIL PEGS 10\" 100CT",
+            "currentStock": 39,
+            "unitCost": 0.561,
+            "location": "1660",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 3.8/week, now 0.0/week)",
+              "Fast mover (3.8/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "82760",
+            "description": "STICK FLAG12X18\"\"",
+            "currentStock": 26,
+            "unitCost": 1.04,
+            "location": "1980",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 3.2/week, now 0.0/week)",
+              "Fast mover (3.2/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9028473",
+            "description": "GATORADE ORG 20OZ",
+            "currentStock": 5,
+            "unitCost": 1.59,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 130,
+            "verificationPriority": 100,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 2.2/week, now 0.0/week)",
+              "Fast mover (2.2/week) completely stopped selling"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1000655",
+            "description": "CONTROL PRO130 SPRYR1.5G",
+            "currentStock": 1,
+            "unitCost": 181.41,
+            "location": "470",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $181.41, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1000942",
+            "description": "CM AIR COMPRESSOR 3GAL",
+            "currentStock": 1,
+            "unitCost": 244.22,
+            "location": "1520",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $244.22, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1026289",
+            "description": "PAINT SPRYR HNDHLD 11.8\"",
+            "currentStock": 1,
+            "unitCost": 232.17,
+            "location": "480",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $232.17, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1026490",
+            "description": "REG SEL INT EGSHL 1X 5G",
+            "currentStock": 1,
+            "unitCost": 207.51,
+            "location": "620",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $207.51, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1030034",
+            "description": "CM AIR CMPRSR BRSHLS 20V",
+            "currentStock": 1,
+            "unitCost": 173.93,
+            "location": "1010",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $173.93, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1037825",
+            "description": "ATC LADDER AL10FT",
+            "currentStock": 1,
+            "unitCost": 218.43,
+            "location": "0",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $218.43, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1374453",
+            "description": "BLUE MAX LQD RUBBER 5GL",
+            "currentStock": 1,
+            "unitCost": 147.22,
+            "location": "370",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $147.22, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1399765",
+            "description": "STAIN SC ACR SS WHT 5G",
+            "currentStock": 1,
+            "unitCost": 126.88,
+            "location": "390",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $126.88, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1529965",
+            "description": "PAINT SPRAYER FLEXIO 575",
+            "currentStock": 1,
+            "unitCost": 112.53,
+            "location": "470",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $112.53, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1608033",
+            "description": "PAINT SPRAYER PROX17",
+            "currentStock": 1,
+            "unitCost": 422.71,
+            "location": "480",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $422.71, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1623388",
+            "description": "GARAGE FLOOR COAT GRAY",
+            "currentStock": 1,
+            "unitCost": 150.26,
+            "location": "370",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $150.26, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1697986",
+            "description": "AIRLESS SPRAYER 0.27 GPM",
+            "currentStock": 1,
+            "unitCost": 281.09,
+            "location": "480",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $281.09, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2001193",
+            "description": "CM DIGITL TRQ WRNCH 1/2\"",
+            "currentStock": 1,
+            "unitCost": 169.93,
+            "location": "1000",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $169.93, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2002079",
+            "description": "20V MX ATMC IMP WRN1/2TO",
+            "currentStock": 1,
+            "unitCost": 176.77,
+            "location": "1440",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $176.77, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2006108",
+            "description": "20V MX XR 1/4SHT SNDR TO",
+            "currentStock": 1,
+            "unitCost": 131.12,
+            "location": "1440",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $131.12, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2009987",
+            "description": "CM MECHANIC TL SET 308PC",
+            "currentStock": 1,
+            "unitCost": 252.41,
+            "location": "-1",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $252.41, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2014526",
+            "description": "20V/60V GRINDER 4-1/2 TO",
+            "currentStock": 1,
+            "unitCost": 176.77,
+            "location": "1440",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $176.77, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2017520",
+            "description": "HAMMR DRL&IMPACT DRV KIT",
+            "currentStock": 1,
+            "unitCost": 338.33,
+            "location": "0",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $338.33, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2022167",
+            "description": "MECHANIC TOOL SET 239PC",
+            "currentStock": 2,
+            "unitCost": 102.5,
+            "location": "1460",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $102.50, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2023067",
+            "description": "BATTERY LITHIUM ION 3PK",
+            "currentStock": 1,
+            "unitCost": 266.2,
+            "location": "1450",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $266.20, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2023462",
+            "description": "PACKOUT CABINET",
+            "currentStock": 1,
+            "unitCost": 109.26,
+            "location": "110",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $109.26, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2033682",
+            "description": "CM MECHANC TOOL ST 121PC",
+            "currentStock": 1,
+            "unitCost": 148.55,
+            "location": "1080",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $148.55, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2038138",
+            "description": "PACKOUT ROLLING TOOL BOX",
+            "currentStock": 1,
+            "unitCost": 122.43,
+            "location": "0",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $122.43, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2103414",
+            "description": "NAILER AIR FINISH 15GA",
+            "currentStock": 1,
+            "unitCost": 198.39,
+            "location": "1240",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $198.39, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2403343",
+            "description": "FRAME NAILER ROUND HEAD",
+            "currentStock": 1,
+            "unitCost": 230.72,
+            "location": "1240",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $230.72, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2408789",
+            "description": "BATRY LI-ION 20VMAX 5AH",
+            "currentStock": 1,
+            "unitCost": 128.12,
+            "location": "-1",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $128.12, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2493385",
+            "description": "FAST CHARGER 20V/60V MAX",
+            "currentStock": 1,
+            "unitCost": 100.7,
+            "location": "1450",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $100.70, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2526200",
+            "description": "20V MAX COMBO KIT 4PC",
+            "currentStock": 1,
+            "unitCost": 381.44,
+            "location": "1440",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $381.44, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2808962",
+            "description": "M18 OSCILLATING TOOL TO",
+            "currentStock": 3,
+            "unitCost": 104.554,
+            "location": "1450",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $104.55, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2829273",
+            "description": "V20 BATTERY 2AH 2PK",
+            "currentStock": 1,
+            "unitCost": 107.2,
+            "location": "1450",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $107.20, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2834414",
+            "description": "V20 IMPACT WRNCH 1/2\"TO",
+            "currentStock": 1,
+            "unitCost": 128.66,
+            "location": "1450",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $128.66, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          }
+        ],
+        "status": "completed",
+        "priority": 96.9,
+        "highPriorityCount": 50,
+        "estimatedTime": 129,
+        "createdAt": "2025-09-11T00:14:39.780Z",
+        "completedAt": "2025-09-11T00:19:27.442Z",
+        "validationResults": [
+          {
+            "partNumber": "30230",
+            "systemStock": 1,
+            "actualCount": 0,
+            "wasPhantom": true,
+            "riskScore": 110,
+            "category": "slow-mover-phantom",
+            "unitCost": 133.11,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $133.11, 12 months stagnant",
+              "Electrical part: Orders in 250s, only 1 showing"
+            ],
+            "notes": "",
+            "verifiedBy": "Unknown",
+            "verificationDate": "2025-09-11T00:19:27.425Z"
+          },
+          {
+            "partNumber": "41754",
+            "systemStock": 50,
+            "actualCount": 45,
+            "wasPhantom": true,
+            "riskScore": 130,
+            "category": "fast-mover-phantom",
+            "unitCost": 0.222,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 11.2/week, now 0.0/week)",
+              "Fast mover (11.2/week) completely stopped selling"
+            ],
+            "notes": "",
+            "verifiedBy": "Unknown",
+            "verificationDate": "2025-09-11T00:19:27.425Z"
+          },
+          {
+            "partNumber": "43109",
+            "systemStock": 10,
+            "actualCount": 9,
+            "wasPhantom": true,
+            "riskScore": 130,
+            "category": "fast-mover-phantom",
+            "unitCost": 0.79,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 2.1/week, now 0.0/week)",
+              "Fast mover (2.1/week) completely stopped selling"
+            ],
+            "notes": "",
+            "verifiedBy": "Unknown",
+            "verificationDate": "2025-09-11T00:19:27.425Z"
+          },
+          {
+            "partNumber": "82760",
+            "systemStock": 26,
+            "actualCount": 24,
+            "wasPhantom": true,
+            "riskScore": 130,
+            "category": "fast-mover-phantom",
+            "unitCost": 1.04,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 3.2/week, now 0.0/week)",
+              "Fast mover (3.2/week) completely stopped selling"
+            ],
+            "notes": "",
+            "verifiedBy": "Unknown",
+            "verificationDate": "2025-09-11T00:19:27.425Z"
+          },
+          {
+            "partNumber": "4023453",
+            "systemStock": 10,
+            "actualCount": 14,
+            "wasPhantom": false,
+            "riskScore": 130,
+            "category": "fast-mover-phantom",
+            "unitCost": 0.48,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 2.2/week, now 0.0/week)",
+              "Fast mover (2.2/week) completely stopped selling"
+            ],
+            "notes": "",
+            "verifiedBy": "Unknown",
+            "verificationDate": "2025-09-11T00:19:27.425Z"
+          }
+        ]
+      }
+    ],
+    [
+      1,
+      {
+        "id": 1,
+        "name": "Verification Sheet 2",
+        "items": [
+          {
+            "partNumber": "2862829",
+            "description": "COMBO KIT 4TL V20 BRSHD",
+            "currentStock": 1,
+            "unitCost": 165.67,
+            "location": "3849",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $165.67, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2896603",
+            "description": "20V MAX DRYWLL CUTOUT",
+            "currentStock": 1,
+            "unitCost": 124.22,
+            "location": "1450",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $124.22, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4000908",
+            "description": "DEHUMIDIFIER 35PT",
+            "currentStock": 1,
+            "unitCost": 166.22,
+            "location": "240",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $166.22, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4001639",
+            "description": "EVPORTVE HUMDFIR 4.75GAL",
+            "currentStock": 1,
+            "unitCost": 151.06,
+            "location": "240",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $151.06, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4003575",
+            "description": "FIRE PIT TABLE LP 24X42\"",
+            "currentStock": 2,
+            "unitCost": 239.98,
+            "location": "0",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $239.98, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4005309",
+            "description": "PORT AC W/RMT 9000BTU",
+            "currentStock": 1,
+            "unitCost": 291.2,
+            "location": "240",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $291.20, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4010381",
+            "description": "MISTING FAN BLK/GRY 18\"H",
+            "currentStock": 1,
+            "unitCost": 245.85,
+            "location": "1440",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $245.85, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4026200",
+            "description": "FIRE PIT RND  29\"",
+            "currentStock": 1,
+            "unitCost": 105.43,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $105.43, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4028119",
+            "description": "THRMST HTG/CLNG SQR 2.8\"",
+            "currentStock": 1,
+            "unitCost": 107.26,
+            "location": "1679",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $107.26, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4035333",
+            "description": "BATTERY SUMP 12V 7-1/2HR",
+            "currentStock": 1,
+            "unitCost": 121.68,
+            "location": "2070",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $121.68, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4035374",
+            "description": "KEROSENE HTR 23500 BTU",
+            "currentStock": 1,
+            "unitCost": 145.8,
+            "location": "-1",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $145.80, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4318085",
+            "description": "TUB&SHWR BANBURY CH",
+            "currentStock": 1,
+            "unitCost": 102.8,
+            "location": "1700",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $102.80, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4891941",
+            "description": "KIT FAUCT PD NORI CH",
+            "currentStock": 1,
+            "unitCost": 154.32,
+            "location": "1700",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $154.32, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4891966",
+            "description": "BANBURY LAV FCT WIDE BN",
+            "currentStock": 1,
+            "unitCost": 122.89,
+            "location": "1699",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $122.89, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4893541",
+            "description": "CHARMAINE P/D KIT FCT SS",
+            "currentStock": 1,
+            "unitCost": 161.92,
+            "location": "1700",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $161.92, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5029048",
+            "description": "SHELVING UNIT CM 36\"X50\"",
+            "currentStock": 1,
+            "unitCost": 127.91,
+            "location": "-1",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $127.91, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5427240",
+            "description": "BB KEYPAD ENTRY LOCK",
+            "currentStock": 1,
+            "unitCost": 108.41,
+            "location": "1744",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $108.41, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "6137970",
+            "description": "COOKER CANNER ALUM 16QT",
+            "currentStock": 2,
+            "unitCost": 107.24,
+            "location": "1831",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $107.24, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "6412845",
+            "description": "VACUUM FOOD SEALER 120W",
+            "currentStock": 1,
+            "unitCost": 111.39,
+            "location": "1830",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $111.39, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7002865",
+            "description": "STEEL UTLTY CART 1200LBS",
+            "currentStock": 1,
+            "unitCost": 154.54,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $154.54, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7015571",
+            "description": "TANK STOCK 150 GAL POLY",
+            "currentStock": 1,
+            "unitCost": 159.47,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $159.47, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7019343",
+            "description": "SPRINKLER CNTRL WIFI APP",
+            "currentStock": 2,
+            "unitCost": 115.35,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $115.35, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7024162",
+            "description": "CM SNW BLWR 123CC 21\"",
+            "currentStock": 2,
+            "unitCost": 457.53,
+            "location": "40110",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $457.53, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7025842",
+            "description": "EGO SNOW BLWR 2STG 28\"",
+            "currentStock": 5,
+            "unitCost": 1801.108,
+            "location": "40110",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $1801.11, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7029290",
+            "description": "EARTH AUGER KIT",
+            "currentStock": 1,
+            "unitCost": 408.24,
+            "location": "1460",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $408.24, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7029681",
+            "description": "CM STRNG TRMR KT 20V 13\"",
+            "currentStock": 1,
+            "unitCost": 163.05,
+            "location": "1370",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $163.05, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7037845",
+            "description": "EGO CHAINSW BATTERY 12\"",
+            "currentStock": 1,
+            "unitCost": 216.48,
+            "location": "0",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $216.48, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7321896",
+            "description": "VERTICAL SHED 22CUFT",
+            "currentStock": 1,
+            "unitCost": 155.19,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $155.19, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7373954",
+            "description": "HANDTRUCK APPLIANCE 800#",
+            "currentStock": 1,
+            "unitCost": 135.18,
+            "location": "3842",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $135.18, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7620735",
+            "description": "WIFI SPRNKLR TMER 8 ZONE",
+            "currentStock": 2,
+            "unitCost": 125.42,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $125.42, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8075593",
+            "description": "AUTO TROLLEY JACK 6000LB",
+            "currentStock": 1,
+            "unitCost": 163.27,
+            "location": "1000",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $163.27, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8082911",
+            "description": "GRILL/MEAT THERMOMTR 2PK",
+            "currentStock": 1,
+            "unitCost": 129.04,
+            "location": "1649",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $129.04, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8085414",
+            "description": "GRLL TMP&MET THRMTR DGTL",
+            "currentStock": 1,
+            "unitCost": 132.18,
+            "location": "40080",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $132.18, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8091914",
+            "description": "BIRD GENIUS SMART FEEDER",
+            "currentStock": 1,
+            "unitCost": 133.98,
+            "location": "260",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $133.98, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8096817",
+            "description": "JUMP START & PWR BNK 12V",
+            "currentStock": 1,
+            "unitCost": 127.3,
+            "location": "990",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $127.30, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8110564",
+            "description": "GRDLE INSRT CRBN STL 1PK",
+            "currentStock": 1,
+            "unitCost": 121.55,
+            "location": "0",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $121.55, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8214777",
+            "description": "GAS GRILL COOK GRATE7528",
+            "currentStock": 2,
+            "unitCost": 126.03,
+            "location": "1651",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $126.03, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8292872",
+            "description": "DIEHARD JUMPSTARTER1150A",
+            "currentStock": 2,
+            "unitCost": 166.83,
+            "location": "990",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $166.83, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8406167",
+            "description": "GRILL PRMIUM KET 22\" CPR",
+            "currentStock": 1,
+            "unitCost": 191.74,
+            "location": "-1",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $191.74, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8437824",
+            "description": "DIEHRD JUMPSTART 1000AMP",
+            "currentStock": 1,
+            "unitCost": 118.84,
+            "location": "990",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $118.84, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9084142",
+            "description": "GRILL GRT/LNR DISP RACK",
+            "currentStock": 1,
+            "unitCost": 127.02,
+            "location": "0",
+            "supplier": "10",
+            "riskScore": 75,
+            "verificationPriority": 95,
+            "riskFactors": [
+              "Slow mover: No sales for 12 months",
+              "High-value slow mover: $127.02, 12 months stagnant"
+            ],
+            "category": "slow-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7010768",
+            "description": "WEEDWACKER STRNG/EDG 13\"",
+            "currentStock": 1,
+            "unitCost": 104.13,
+            "location": "1480",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 90,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.3/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7013944",
+            "description": "EGO STRNG TRMMR BTTY 15\"",
+            "currentStock": 3,
+            "unitCost": 177.41,
+            "location": "1500",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 90,
+            "riskFactors": [
+              "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7025981",
+            "description": "TRIMMER&BLOWER KIT 20V",
+            "currentStock": 3,
+            "unitCost": 260.49,
+            "location": "1450",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 90,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.5/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7809312",
+            "description": "EGO G3 5AH BATTERY",
+            "currentStock": 4,
+            "unitCost": 242.16,
+            "location": "1460",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 90,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1006707",
+            "description": "DISPSL PNT TRY BK 15\"X9\"",
+            "currentStock": 15,
+            "unitCost": 0.72,
+            "location": "530",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1010016",
+            "description": "ACE RSTP SPRY FLTBLK15OZ",
+            "currentStock": 5,
+            "unitCost": 3.92,
+            "location": "450",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1015403",
+            "description": "GLUE CONST PREMIUM 28OZ",
+            "currentStock": 9,
+            "unitCost": 9.36,
+            "location": "760",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.4/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "11153",
+            "description": "PAIL PAINT 5 QT POLY ACE",
+            "currentStock": 8,
+            "unitCost": 1.21,
+            "location": "430",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1200831",
+            "description": "OIL AUST TMBR MAHOGNY GL",
+            "currentStock": 3,
+            "unitCost": 40.14,
+            "location": "10",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          }
+        ],
+        "status": "active",
+        "priority": 92.1,
+        "highPriorityCount": 45,
+        "estimatedTime": 104,
+        "createdAt": "2025-09-11T00:14:39.780Z",
+        "completedAt": null
+      }
+    ],
+    [
+      2,
+      {
+        "id": 2,
+        "name": "Verification Sheet 3",
+        "items": [
+          {
+            "partNumber": "12993",
+            "description": "PAINTBRSH CHIP 2\"WT BRSL",
+            "currentStock": 25,
+            "unitCost": 0.24,
+            "location": "540",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 71.3% (was 2.6/week, now 0.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "13087",
+            "description": "ALL PURPOSE SPONGE ACE",
+            "currentStock": 5,
+            "unitCost": 2.04,
+            "location": "1865",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "13322",
+            "description": "GREAT STUFF G&C 12OZ",
+            "currentStock": 6,
+            "unitCost": 4.35,
+            "location": "780",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 71.7% (was 1.8/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1335348",
+            "description": "CAULK ALEX FDRY WH10.1OZ",
+            "currentStock": 22,
+            "unitCost": 2.761,
+            "location": "770",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.3/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1395540",
+            "description": "SPRYPNT 2X S-G BLACK",
+            "currentStock": 11,
+            "unitCost": 4.159,
+            "location": "410",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 87.0% (was 1.9/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1471192",
+            "description": "PRIMRSPRY AUTO SELF ETCH",
+            "currentStock": 7,
+            "unitCost": 6.39,
+            "location": "430",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.4/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1490762",
+            "description": "THREADLOCKER 271 RED",
+            "currentStock": 7,
+            "unitCost": 2.94,
+            "location": "740",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 82.9% (was 1.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1590801",
+            "description": "GORILLA HD CONST ADH 9OZ",
+            "currentStock": 10,
+            "unitCost": 6.48,
+            "location": "760",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1594522",
+            "description": "BUCKET 5GAL CAMO ACE",
+            "currentStock": 11,
+            "unitCost": 4.66,
+            "location": "430",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.8/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1605278",
+            "description": "CITRUSAFE GRILL CLNR23OZ",
+            "currentStock": 2,
+            "unitCost": 4.81,
+            "location": "1653",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "17007",
+            "description": "SPRYPNT ACE GLS CLEAR",
+            "currentStock": 3,
+            "unitCost": 2.95,
+            "location": "430",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "17031",
+            "description": "SPRYPNT ACE PRIMER GRAY",
+            "currentStock": 8,
+            "unitCost": 2.95,
+            "location": "430",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 76.8% (was 1.1/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "17072",
+            "description": "ACE RSTP SPRY GL BLK15OZ",
+            "currentStock": 2,
+            "unitCost": 3.81,
+            "location": "450",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "17073",
+            "description": "ACE RSTP SPRY SATBLK15OZ",
+            "currentStock": 7,
+            "unitCost": 3.911,
+            "location": "450",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 84.5% (was 1.6/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1817907",
+            "description": "PAINT BRUSH FOAM 3\"W",
+            "currentStock": 19,
+            "unitCost": 0.23,
+            "location": "540",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 3.0/week, now 0.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "18465",
+            "description": "CAULK DFLEX230 CLR10.1OZ",
+            "currentStock": 15,
+            "unitCost": 3.503,
+            "location": "780",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 80.9% (was 1.3/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "2262541",
+            "description": "SPRING CLAMP 1\" SG",
+            "currentStock": 14,
+            "unitCost": 0.765,
+            "location": "1130",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "3007275",
+            "description": "WALLPLATE 1G MID BLNK WH",
+            "currentStock": 14,
+            "unitCost": 0.328,
+            "location": "960",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 80.9% (was 1.3/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "3100476",
+            "description": "BATTERIES ALKLINE 9V 4PK",
+            "currentStock": 7,
+            "unitCost": 16.291,
+            "location": "40060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "32447",
+            "description": "WIRE 8 THHN STR BLK 500'",
+            "currentStock": 227,
+            "unitCost": 0.47,
+            "location": "880",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "33180",
+            "description": "ELEC TAPE 3/4\"X60' BLK",
+            "currentStock": 18,
+            "unitCost": 0.78,
+            "location": "940",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.6/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4004016",
+            "description": "COPL INSRT PLY 1.5X1.25\"",
+            "currentStock": 9,
+            "unitCost": 0.84,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.5/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4011979",
+            "description": "CEMENT RAIN-R-SHINE 4OZ",
+            "currentStock": 2,
+            "unitCost": 2.81,
+            "location": "1600",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4017294",
+            "description": "HEX BUSH 3/8\"MPTX1/4\"FPT",
+            "currentStock": 3,
+            "unitCost": 0.91,
+            "location": "1672",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4026886",
+            "description": "PLUG INSERT POLY 1/2\"",
+            "currentStock": 35,
+            "unitCost": 0.71,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 95.1% (was 5.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4027439",
+            "description": "POLY TUBE 1/4\"X400",
+            "currentStock": 260,
+            "unitCost": 0.101,
+            "location": "210",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 94.6% (was 4.6/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4027462",
+            "description": "VNYL TBNG PVC 0.17X1/4\"",
+            "currentStock": 209,
+            "unitCost": 0.105,
+            "location": "210",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 82.4% (was 5.7/week, now 1.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4027587",
+            "description": "TUBE BRAID 1/4ID X 1/2OD",
+            "currentStock": 55,
+            "unitCost": 0.245,
+            "location": "210",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 81.9% (was 2.8/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4027603",
+            "description": "SUPLY HOSE 1/2 X 3/4\"",
+            "currentStock": 71,
+            "unitCost": 0.7,
+            "location": "210",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 70.6% (was 11.9/week, now 3.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4039426",
+            "description": "CEMENT ALL PURPOSE 4OZ",
+            "currentStock": 3,
+            "unitCost": 2.51,
+            "location": "1600",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.5/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4044566",
+            "description": "FILTER AIR PLEAT 16X25X1",
+            "currentStock": 11,
+            "unitCost": 2.92,
+            "location": "50",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.5/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "40973",
+            "description": "THREAD SEAL TPE 1/2X600\"",
+            "currentStock": 6,
+            "unitCost": 0.64,
+            "location": "1676",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "41144",
+            "description": "HSE CLMP 9/16\"1-1/16\" SS",
+            "currentStock": 19,
+            "unitCost": 0.693,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 82.2% (was 5.6/week, now 1.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "41147",
+            "description": "HS CLMP 1-13/16\"2-3/4\"SS",
+            "currentStock": 21,
+            "unitCost": 0.771,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 84.5% (was 1.6/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "41768",
+            "description": "ELBOW INSRT POLY BLK 1/2",
+            "currentStock": 17,
+            "unitCost": 0.38,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 74.1% (was 6.8/week, now 1.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "41769",
+            "description": "ELBOW INSERT POLY 3/4\"",
+            "currentStock": 5,
+            "unitCost": 0.44,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.3/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "41773",
+            "description": "TEE INSERT POLY 1/2\"",
+            "currentStock": 8,
+            "unitCost": 0.44,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 87.5% (was 4.0/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4194361",
+            "description": "STREET KEY 5/8\" OD X 60\"",
+            "currentStock": 6,
+            "unitCost": 20.58,
+            "location": "2070",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.0/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "41992",
+            "description": "ADAPTR INSRT POLY 1\" MPT",
+            "currentStock": 6,
+            "unitCost": 0.26,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 70.5% (was 2.5/week, now 0.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "41998",
+            "description": "COUPLE INSRT POLY BLK 1.",
+            "currentStock": 9,
+            "unitCost": 0.42,
+            "location": "2070",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 125.0% (was 1.0/week, now -0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "42000",
+            "description": "90D ELBW INSERTXFPT 1/2\"",
+            "currentStock": 11,
+            "unitCost": 0.73,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.8/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "42450",
+            "description": "PIPE POLY 1\"X100' UTL80",
+            "currentStock": 142,
+            "unitCost": 0.261,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 86.5% (was 12.9/week, now 1.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "42452",
+            "description": "PIPE POLY 1.5\"X100'UTL80",
+            "currentStock": 76,
+            "unitCost": 0.69,
+            "location": "-1",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.8/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "43104",
+            "description": "COUPLE 1/2\" SXS SCH40",
+            "currentStock": 11,
+            "unitCost": 0.16,
+            "location": "1610",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.0/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "43106",
+            "description": "COUPLE 1\" SXS SCH40",
+            "currentStock": 23,
+            "unitCost": 0.35,
+            "location": "1611",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 81.3% (was 4.0/week, now 0.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "43107",
+            "description": "COUPLE 1.25\"SXS SCH40",
+            "currentStock": 15,
+            "unitCost": 0.44,
+            "location": "-1",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 76.8% (was 1.1/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "43116",
+            "description": "ADAPTR SCH40 1/2SL1/2MPT",
+            "currentStock": 26,
+            "unitCost": 0.32,
+            "location": "1610",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "43118",
+            "description": "ADAPTR SCH40PVC1\"SL1\"MPT",
+            "currentStock": 29,
+            "unitCost": 0.37,
+            "location": "2280",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 83.8% (was 1.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "43124",
+            "description": "ELBOW 90DEG 1\" SXS SCH40",
+            "currentStock": 22,
+            "unitCost": 0.47,
+            "location": "1611",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 88.4% (was 2.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "43126",
+            "description": "ELBOW 90 1.5\" SXS SCH40",
+            "currentStock": 21,
+            "unitCost": 0.85,
+            "location": "1612",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 82.9% (was 1.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          }
+        ],
+        "status": "pending",
+        "priority": 70,
+        "highPriorityCount": 0,
+        "estimatedTime": 187,
+        "createdAt": "2025-09-11T00:14:39.780Z",
+        "completedAt": null
+      }
+    ],
+    [
+      3,
+      {
+        "id": 3,
+        "name": "Verification Sheet 4",
+        "items": [
+          {
+            "partNumber": "43127",
+            "description": "ELBOW 90 2\" SXS SCH40",
+            "currentStock": 6,
+            "unitCost": 1.39,
+            "location": "1612",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "43156",
+            "description": "CAP 3/4\" SLIP SCH40",
+            "currentStock": 25,
+            "unitCost": 0.22,
+            "location": "1610",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.7/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "43157",
+            "description": "CAP 1\" SLIP SCH40",
+            "currentStock": 16,
+            "unitCost": 0.35,
+            "location": "-1",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.9% (was 2.1/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4316568",
+            "description": "PVC PIPE SCH40 2\"X2'",
+            "currentStock": 3,
+            "unitCost": 4.8,
+            "location": "40090",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "43913",
+            "description": "CLAMP 1-5/16 TO 2-1/4\"SS",
+            "currentStock": 10,
+            "unitCost": 0.76,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "44052",
+            "description": "NIPPLE SCH80 PVC 1/2\"X2\"",
+            "currentStock": 30,
+            "unitCost": 0.33,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 74.0% (was 1.9/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "44078",
+            "description": "NIPPLE SCH80 PVC 1/2\"X8\"",
+            "currentStock": 6,
+            "unitCost": 0.76,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 82.9% (was 1.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "44096",
+            "description": "NIPPLE SCH80 PVC1/2\"X10\"",
+            "currentStock": 13,
+            "unitCost": 0.89,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "44886",
+            "description": "ADAPTR SCH40 3/4MPT1/2SL",
+            "currentStock": 29,
+            "unitCost": 0.382,
+            "location": "1610",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "44910",
+            "description": "CAP PVC SCH40 1/2\"FPT",
+            "currentStock": 42,
+            "unitCost": 0.42,
+            "location": "1610",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 89.2% (was 9.2/week, now 1.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "45278",
+            "description": "THREAD SEAL TPE 1/2X300\"",
+            "currentStock": 11,
+            "unitCost": 0.51,
+            "location": "1676",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.0/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "45279",
+            "description": "THREAD SEAL TPE 3/4X300\"",
+            "currentStock": 27,
+            "unitCost": 0.63,
+            "location": "1676",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 94.8% (was 4.8/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4559753",
+            "description": "BAL VALVE PVC THRED 1/2\"",
+            "currentStock": 4,
+            "unitCost": 0.39,
+            "location": "1673",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 79.7% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "45844",
+            "description": "ELBOW 90 PVC40 1/2\" FPT",
+            "currentStock": 6,
+            "unitCost": 0.515,
+            "location": "1610",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "46431",
+            "description": "COUPLE SCH80 3/4 FPT PVC",
+            "currentStock": 3,
+            "unitCost": 2.69,
+            "location": "2060",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 72.9% (was 1.8/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4765970",
+            "description": "AIR FILTER 16X25X2 PLTD",
+            "currentStock": 21,
+            "unitCost": 4.22,
+            "location": "60",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 83.8% (was 1.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4809513",
+            "description": "PRIMER/CMNT PRPL/CLR 2PK",
+            "currentStock": 2,
+            "unitCost": 5.16,
+            "location": "1600",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "4926234",
+            "description": "PINCH CLAMP 1/2\" 10PK",
+            "currentStock": 6,
+            "unitCost": 2.87,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 71.1% (was 3.5/week, now 1.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5006143",
+            "description": "HANGER STORAGE 10\" JUMBO",
+            "currentStock": 7,
+            "unitCost": 1.5,
+            "location": "1837",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.0/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5007943",
+            "description": "BOLT U 1/4\"1-1/8\"X3.5\"",
+            "currentStock": 5,
+            "unitCost": 0.579,
+            "location": "1720",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5020532",
+            "description": "KEY KWIKSET KW10-ACE",
+            "currentStock": 12,
+            "unitCost": 0.381,
+            "location": "40030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 80.9% (was 1.3/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5028408",
+            "description": "FOR SALE OWNR SIGN 8X12\"",
+            "currentStock": 6,
+            "unitCost": 0.403,
+            "location": "1742",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.4/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5038143",
+            "description": "STORAGE TOTE BLK/YLW 12G",
+            "currentStock": 9,
+            "unitCost": 6.307,
+            "location": "100",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.4/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5038313",
+            "description": "HNG LID TOTE BLK/CLR 12G",
+            "currentStock": 9,
+            "unitCost": 8.9,
+            "location": "100",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.6/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5058476",
+            "description": "WR RP CLIP FRG STL 5/16\"",
+            "currentStock": 3,
+            "unitCost": 0.23,
+            "location": "1721",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5058559",
+            "description": "SPRNG SNP ZINC 0.25\" 80#",
+            "currentStock": 8,
+            "unitCost": 0.2,
+            "location": "1721",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 80.3% (was 2.5/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5073523",
+            "description": "KEY MASTER M1-ACE250PK",
+            "currentStock": 313,
+            "unitCost": 0.23,
+            "location": "40030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 76.8% (was 3.2/week, now 0.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "54544",
+            "description": "KEY WEISER WR5-ACE",
+            "currentStock": 8,
+            "unitCost": 0.31,
+            "location": "40030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.0/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5606298",
+            "description": "GRADE STAKE 1X2X12 EA",
+            "currentStock": 33,
+            "unitCost": 0.3,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5614086",
+            "description": "STAKE RND W/HOLES 3/4X24",
+            "currentStock": 9,
+            "unitCost": 4.03,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 82.9% (was 1.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "58173",
+            "description": "PLAY SAND QUIKRETE 50#",
+            "currentStock": 55,
+            "unitCost": 6.31,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 71.1% (was 6.9/week, now 2.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5936604",
+            "description": "SPLIT RING 5/8IN.",
+            "currentStock": 23,
+            "unitCost": 0.05,
+            "location": "40030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 83.8% (was 1.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5965306",
+            "description": "FIC1 1617/FIC3 1681 KEY",
+            "currentStock": 11,
+            "unitCost": 0.41,
+            "location": "40030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5988522",
+            "description": "CLR ID TAG W/KY RNG BULK",
+            "currentStock": 49,
+            "unitCost": 0.41,
+            "location": "40030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 88.4% (was 2.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "6065782",
+            "description": "ESPRS COFE CRM VNLA 15OZ",
+            "currentStock": 3,
+            "unitCost": 2.25,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 70.5% (was 1.7/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "6066343",
+            "description": "ARIZONA FRUT PUNCH 20OZ",
+            "currentStock": 6,
+            "unitCost": 0.73,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 83.8% (was 1.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "6084033",
+            "description": "FLEX GRDN HOSE BLK 50'",
+            "currentStock": 3,
+            "unitCost": 19.81,
+            "location": "1940",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 79.0% (was 2.4/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "6084034",
+            "description": "FLEX GRDN HOSE BLK 75'",
+            "currentStock": 2,
+            "unitCost": 26.41,
+            "location": "1940",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "6084035",
+            "description": "FLEX GRDN HOSE BLK 100'",
+            "currentStock": 4,
+            "unitCost": 33.01,
+            "location": "1940",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 86.5% (was 1.8/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "61778",
+            "description": "LIGHTER FLUID 5 OZ",
+            "currentStock": 4,
+            "unitCost": 1.4,
+            "location": "1661",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.4/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "6186753",
+            "description": "LAWN&LEAF BAG DRAW 40PK",
+            "currentStock": 6,
+            "unitCost": 10.62,
+            "location": "1875",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7003081",
+            "description": "EGO TRIMMR LNE .095\" 5PK",
+            "currentStock": 9,
+            "unitCost": 11.87,
+            "location": "1470",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 88.4% (was 2.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7005751",
+            "description": "GARDEN KNEELER ACE BLK",
+            "currentStock": 3,
+            "unitCost": 4,
+            "location": "2350",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7008303",
+            "description": "ELBOW3/4\"MX3/8\"FUNNYPIPE",
+            "currentStock": 6,
+            "unitCost": 0.418,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7008329",
+            "description": "ELBOW1/2\"FX3/8\"FUNNYPIPE",
+            "currentStock": 9,
+            "unitCost": 0.486,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 80.9% (was 1.3/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7008393",
+            "description": "LAWN WD KLR WAND 1G",
+            "currentStock": 1,
+            "unitCost": 24.56,
+            "location": "300",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 70.5% (was 1.7/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7009969",
+            "description": "ROTOR SCRWDRV/PLUP TOOL",
+            "currentStock": 3,
+            "unitCost": 3.18,
+            "location": "2030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 82.9% (was 1.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7012867",
+            "description": "RAKE FBRGLS 24X65\"",
+            "currentStock": 9,
+            "unitCost": 12.648,
+            "location": "2360",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 79.7% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7014323",
+            "description": "SPRINKLR POPUP ADJ 3.93\"",
+            "currentStock": 4,
+            "unitCost": 8.06,
+            "location": "2030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 71.7% (was 1.8/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7016356",
+            "description": "KILLER WED&GRS RTU 1GAL",
+            "currentStock": 4,
+            "unitCost": 23.428,
+            "location": "310",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 86.5% (was 1.8/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          }
+        ],
+        "status": "pending",
+        "priority": 70,
+        "highPriorityCount": 0,
+        "estimatedTime": 161,
+        "createdAt": "2025-09-11T00:14:39.780Z",
+        "completedAt": null
+      }
+    ],
+    [
+      4,
+      {
+        "id": 4,
+        "name": "Verification Sheet 5",
+        "items": [
+          {
+            "partNumber": "7024620",
+            "description": "LANDSCAPE FABRIC 3'X50'",
+            "currentStock": 4,
+            "unitCost": 4.716,
+            "location": "2150",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7024624",
+            "description": "LANDSCAPE PIN 4.5\" 20PK",
+            "currentStock": 11,
+            "unitCost": 1.15,
+            "location": "2150",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 87.7% (was 4.1/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7024627",
+            "description": "LANDSCAPE PIN 4\" 10PK",
+            "currentStock": 22,
+            "unitCost": 0.956,
+            "location": "2150",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7028859",
+            "description": "TURRET SPRINKLER MTL 1PK",
+            "currentStock": 3,
+            "unitCost": 5.79,
+            "location": "1960",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7029730",
+            "description": "PLANT SAUCER RND CLR 12\"",
+            "currentStock": 9,
+            "unitCost": 0.46,
+            "location": "2110",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.5/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7029746",
+            "description": "PLANT SAUCER RND CLR 8\"",
+            "currentStock": 29,
+            "unitCost": 0.19,
+            "location": "2110",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7035066",
+            "description": "DRP IRRG STKS W/CLIP 13\"",
+            "currentStock": 10,
+            "unitCost": 0.92,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.3/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7035264",
+            "description": "DBL BARBCONN 1/4\" 25PK",
+            "currentStock": 4,
+            "unitCost": 1.884,
+            "location": "2040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.5% (was 4.1/week, now 1.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7035330",
+            "description": "TUBING POLY 1/4\"X100'",
+            "currentStock": 4,
+            "unitCost": 6.74,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 79.0% (was 2.4/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7036716",
+            "description": "PLNTR WHSKY BRL BRWN 19\"",
+            "currentStock": 4,
+            "unitCost": 9.87,
+            "location": "2130",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.5/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7036965",
+            "description": "POTTING MIX W/FERT 8QT",
+            "currentStock": 9,
+            "unitCost": 3.278,
+            "location": "2280",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 84.5% (was 1.6/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7037302",
+            "description": "KLR TGR SPR RTU LQD 24OZ",
+            "currentStock": 4,
+            "unitCost": 10.01,
+            "location": "310",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "70530",
+            "description": "SHOVL SQR-PT LONG-HND47\"",
+            "currentStock": 4,
+            "unitCost": 7.14,
+            "location": "2350",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7065881",
+            "description": "BUBBLER ADJUSTABLE BG/5",
+            "currentStock": 6,
+            "unitCost": 2.362,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 93.4% (was 3.8/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7066012",
+            "description": "DRIPPR INLINE 1GPH BG25",
+            "currentStock": 2,
+            "unitCost": 5.32,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 79.7% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7066020",
+            "description": "DRIPPR INLINE1/2GPH BG25",
+            "currentStock": 3,
+            "unitCost": 5.32,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.7/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7068513",
+            "description": "ELBOW COMPRESSION .710",
+            "currentStock": 7,
+            "unitCost": 0.654,
+            "location": "2040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.7/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7087737",
+            "description": "POTTING MIX W/FERT 16QT",
+            "currentStock": 3,
+            "unitCost": 7.22,
+            "location": "2280",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 86.5% (was 1.8/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7094915",
+            "description": "SPRINKL SHRUB HALF",
+            "currentStock": 4,
+            "unitCost": 0.49,
+            "location": "2030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7094923",
+            "description": "SPRINKLRSHRUB QTR",
+            "currentStock": 5,
+            "unitCost": 0.49,
+            "location": "2030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.0/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7095581",
+            "description": "OSCLTNG SPRNKLR 4000SQFT",
+            "currentStock": 4,
+            "unitCost": 21.95,
+            "location": "1950",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 87.0% (was 1.9/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7100225",
+            "description": "STAKE F/1/4\" TUBING CD10",
+            "currentStock": 5,
+            "unitCost": 1.35,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.9/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7104318",
+            "description": "ADAPTR 3/4\"FHT TO .710\"",
+            "currentStock": 5,
+            "unitCost": 0.9,
+            "location": "2040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.0/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7106198",
+            "description": "SCOTTS TB LAWN SOIL 1CF",
+            "currentStock": 18,
+            "unitCost": 4.9,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 80.9% (was 14.4/week, now 2.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7107089",
+            "description": "TUBING POLY 1/4\"X50'",
+            "currentStock": 5,
+            "unitCost": 3.66,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 74.3% (was 2.9/week, now 0.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7107162",
+            "description": "DRIP STAKE 1/4X3.5\" 20PK",
+            "currentStock": 7,
+            "unitCost": 2.44,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 93.5% (was 3.8/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7114267",
+            "description": "ROTOR SPRNKLRPOPUP ADJST",
+            "currentStock": 6,
+            "unitCost": 10.99,
+            "location": "2030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 83.8% (was 3.1/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7120298",
+            "description": "POP UP 4\"15'180DEG TORO",
+            "currentStock": 3,
+            "unitCost": 2.981,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 79.7% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "71321",
+            "description": "COUPL HOSE PLASTC SHTOFF",
+            "currentStock": 7,
+            "unitCost": 1.189,
+            "location": "1970",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.9/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7132749",
+            "description": "ACE GARDEN SOIL 1CUFT",
+            "currentStock": 27,
+            "unitCost": 3.01,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 71.5% (was 10.5/week, now 3.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7139082",
+            "description": "SPRAY HEAD PULL UP TOOL",
+            "currentStock": 2,
+            "unitCost": 8.533,
+            "location": "2030",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.3/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7188832",
+            "description": "VINYL TUBING 1/4\"",
+            "currentStock": 3,
+            "unitCost": 9.9,
+            "location": "2040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7198864",
+            "description": "DRP IRRAG MANIFLD 4PORT",
+            "currentStock": 7,
+            "unitCost": 1.14,
+            "location": "2040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7202013",
+            "description": "ACE COMPOSTED MANURE 1CF",
+            "currentStock": 64,
+            "unitCost": 2.371,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 82.1% (was 8.4/week, now 1.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7202104",
+            "description": "SHOVEL FLORAL LONG-H 44\"",
+            "currentStock": 4,
+            "unitCost": 12.617,
+            "location": "2330",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 82.9% (was 1.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7203144",
+            "description": "ACE POTTING SOIL 1.5CF",
+            "currentStock": 42,
+            "unitCost": 2.98,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 85.4% (was 12.0/week, now 1.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7206428",
+            "description": "EZ SEED SUN&SHADE 3.75#",
+            "currentStock": 4,
+            "unitCost": 16.388,
+            "location": "2290",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 79.0% (was 2.4/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7206436",
+            "description": "EZ SEED SUN&SHADE 10#",
+            "currentStock": 13,
+            "unitCost": 32.564,
+            "location": "2290",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.3/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7209885",
+            "description": "FULL DUAL SPRY NOZZL 12'",
+            "currentStock": 7,
+            "unitCost": 1.799,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.7/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7209901",
+            "description": "QTR DUAL SPRAY NOZZL 12'",
+            "currentStock": 8,
+            "unitCost": 1.799,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 83.8% (was 3.1/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7209968",
+            "description": "HALF CIRCLE NZL 8'",
+            "currentStock": 10,
+            "unitCost": 1.289,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 93.5% (was 3.8/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7215197",
+            "description": "SP O&D TRIAZ RTS 32 OZ",
+            "currentStock": 3,
+            "unitCost": 7.79,
+            "location": "2210",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 81.9% (was 1.4/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "72436",
+            "description": "ACE COMPOST 1.5 CF",
+            "currentStock": 31,
+            "unitCost": 3.254,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 91.0% (was 5.5/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "72459",
+            "description": "OSCLTNG SPRNKLR 3400SQFT",
+            "currentStock": 3,
+            "unitCost": 7.78,
+            "location": "1960",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 80.9% (was 1.3/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7299407",
+            "description": "LWNMR OIL SAE30 18OZTORO",
+            "currentStock": 8,
+            "unitCost": 3.77,
+            "location": "1430",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 79.7% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7301609",
+            "description": "POTTING SOIL MIX MC 2CF",
+            "currentStock": 33,
+            "unitCost": 13.206,
+            "location": "-1",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 83.3% (was 3.0/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7327612",
+            "description": "WEED&GRASS KILLR 1GAL",
+            "currentStock": 2,
+            "unitCost": 7.01,
+            "location": "300",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7367816",
+            "description": "SPRINKLR DUAL 2\"PRO HALF",
+            "currentStock": 11,
+            "unitCost": 2.46,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 84.5% (was 1.6/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7367840",
+            "description": "SPRINKLR DUAL 4\"PRO HALF",
+            "currentStock": 3,
+            "unitCost": 4.14,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 91.7% (was 3.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "73811",
+            "description": "GOOSENECK HOSE ADAPTRHBS",
+            "currentStock": 3,
+            "unitCost": 3.078,
+            "location": "1970",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          }
+        ],
+        "status": "pending",
+        "priority": 70,
+        "highPriorityCount": 0,
+        "estimatedTime": 142,
+        "createdAt": "2025-09-11T00:14:39.780Z",
+        "completedAt": null
+      }
+    ],
+    [
+      5,
+      {
+        "id": 5,
+        "name": "Verification Sheet 6",
+        "items": [
+          {
+            "partNumber": "7385495",
+            "description": "EDGE TERR BRD BLK 4\"X40'",
+            "currentStock": 4,
+            "unitCost": 17.743,
+            "location": "2170",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.0/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7394703",
+            "description": "NATURESCPE BLK MULCH 2CF",
+            "currentStock": 31,
+            "unitCost": 3.87,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 89.3% (was 25.7/week, now 2.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7402860",
+            "description": "RISER 1/2 MNPT X 6",
+            "currentStock": 11,
+            "unitCost": 0.176,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 92.8% (was 3.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7402894",
+            "description": "RISER 1/2MNPT X 2 PVC",
+            "currentStock": 13,
+            "unitCost": 0.17,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 81.4% (was 2.7/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7402944",
+            "description": "PVC RISR 1/2MNPT X CLOSE",
+            "currentStock": 10,
+            "unitCost": 0.173,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 2.0/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7403025",
+            "description": "RISER 1/2\" MNPT X 12\"",
+            "currentStock": 11,
+            "unitCost": 0.507,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.3/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7403066",
+            "description": "NOZZLE PU HLF PAT BRS 4\"",
+            "currentStock": 5,
+            "unitCost": 2.77,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 81.9% (was 1.4/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7403173",
+            "description": "NOZZLE PU 12' ADJ 4\"",
+            "currentStock": 4,
+            "unitCost": 3.09,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.0/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7435191",
+            "description": "TURRET WAND 10P 30\"",
+            "currentStock": 3,
+            "unitCost": 7.1,
+            "location": "1950",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.0/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7439995",
+            "description": "HOSE CONNCTR 2WAY MTL",
+            "currentStock": 4,
+            "unitCost": 7.16,
+            "location": "1970",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 1.0/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7455488",
+            "description": "ADJ NOZZLE HIGH EFF 12'",
+            "currentStock": 7,
+            "unitCost": 1.539,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 72.9% (was 3.7/week, now 1.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7475379",
+            "description": "LAWN FERTILIZER 5M ACE",
+            "currentStock": 3,
+            "unitCost": 10.59,
+            "location": "3845",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 74.0% (was 1.9/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7492820",
+            "description": "SPRINKLER VALVE KEY",
+            "currentStock": 5,
+            "unitCost": 2.53,
+            "location": "2070",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 80.9% (was 1.3/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7539711",
+            "description": "ZEROG 100FT FABRIC HOSE",
+            "currentStock": 3,
+            "unitCost": 48,
+            "location": "1940",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 75.0% (was 3.0/week, now 0.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7637028",
+            "description": "SMARTFLO MAX 100FT HOSE",
+            "currentStock": 4,
+            "unitCost": 37.56,
+            "location": "1930",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 79.7% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7771298",
+            "description": "MOISTURE/LIGHT/PH METER",
+            "currentStock": 8,
+            "unitCost": 7.44,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7795529",
+            "description": "POPUP SPRNKLR 4' SPRAY",
+            "currentStock": 5,
+            "unitCost": 4.69,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.0/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7804891",
+            "description": "EGO STRG TRMR LINE .095\"",
+            "currentStock": 4,
+            "unitCost": 17.68,
+            "location": "1470",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 82.9% (was 1.5/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8009847",
+            "description": "STICK FLAG8\"X12\"",
+            "currentStock": 21,
+            "unitCost": 0.62,
+            "location": "1980",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.4/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8060812",
+            "description": "MEAT CHURCH THE GOSPL AP",
+            "currentStock": 4,
+            "unitCost": 6.57,
+            "location": "1656",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 76.8% (was 1.1/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8063208",
+            "description": "SAFETY GREEN LIGHTSTICK",
+            "currentStock": 31,
+            "unitCost": 0.83,
+            "location": "1661",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8063784",
+            "description": "GREASE CUP LINERS 10PK",
+            "currentStock": 3,
+            "unitCost": 4.57,
+            "location": "1652",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 72.9% (was 1.8/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8063785",
+            "description": "GRIDDLE CST IRN CONDTNR",
+            "currentStock": 8,
+            "unitCost": 7.5,
+            "location": "1652",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 72.9% (was 1.8/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8098809",
+            "description": "BLANCO BBQ RUB 12OZ",
+            "currentStock": 1,
+            "unitCost": 6.48,
+            "location": "1656",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.1/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8108083",
+            "description": "HCKRY BBQ RUB 12.5OZ",
+            "currentStock": 4,
+            "unitCost": 6.48,
+            "location": "1656",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8328510",
+            "description": "BULLY STICKS 12\"",
+            "currentStock": 12,
+            "unitCost": 5.543,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.5/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8371270",
+            "description": "HTH SUPER SHOCK 1 LB",
+            "currentStock": 5,
+            "unitCost": 3.24,
+            "location": "2010",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 94.9% (was 4.9/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "88115",
+            "description": "PROTECTANT ARMR ALL 16OZ",
+            "currentStock": 8,
+            "unitCost": 5.73,
+            "location": "1070",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 140.6% (was 1.2/week, now -0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9008294",
+            "description": "RED BULL COCO BRY SMR ED",
+            "currentStock": 39,
+            "unitCost": 2.31,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 74.0% (was 1.9/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9026162",
+            "description": "CHUKLES JLLY CNDY 2OZ",
+            "currentStock": 15,
+            "unitCost": 1.2,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9037599",
+            "description": "SWEETART TANGY 1.8OZ",
+            "currentStock": 38,
+            "unitCost": 1.198,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 78.3% (was 2.3/week, now 0.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9090936",
+            "description": "BEF STCK/CHS ORGNL 1.3OZ",
+            "currentStock": 9,
+            "unitCost": 1.14,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 86.3% (was 5.5/week, now 0.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9092180",
+            "description": "REFILL STRP WHT MED FOAM",
+            "currentStock": 4,
+            "unitCost": 1.8,
+            "location": "790",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 79.7% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9096881",
+            "description": "GUMMI BEAR FRUIT 5OZ",
+            "currentStock": 1,
+            "unitCost": 1.98,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9099564",
+            "description": "DOTS PRTZL GRLCPARM 16OZ",
+            "currentStock": 6,
+            "unitCost": 5.65,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9281189",
+            "description": "WILD CHERRY HD CNDY 6OZ",
+            "currentStock": 8,
+            "unitCost": 1.1,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.2/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9285685",
+            "description": "SPLASH FOAM PUMPER 12\"",
+            "currentStock": 12,
+            "unitCost": 2.93,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 100.0% (was 1.8/week, now 0.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9297748",
+            "description": "CINNAMON HARD CANDY 6OZ",
+            "currentStock": 6,
+            "unitCost": 1.1,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 79.7% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9333121",
+            "description": "CHEEZIT ORIGINAL 3OZ",
+            "currentStock": 1,
+            "unitCost": 1.36,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 80.9% (was 1.3/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "93598",
+            "description": "PEPPERMINT PATTIE 1.4OZ",
+            "currentStock": 15,
+            "unitCost": 1.11,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 78.3% (was 1.2/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9607425",
+            "description": "RASPBERRY HARD CANDY 6OZ",
+            "currentStock": 5,
+            "unitCost": 1.1,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 70,
+            "verificationPriority": 70,
+            "riskFactors": [
+              "Fast mover velocity dropped 76.8% (was 1.1/week, now 0.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "1006704",
+            "description": "PNT TRAY WH 8X4\" 1PK",
+            "currentStock": 8,
+            "unitCost": 0.74,
+            "location": "530",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 53.6% (was 3.8/week, now 1.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "12992",
+            "description": "PAINTBRS CHIP 1.5WT BRSL",
+            "currentStock": 37,
+            "unitCost": 0.2,
+            "location": "540",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 66.7% (was 3.0/week, now 1.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "41753",
+            "description": "PIPE POLY 1/2\"X100' BLK",
+            "currentStock": 52,
+            "unitCost": 0.174,
+            "location": "1694",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 51.4% (was 6.7/week, now 3.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "44622",
+            "description": "CLAMP HOSE 7/16\"TO 1\" SS",
+            "currentStock": 22,
+            "unitCost": 0.69,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 56.9% (was 7.5/week, now 3.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "5058581",
+            "description": "SPRNG SNP ZNC 2.75\" 160#",
+            "currentStock": 6,
+            "unitCost": 0.31,
+            "location": "1721",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 51.2% (was 4.6/week, now 2.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "6039061D",
+            "description": "ICE CRM MIX RNBW IC 3OZ",
+            "currentStock": 18,
+            "unitCost": 2.35,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 51.3% (was 3.1/week, now 1.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7008287",
+            "description": "ELBOW1/2\"MX3/8\"FUNNYPIPE",
+            "currentStock": 8,
+            "unitCost": 0.419,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 55.4% (was 3.9/week, now 1.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7008337",
+            "description": "COUPL 3/8X3/8\" FUNNYPIPE",
+            "currentStock": 8,
+            "unitCost": 0.529,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 63.9% (was 4.8/week, now 1.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7029018",
+            "description": "KILLER WED & GRSS 35.2OZ",
+            "currentStock": 11,
+            "unitCost": 25.191,
+            "location": "310",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 57.1% (was 4.1/week, now 1.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          }
+        ],
+        "status": "pending",
+        "priority": 64.6,
+        "highPriorityCount": 0,
+        "estimatedTime": 155,
+        "createdAt": "2025-09-11T00:14:39.780Z",
+        "completedAt": null
+      }
+    ],
+    [
+      6,
+      {
+        "id": 6,
+        "name": "Verification Sheet 7",
+        "items": [
+          {
+            "partNumber": "7029587",
+            "description": "KILLER WEED&GRASS 24OZ",
+            "currentStock": 7,
+            "unitCost": 4.681,
+            "location": "310",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 67.5% (was 4.6/week, now 1.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7034796",
+            "description": "PLUG DRP SYS DBLEND 50PK",
+            "currentStock": 5,
+            "unitCost": 1.836,
+            "location": "2050",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 50.5% (was 3.5/week, now 1.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7035298",
+            "description": "COMPRESSION COUPLER 5/8\"",
+            "currentStock": 10,
+            "unitCost": 0.505,
+            "location": "2040",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 68.3% (was 6.3/week, now 2.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7099039",
+            "description": "ROTOR SPRINKL POPUP ADJS",
+            "currentStock": 3,
+            "unitCost": 13.45,
+            "location": "2030",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 50.9% (was 4.1/week, now 2.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7204076",
+            "description": "ACE TOP SOIL 1CF",
+            "currentStock": 744,
+            "unitCost": 2.37,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 57.4% (was 17.6/week, now 7.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "72601",
+            "description": "NOZZLE UNDRGRND 1/2 PAT",
+            "currentStock": 10,
+            "unitCost": 1.296,
+            "location": "2020",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 68.3% (was 3.2/week, now 1.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7321797",
+            "description": "RIVER ROCK .5CF",
+            "currentStock": 8,
+            "unitCost": 2.868,
+            "location": "40040",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 63.9% (was 9.0/week, now 3.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 3,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7394711",
+            "description": "NATURESCPE BRN MULCH 2CF",
+            "currentStock": 97,
+            "unitCost": 3.878,
+            "location": "-1",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 63.6% (was 20.6/week, now 7.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "74129",
+            "description": "WASHR HOSE RUBBR 10/PK",
+            "currentStock": 4,
+            "unitCost": 0.4,
+            "location": "1970",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 57.1% (was 4.1/week, now 1.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7437650",
+            "description": "GARDEN SPRAYER 1GAL ACE",
+            "currentStock": 5,
+            "unitCost": 12.33,
+            "location": "320",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 50.0% (was 3.0/week, now 1.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "7475403",
+            "description": "ACE WEED&FEED 5M",
+            "currentStock": 3,
+            "unitCost": 14.6,
+            "location": "3845",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 68.3% (was 3.2/week, now 1.0/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8207433",
+            "description": "HICKORY BBQ PELLETS 20LB",
+            "currentStock": 14,
+            "unitCost": 12.67,
+            "location": "1656",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 61.8% (was 3.9/week, now 1.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "8684151",
+            "description": "OAK LUMP CHARCOAL 20LB",
+            "currentStock": 12,
+            "unitCost": 15.6,
+            "location": "1655",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 53.6% (was 3.2/week, now 1.5/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 4,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9273988",
+            "description": "BOSTON BAKED BEANS .75OZ",
+            "currentStock": 24,
+            "unitCost": 0.33,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 59.4% (was 4.3/week, now 1.8/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 5,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          },
+          {
+            "partNumber": "9469479",
+            "description": "SODA ORANGE & CREME 24OZ",
+            "currentStock": 4,
+            "unitCost": 1.17,
+            "location": "3831",
+            "supplier": "10",
+            "riskScore": 40,
+            "verificationPriority": 40,
+            "riskFactors": [
+              "Very fast mover velocity dropped 50.4% (was 4.5/week, now 2.3/week)"
+            ],
+            "category": "fast-mover-phantom",
+            "estimatedTime": 2,
+            "generatedAt": "2025-09-11T00:14:39.780Z"
+          }
+        ],
+        "status": "pending",
+        "priority": 40,
+        "highPriorityCount": 0,
+        "estimatedTime": 47,
+        "createdAt": "2025-09-11T00:14:39.780Z",
+        "completedAt": null
+      }
+    ]
+  ],
+  "currentSheetIndex": 1,
+  "completedSheets": [
+    0
+  ],
+  "lastUpdated": "2025-09-11T00:19:27.442Z"
+}

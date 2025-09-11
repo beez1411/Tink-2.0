@@ -7,6 +7,7 @@ const PhantomInventoryML = require('./phantom-inventory-ml');
 const MultiStoreSyncManager = require('./multi-store-sync');
 const NetworkConfigManager = require('./network-config-manager');
 const VerificationWorkflow = require('./verification-workflow');
+const MLDataCleanup = require('./ml-data-cleanup');
 const fs = require('fs').promises;
 
 class EnhancedPhantomDetector {
@@ -17,13 +18,36 @@ class EnhancedPhantomDetector {
         // Initialize ML system
         this.phantomML = new PhantomInventoryML(storeId);
         
-        // Load network sync configuration (HTTP/cloud/local)
-        const networkConfig = new NetworkConfigManager().getConfig();
+        // Load network sync configuration from API config (priority) or NetworkConfigManager (fallback)
+        let networkConfig;
+        try {
+            // Try to load from API config first (where user configures it in UI)
+            const APIConfigManager = require('./api-config-manager');
+            const apiConfigManager = new APIConfigManager();
+            const apiConfig = apiConfigManager.getConfig();
+            
+            if (apiConfig.networkSync?.enabled) {
+                networkConfig = {
+                    networkSync: 'http',
+                    apiBaseUrl: apiConfig.networkSync.apiBaseUrl,
+                    apiKey: apiConfig.networkSync.apiKey,
+                    storeId: apiConfig.networkSync.storeId
+                };
+                console.log(`Using network sync config from API settings for store ${apiConfig.networkSync.storeId}`);
+            } else {
+                // Fallback to NetworkConfigManager
+                networkConfig = new NetworkConfigManager().getConfig();
+                console.log('Using network sync config from NetworkConfigManager (fallback)');
+            }
+        } catch (error) {
+            console.warn('Failed to load API config, using NetworkConfigManager:', error.message);
+            networkConfig = new NetworkConfigManager().getConfig();
+        }
 
         // Initialize multi-store sync with config
         this.syncManager = new MultiStoreSyncManager({
-            storeId: storeId,
-            networkSync: networkConfig.networkSync,
+            storeId: networkConfig.storeId || storeId,
+            networkSync: networkConfig.networkSync || 'local',
             apiBaseUrl: networkConfig.apiBaseUrl,
             apiKey: networkConfig.apiKey,
             cloudProvider: networkConfig.cloudProvider
@@ -33,6 +57,7 @@ class EnhancedPhantomDetector {
         this.verificationWorkflow = new VerificationWorkflow(storeId, this.phantomML);
         
         this.isInitialized = false;
+        this.periodicSyncTimer = null;
     }
 
     /**
@@ -54,9 +79,11 @@ class EnhancedPhantomDetector {
             console.log('Loading verification workflow state...');
             await this.verificationWorkflow.loadWorkflowState();
             
-            // Sync with other stores
-            console.log('Syncing with other stores...');
-            await this.syncManager.syncPhantomInventoryData(this.storeId, this.phantomML);
+            // Sync with other stores (silent, non-blocking)
+            this.performStartupSync();
+            
+            // Setup periodic sync (every 4 hours if app stays running)
+            this.setupPeriodicSync();
             
             this.isInitialized = true;
             console.log(`Enhanced Phantom Detector initialized successfully for store ${this.storeId}`);
@@ -74,6 +101,175 @@ class EnhancedPhantomDetector {
                 success: false,
                 error: error.message
             };
+        }
+    }
+
+    /**
+     * Perform network sync at startup (silent, non-blocking)
+     */
+    async performStartupSync() {
+        try {
+            // Check if network sync is enabled
+            const APIConfigManager = require('./api-config-manager');
+            const apiConfigManager = new APIConfigManager();
+            const apiConfig = apiConfigManager.getConfig();
+            
+            if (!apiConfig.networkSync?.enabled) {
+                console.log('Network sync disabled - skipping startup sync');
+                return;
+            }
+
+            // Check if we have any ML data to sync
+            if (this.phantomML.verificationResults.size === 0) {
+                console.log('No verification data to sync at startup');
+                return;
+            }
+
+            console.log(`🔄 Starting silent network sync for store ${this.storeId}...`);
+            
+            // Perform sync in background (don't await to avoid blocking startup)
+            this.syncManager.syncPhantomInventoryData(this.storeId, this.phantomML)
+                .then(syncResult => {
+                    if (syncResult.success) {
+                        console.log(`✅ Startup sync completed: Connected to ${syncResult.networkStores || 0} stores`);
+                    } else {
+                        console.log(`⚠️ Startup sync failed: ${syncResult.error}`);
+                    }
+                })
+                .catch(error => {
+                    console.log(`⚠️ Startup sync error: ${error.message}`);
+                });
+                
+        } catch (error) {
+            console.log(`⚠️ Startup sync initialization failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Setup periodic sync (every 4 hours if app stays running)
+     */
+    setupPeriodicSync() {
+        try {
+            // Clear any existing timer
+            if (this.periodicSyncTimer) {
+                clearInterval(this.periodicSyncTimer);
+            }
+
+            // Check if network sync is enabled
+            const APIConfigManager = require('./api-config-manager');
+            const apiConfigManager = new APIConfigManager();
+            const apiConfig = apiConfigManager.getConfig();
+            
+            if (!apiConfig.networkSync?.enabled) {
+                return;
+            }
+
+            // Setup 4-hour periodic sync
+            const SYNC_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+            
+            this.periodicSyncTimer = setInterval(() => {
+                console.log(`🔄 Performing periodic network sync for store ${this.storeId}...`);
+                this.performStartupSync(); // Reuse the same silent sync method
+            }, SYNC_INTERVAL);
+
+            console.log(`⏰ Periodic sync scheduled every 4 hours for store ${this.storeId}`);
+            
+        } catch (error) {
+            console.log(`⚠️ Failed to setup periodic sync: ${error.message}`);
+        }
+    }
+
+    /**
+     * Cleanup method to clear timers
+     */
+    cleanup() {
+        if (this.periodicSyncTimer) {
+            clearInterval(this.periodicSyncTimer);
+            this.periodicSyncTimer = null;
+            console.log(`🧹 Cleaned up periodic sync timer for store ${this.storeId}`);
+        }
+    }
+
+    /**
+     * Reset all ML learning data to factory defaults
+     */
+    async resetMLDataToFactoryDefaults() {
+        try {
+            console.log('🧹 Resetting ML data to factory defaults...');
+            
+            const cleanup = new MLDataCleanup();
+            const result = await cleanup.resetToFactoryDefaults();
+            
+            if (result.success) {
+                console.log(`✅ Factory reset completed - removed ${result.filesRemoved} files`);
+                
+                // Reinitialize the system with fresh data
+                this.phantomML = new PhantomInventoryML(this.storeId);
+                await this.phantomML.initializeLearningData();
+                
+                return {
+                    success: true,
+                    message: `Factory reset completed - removed ${result.filesRemoved} files`,
+                    filesRemoved: result.filesRemoved
+                };
+            } else {
+                throw new Error(result.error);
+            }
+            
+        } catch (error) {
+            console.error('❌ Factory reset failed:', error.message);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Clean ML data but keep API configuration
+     */
+    async cleanMLDataOnly() {
+        try {
+            console.log('🧹 Cleaning ML data (keeping configuration)...');
+            
+            const cleanup = new MLDataCleanup();
+            const result = await cleanup.cleanMLDataOnly();
+            
+            if (result.success) {
+                console.log(`✅ ML data cleanup completed - removed ${result.filesRemoved} files`);
+                
+                // Reinitialize the ML system with fresh data
+                this.phantomML = new PhantomInventoryML(this.storeId);
+                await this.phantomML.initializeLearningData();
+                
+                return {
+                    success: true,
+                    message: `ML data cleanup completed - removed ${result.filesRemoved} files`,
+                    filesRemoved: result.filesRemoved
+                };
+            } else {
+                throw new Error(result.error);
+            }
+            
+        } catch (error) {
+            console.error('❌ ML data cleanup failed:', error.message);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Get preview of what would be cleaned up
+     */
+    async getCleanupPreview() {
+        try {
+            const cleanup = new MLDataCleanup();
+            return await cleanup.getCleanupPreview();
+        } catch (error) {
+            console.error('Error getting cleanup preview:', error.message);
+            return null;
         }
     }
 

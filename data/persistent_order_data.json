@@ -17965,10 +17965,6 @@
     }
   ],
   "orderTotal": 12569.451999999994,
-  "savedAt": "2025-08-31T20:27:05.974Z",
-  "inventoryFile": {
-    "path": "C:\\Users\\brand\\Documents\\GitHub\\Tink 2.0\\Eagle Test.txt",
-    "name": "Eagle Test.txt",
-    "size": 16610453
-  }
+  "savedAt": "2025-09-11T00:37:55.098Z",
+  "inventoryFile": null
 }

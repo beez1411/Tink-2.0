@@ -247,7 +247,15 @@ function createMenu() {
       submenu: [
         { role: 'reload' },
         { role: 'forceReload' },
-        { role: 'toggleDevTools' },
+        { 
+          label: 'Toggle Developer Tools',
+          accelerator: 'F12',
+          click: () => {
+            if (mainWindow) {
+              mainWindow.webContents.toggleDevTools();
+            }
+          }
+        },
         { type: 'separator' },
         { role: 'resetZoom' },
         { role: 'zoomIn' },
@@ -266,6 +274,62 @@ function createMenu() {
               mainWindow.webContents.send('open-api-configuration');
             }
           }
+        },
+        { type: 'separator' },
+        {
+          label: 'ML Data Cleanup',
+          submenu: [
+            {
+              label: 'Reset All ML Data (Factory Reset)',
+              click: async () => {
+                if (mainWindow) {
+                  const result = await dialog.showMessageBox(mainWindow, {
+                    type: 'warning',
+                    buttons: ['Cancel', 'Reset All Data'],
+                    defaultId: 0,
+                    title: 'Factory Reset ML Data',
+                    message: 'This will permanently delete ALL machine learning data, including:\n\n• Store ML learning data\n• Verification results\n• Network sync data\n• API configuration\n• All learning insights\n\nThis action cannot be undone. Continue?'
+                  });
+                  
+                  if (result.response === 1) {
+                    mainWindow.webContents.send('perform-factory-reset');
+                  }
+                }
+              }
+            },
+            {
+              label: 'Clean ML Data (Keep Config)',
+              click: async () => {
+                if (mainWindow) {
+                  const result = await dialog.showMessageBox(mainWindow, {
+                    type: 'question',
+                    buttons: ['Cancel', 'Clean ML Data'],
+                    defaultId: 0,
+                    title: 'Clean ML Learning Data',
+                    message: 'This will delete machine learning data but keep your API configuration:\n\n• Store ML learning data\n• Verification results\n• Network sync data\n• Learning insights\n\nAPI configuration will be preserved. Continue?'
+                  });
+                  
+                  if (result.response === 1) {
+                    mainWindow.webContents.send('perform-ml-cleanup');
+                  }
+                }
+              }
+            },
+            { type: 'separator' },
+            {
+              label: 'Open Developer Tools (for localStorage cleanup)',
+              accelerator: 'CmdOrCtrl+Shift+I',
+              click: () => {
+                if (mainWindow) {
+                  mainWindow.webContents.openDevTools();
+                  // Send a message to show cleanup instructions
+                  setTimeout(() => {
+                    mainWindow.webContents.send('show-localstorage-cleanup-instructions');
+                  }, 1000);
+                }
+              }
+            }
+          ]
         },
         { type: 'separator' },
         {
@@ -2665,6 +2729,166 @@ ipcMain.handle('test-api-connection', async (event) => {
 });
 
 // Test Network Sync connection
+// ML Data Cleanup - Reset to factory defaults
+ipcMain.handle('reset-ml-data-factory', async (event) => {
+  try {
+    if (!phantomSetup || !phantomSetup.isInitialized) {
+      throw new Error('Phantom system not initialized');
+    }
+    
+    const phantomDetector = phantomSetup.getPhantomDetector();
+    const result = await phantomDetector.resetMLDataToFactoryDefaults();
+    
+    return result;
+    
+  } catch (error) {
+    console.error('Factory reset error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// ML Data Cleanup - Clean ML data only (keep config)
+ipcMain.handle('clean-ml-data-only', async (event) => {
+  try {
+    if (!phantomSetup || !phantomSetup.isInitialized) {
+      throw new Error('Phantom system not initialized');
+    }
+    
+    const phantomDetector = phantomSetup.getPhantomDetector();
+    const result = await phantomDetector.cleanMLDataOnly();
+    
+    return result;
+    
+  } catch (error) {
+    console.error('ML data cleanup error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// Get cleanup preview
+ipcMain.handle('get-cleanup-preview', async (event) => {
+  try {
+    if (!phantomSetup || !phantomSetup.isInitialized) {
+      throw new Error('Phantom system not initialized');
+    }
+    
+    const phantomDetector = phantomSetup.getPhantomDetector();
+    const preview = await phantomDetector.getCleanupPreview();
+    
+    return { success: true, preview };
+    
+  } catch (error) {
+    console.error('Cleanup preview error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// Get localStorage cleanup script
+ipcMain.handle('get-localstorage-cleanup-script', async (event, keepConfig = false) => {
+  try {
+    const MLDataCleanup = require('./js/ml-data-cleanup');
+    const cleanup = new MLDataCleanup();
+    const script = cleanup.getLocalStorageCleanupScript(keepConfig);
+    
+    return { success: true, script };
+    
+  } catch (error) {
+    console.error('localStorage cleanup script error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// Intelligent Feedback Learning System IPC Handlers
+ipcMain.handle('initialize-intelligent-feedback', async (event) => {
+  try {
+    const IntelligentFeedbackLearning = require('./js/intelligent-feedback-learning');
+    
+    // Get store ID (you may want to make this dynamic)
+    const storeId = '17521'; // This should come from configuration
+    
+    if (!global.intelligentFeedback) {
+      global.intelligentFeedback = new IntelligentFeedbackLearning(storeId);
+      await global.intelligentFeedback.initialize();
+    }
+    
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Error initializing intelligent feedback:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('apply-manager-overrides', async (event, orderRecommendations) => {
+  try {
+    if (!global.intelligentFeedback) {
+      return { success: true, adjustedRecommendations: orderRecommendations };
+    }
+    
+    const adjustedRecommendations = global.intelligentFeedback.applyManagerOverrides(orderRecommendations);
+    
+    return { 
+      success: true, 
+      adjustedRecommendations: adjustedRecommendations 
+    };
+    
+  } catch (error) {
+    console.error('Error applying manager overrides:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('get-override-adjustment-suggestions', async (event) => {
+  try {
+    if (!global.intelligentFeedback) {
+      return { success: true, suggestions: [] };
+    }
+    
+    const suggestions = await global.intelligentFeedback.analyzeTrendsAndSuggestAdjustments();
+    
+    return { 
+      success: true, 
+      suggestions: suggestions 
+    };
+    
+  } catch (error) {
+    console.error('Error getting override suggestions:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('accept-override-adjustment', async (event, { sku, newQuantity, reason }) => {
+  try {
+    if (!global.intelligentFeedback) {
+      return { success: false, error: 'Intelligent feedback system not initialized' };
+    }
+    
+    const success = await global.intelligentFeedback.acceptOverrideAdjustment(sku, newQuantity, reason);
+    
+    return { success: success };
+    
+  } catch (error) {
+    console.error('Error accepting override adjustment:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('update-sales-data', async (event, { sku, salesData }) => {
+  try {
+    if (!global.intelligentFeedback) {
+      return { success: false, error: 'Intelligent feedback system not initialized' };
+    }
+    
+    await global.intelligentFeedback.updateSalesData(sku, salesData);
+    
+    return { success: true };
+    
+  } catch (error) {
+    console.error('Error updating sales data:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle('test-network-sync', async (event, { syncUrl, apiKey, storeId }) => {
   try {
     const http = require('http');
@@ -3290,6 +3514,9 @@ ipcMain.handle('phantom-ml-feedback', async (event, validationResults) => {
     // Save updated ML data
     await phantomML.saveMLData();
     
+    // Network sync will happen at startup, not after each verification
+    let networkSyncStatus = 'Will sync at next startup';
+    
     // NEW: Complete current sheet and move to next if available
     try {
       const sheetCompletion = await verificationWorkflow.completeCurrentSheet(validationResults);
@@ -3300,6 +3527,7 @@ ipcMain.handle('phantom-ml-feedback', async (event, validationResults) => {
           accuracy,
           learningImprovement,
           totalVerifications: phantomML.verificationResults.size,
+          networkSyncStatus: networkSyncStatus,
           // NEW: Sheet completion info
           sheetCompletion: sheetCompletion,
           hasNextSheet: sheetCompletion.hasNextSheet,

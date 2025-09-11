@@ -7,10 +7,77 @@
 // Tab management variables
 let currentTab = null;
 
+// ML Data Cleanup Menu Handlers
+if (window.electronAPI && window.electronAPI.receive) {
+    // Handle factory reset from menu
+    window.electronAPI.receive('perform-factory-reset', async () => {
+        try {
+            console.log('🧹 Performing factory reset from menu...');
+            const result = await window.api.resetMLDataFactory();
+            
+            if (result.success) {
+                // Also clean localStorage
+                const script = await window.api.getLocalStorageCleanupScript(false);
+                if (script.success) {
+                    eval(script.script);
+                }
+                
+                alert(`✅ Factory reset completed!\n\nRemoved ${result.filesRemoved} files.\nPlease restart the application.`);
+            } else {
+                alert(`❌ Factory reset failed: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Factory reset error:', error);
+            alert(`❌ Factory reset failed: ${error.message}`);
+        }
+    });
+
+    // Handle ML cleanup from menu
+    window.electronAPI.receive('perform-ml-cleanup', async () => {
+        try {
+            console.log('🧹 Performing ML cleanup from menu...');
+            const result = await window.api.cleanMLDataOnly();
+            
+            if (result.success) {
+                // Also clean localStorage (but keep config)
+                const script = await window.api.getLocalStorageCleanupScript(true);
+                if (script.success) {
+                    eval(script.script);
+                }
+                
+                alert(`✅ ML data cleanup completed!\n\nRemoved ${result.filesRemoved} files.\nAPI configuration preserved.\nPlease restart the application.`);
+            } else {
+                alert(`❌ ML cleanup failed: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('ML cleanup error:', error);
+            alert(`❌ ML cleanup failed: ${error.message}`);
+        }
+    });
+
+    // Show localStorage cleanup instructions in console
+    window.electronAPI.receive('show-localstorage-cleanup-instructions', () => {
+        console.log('%c🧹 ML Data localStorage Cleanup Instructions', 'font-size: 16px; font-weight: bold; color: #4CAF50;');
+        console.log('%cTo complete the ML data cleanup, run this script:', 'font-size: 14px; color: #2196F3;');
+        console.log('');
+        
+        window.api.getLocalStorageCleanupScript(false).then(result => {
+            if (result.success) {
+                console.log('%c' + result.script, 'background: #f5f5f5; padding: 10px; border-left: 4px solid #4CAF50;');
+                console.log('');
+                console.log('%c📋 Copy the script above and paste it here, then press Enter', 'font-size: 14px; color: #FF9800;');
+            }
+        });
+    });
+}
+
 // Initialize the tabbed interface when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing interface...');
     initializeTabInterface();
+    
+    // Initialize Intelligent Feedback Learning System
+    initializeIntelligentFeedback();
     
     // Check for persistent inventory data
     setTimeout(() => {
@@ -174,6 +241,59 @@ function showWelcomeScreen() {
 }
 
 // Settings button removed - API configuration now only accessible through Tools menu
+
+// ============================================================================
+// INTELLIGENT FEEDBACK LEARNING SYSTEM
+// ============================================================================
+
+async function initializeIntelligentFeedback() {
+    try {
+        console.log('🧠 Initializing Intelligent Feedback Learning System...');
+        
+        // Initialize the intelligent feedback system via IPC
+        const result = await window.api.initializeIntelligentFeedback();
+        
+        if (result.success) {
+            console.log('✅ Intelligent Feedback Learning System initialized');
+            
+            // Initialize notification system
+            if (window.overrideNotifications) {
+                window.overrideNotifications.initialize();
+            }
+            
+            // Check for existing override adjustment suggestions
+            setTimeout(checkForOverrideAdjustmentSuggestions, 5000); // Check after 5 seconds
+            
+        } else {
+            console.warn('⚠️ Failed to initialize Intelligent Feedback Learning:', result.error);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error initializing Intelligent Feedback Learning:', error);
+    }
+}
+
+async function checkForOverrideAdjustmentSuggestions() {
+    try {
+        console.log('🔍 Checking for override adjustment suggestions...');
+        
+        const result = await window.api.getOverrideAdjustmentSuggestions();
+        
+        if (result.success && result.suggestions.length > 0) {
+            console.log(`📈 Found ${result.suggestions.length} override adjustment suggestions`);
+            
+            // Show notifications for suggestions
+            if (window.overrideNotifications) {
+                window.overrideNotifications.showOverrideAdjustmentSuggestions(result.suggestions);
+            }
+        } else {
+            console.log('📊 No override adjustment suggestions at this time');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error checking for override suggestions:', error);
+    }
+}
 
 // ============================================================================
 // LEARNING INSIGHTS FUNCTIONALITY
@@ -3492,7 +3612,8 @@ async function finalizeValidation() {
                     totalValidated: validationResults.length,
                     phantomsConfirmed: validationResults.filter(item => item.wasPhantom).length,
                     accuracy: mlFeedbackResult.data.accuracy || 0,
-                    learningImprovement: mlFeedbackResult.data.learningImprovement || 0
+                    learningImprovement: mlFeedbackResult.data.learningImprovement || 0,
+                    networkSyncStatus: mlFeedbackResult.data.networkSyncStatus || 'Not configured'
                 },
                 completedAt: new Date().toISOString()
             };
@@ -3921,8 +4042,25 @@ async function processFeedbackForML(feedbackData) {
             timestamp: feedbackData.timestamp
         });
         
-        // Here you would integrate with your ML pipeline
-        // For now, we'll simulate ML processing
+        // NEW: Integrate with Intelligent Feedback Learning System
+        if (window.intelligentFeedback) {
+            console.log('🧠 Recording manager feedback in intelligent learning system...');
+            
+            try {
+                const override = await window.intelligentFeedback.recordManagerFeedback(feedbackData);
+                console.log('✅ Manager override created/updated:', override);
+                
+                // Show success message with learning confirmation
+                if (override) {
+                    console.log(`🎯 Future orders for ${feedbackData.sku} will use manager preference: ${override.managerPreference} units`);
+                }
+                
+            } catch (learningError) {
+                console.error('❌ Error in intelligent learning system:', learningError);
+            }
+        }
+        
+        // Original ML processing (for reports)
         console.log('Processing feedback for ML learning:', {
             sku: feedbackData.sku,
             originalRecommendation: feedbackData.tinkRecommendation,
@@ -5459,6 +5597,28 @@ runSuggestedOrderBtn.addEventListener('click', async () => {
             console.log('Analysis result:', result);
             console.log('Order data received:', result.orderData);
             
+            // NEW: Apply manager overrides to order recommendations
+            let finalOrderData = result.orderData;
+            try {
+                const overrideResult = await window.api.applyManagerOverrides(result.orderData);
+                if (overrideResult.success) {
+                    finalOrderData = overrideResult.adjustedRecommendations;
+                    console.log('✅ Manager overrides applied to order recommendations');
+                    
+                    // Show override summary if any were applied
+                    const overridesApplied = finalOrderData.filter(item => item.overrideApplied);
+                    if (overridesApplied.length > 0) {
+                        console.log(`🎯 Applied ${overridesApplied.length} manager overrides:`);
+                        overridesApplied.forEach(item => {
+                            console.log(`  - ${item.sku}: ${item.originalRecommendation} → ${item.recommendedQuantity} (${item.overrideReason})`);
+                        });
+                    }
+                }
+            } catch (overrideError) {
+                console.warn('⚠️ Error applying manager overrides:', overrideError);
+                // Continue with original recommendations if override fails
+            }
+            
             // EXTRACT LEARNING INSIGHTS FROM ANALYSIS RESULTS
             if (result.debug) {
                 console.log('Extracting learning insights from analysis debug data...');
@@ -5536,7 +5696,7 @@ runSuggestedOrderBtn.addEventListener('click', async () => {
                 }
                 
                 // Populate order table with the returned data
-                populateOrderTable(result.orderData);
+                populateOrderTable(finalOrderData);
                 
                 // Calculate and display total
                 updateOrderTotal();
@@ -7880,34 +8040,18 @@ async function testNetworkSyncConnection(syncUrl, apiKey, storeId) {
             }
         };
         
-        // Use fetch if available, otherwise fall back to node http
-        if (typeof fetch !== 'undefined') {
-            fetch(syncUrl + '/api/health', options)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'healthy') {
-                        resolve({ success: true, stores: data.stores || 0 });
-                    } else {
-                        reject(new Error('Server responded but status is not healthy'));
-                    }
-                })
-                .catch(error => {
-                    reject(new Error(`Connection failed: ${error.message}`));
-                });
-        } else {
-            // Fallback for Electron environment - use IPC to main process
-            window.api.testNetworkSync({ syncUrl, apiKey, storeId })
-                .then(response => {
-                    if (response.success) {
-                        resolve(response);
-                    } else {
-                        reject(new Error(response.error));
-                    }
-                })
-                .catch(error => {
-                    reject(new Error(`Test failed: ${error.message}`));
-                });
-        }
+        // Always use IPC to main process in Electron environment
+        window.api.testNetworkSync({ syncUrl, apiKey, storeId })
+            .then(response => {
+                if (response.success) {
+                    resolve(response);
+                } else {
+                    reject(new Error(response.error));
+                }
+            })
+            .catch(error => {
+                reject(new Error(`Test failed: ${error.message}`));
+            });
     });
 }
 

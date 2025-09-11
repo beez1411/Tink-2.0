@@ -69,6 +69,21 @@ contextBridge.exposeInMainWorld('api', {
   // Generic invoke function for IPC calls
   invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
   
+  // Receive messages from main process
+  receive: (channel, func) => {
+    const validChannels = [
+      'perform-factory-reset',
+      'perform-ml-cleanup', 
+      'show-localstorage-cleanup-instructions',
+      'open-api-configuration',
+      'toggle-api-mode',
+      'refresh-api-data'
+    ];
+    if (validChannels.includes(channel)) {
+      ipcRenderer.on(channel, (event, ...args) => func(...args));
+    }
+  },
+  
   // API Configuration functions
   getApiConfigSummary: () => ipcRenderer.invoke('get-api-config-summary'),
   getApiConfig: () => ipcRenderer.invoke('get-api-config'),
@@ -76,6 +91,19 @@ contextBridge.exposeInMainWorld('api', {
   testApiConnection: () => ipcRenderer.invoke('test-api-connection'),
   testNetworkSync: (config) => ipcRenderer.invoke('test-network-sync', config),
   resetApiConfig: () => ipcRenderer.invoke('reset-api-config'),
+  
+  // ML Data Cleanup functions
+  resetMLDataFactory: () => ipcRenderer.invoke('reset-ml-data-factory'),
+  cleanMLDataOnly: () => ipcRenderer.invoke('clean-ml-data-only'),
+  getCleanupPreview: () => ipcRenderer.invoke('get-cleanup-preview'),
+  getLocalStorageCleanupScript: (keepConfig) => ipcRenderer.invoke('get-localstorage-cleanup-script', keepConfig),
+  
+  // Intelligent Feedback Learning functions
+  initializeIntelligentFeedback: () => ipcRenderer.invoke('initialize-intelligent-feedback'),
+  applyManagerOverrides: (orderRecommendations) => ipcRenderer.invoke('apply-manager-overrides', orderRecommendations),
+  getOverrideAdjustmentSuggestions: () => ipcRenderer.invoke('get-override-adjustment-suggestions'),
+  acceptOverrideAdjustment: (sku, newQuantity, reason) => ipcRenderer.invoke('accept-override-adjustment', { sku, newQuantity, reason }),
+  updateSalesData: (sku, salesData) => ipcRenderer.invoke('update-sales-data', { sku, salesData }),
   getApiInventoryData: (options) => ipcRenderer.invoke('get-api-inventory-data', options),
   refreshApiInventory: () => ipcRenderer.invoke('refresh-api-inventory'),
   setApiEnabled: (enabled) => ipcRenderer.invoke('set-api-enabled', enabled),
