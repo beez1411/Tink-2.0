@@ -2918,7 +2918,7 @@ ipcMain.handle('test-network-sync', async (event, { syncUrl, apiKey, storeId }) 
           try {
             const response = JSON.parse(data);
             if (res.statusCode >= 200 && res.statusCode < 300 && response.status === 'healthy') {
-              resolve({ success: true, stores: response.stores || 0 });
+              resolve({ success: true, stores: response.activeStores || 0 });
             } else {
               resolve({ success: false, error: `Server error: ${response.error || 'Unknown error'}` });
             }

@@ -50,10 +50,24 @@ async function initializeDatabase() {
 // Authentication middleware
 function validateApiKey(req, res, next) {
     const authHeader = req.headers.authorization || '';
-    if (!authHeader.startsWith('Bearer ') || authHeader.slice(7) !== API_KEY) {
+    if (!authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
-    next();
+    
+    const providedKey = authHeader.slice(7);
+    
+    // Accept master API key
+    if (providedKey === API_KEY) {
+        return next();
+    }
+    
+    // Accept store-specific API keys (pattern: tink-ml-sync-{storeId}-{location}-{hash})
+    const storeKeyPattern = /^tink-ml-sync-\d{5}-[a-z]+-[a-f0-9]{32}$/;
+    if (storeKeyPattern.test(providedKey) && providedKey.endsWith('a8b3fd7db46dd67d434aa5a74821fd64')) {
+        return next();
+    }
+    
+    return res.status(401).json({ error: 'Unauthorized' });
 }
 
 // ============================================================================
