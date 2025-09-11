@@ -1,6 +1,6 @@
 {
   "name": "tink-2.0",
-  "version": "2.0.19",
+  "version": "2.0.20",
   "description": "Tink 2.0 - JavaScript-powered desktop application for processing inventory data",
   "main": "main.js",
   "scripts": {

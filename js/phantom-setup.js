@@ -184,8 +184,7 @@ class PhantomSetup {
             await this.initializePhantomSystem();
             return {
                 alreadySetup: true,
-                store: currentStore,
-                phantomDetector: this.phantomDetector
+                store: currentStore
             };
         }
 
@@ -213,7 +212,6 @@ class PhantomSetup {
             return {
                 success: true,
                 store: storeConfig,
-                phantomDetector: this.phantomDetector,
                 systemStats: initResult.systemStats
             };
             
